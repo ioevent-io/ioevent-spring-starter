@@ -4,18 +4,26 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
+import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
 import com.grizzlywave.grizzlywavestarter.model.Order;
 
 /**
@@ -45,8 +53,8 @@ public class AnnotationAspect {
 	/**
 	 * publish the order to the broker when we call @waveInit annotation
 	 **/ 
-	@Around(value = "@annotation(anno)", argNames = "jp, anno") // aspect method who have the annotation @Delegate
-	public Object handle(ProceedingJoinPoint joinPoint, WaveInit waveinit) throws Throwable {
+	@Around(value = "@annotation(anno)", argNames = "jp, anno") // aspect method who have the annotation waveinit
+	public Object producer(ProceedingJoinPoint joinPoint, WaveInit waveinit) throws Throwable {
 		Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 //		wave.id() to access annotation parameters
 //		 joinPoint.getArgs()[0].toString() to get our method parameters
@@ -58,6 +66,7 @@ public class AnnotationAspect {
 		kafkaTemplate.send(message);
 		LOGGER.info("event sent successfully");
 		Object obj = joinPoint.proceed(joinPoint.getArgs());
-		return obj; // invoke the delegate method
+		return obj; 
 	}
-}
+	
+	/**/}
