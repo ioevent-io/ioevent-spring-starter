@@ -1,5 +1,7 @@
 package com.grizzlywave.grizzlywavestarter.annotation;
 
+import java.util.logging.Logger;
+
 import org.springframework.stereotype.Component;
 
 import com.grizzlywave.grizzlywavestarter.annotations.firstAnnotation;
@@ -12,5 +14,8 @@ import com.grizzlywave.grizzlywavestarter.annotations.firstAnnotation;
 public class CustomAnnotationTestDelegate {
 	@firstAnnotation
 	public void methodWithCustomAnnotation() {
+		Logger LOGGER = Logger.getLogger(
+			    Thread.currentThread().getStackTrace()[0].getClassName() );
+		LOGGER.info("after annotation msg");
 	}
 }
