@@ -50,7 +50,6 @@ public class AnnotationAspect {
 		Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 //		wave.id() to access annotation parameters
 //		 joinPoint.getArgs()[0].toString() to get our method parameters
-		Object obj = joinPoint.proceed();
 		Message<Object> message = MessageBuilder.withPayload(joinPoint.getArgs()[0])
 				.setHeader(KafkaHeaders.TOPIC, waveinit.target_topic()).setHeader(KafkaHeaders.MESSAGE_KEY, "999")
 				.setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source", "orderMS")
@@ -58,6 +57,7 @@ public class AnnotationAspect {
 				.setHeader("event", waveinit.target_event()).build();
 		kafkaTemplate.send(message);
 		LOGGER.info("event sent successfully");
+		Object obj = joinPoint.proceed(joinPoint.getArgs());
 		return obj; // invoke the delegate method
 	}
 }
