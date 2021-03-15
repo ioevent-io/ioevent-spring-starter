@@ -1,18 +1,18 @@
 
 version: '3.3'
 services:
-    # mongodb:
-        # image: mongo:latest
-        # container_name: "mongodb"
-        # environment:
-          # - MONGO_INITDB_DATABASE=stage2
-          # #- MONGO_INITDB_ROOT_PASSWORD=GH15935746
-          # #- MONGO_INITDB_ROOT_USERNAME=root
-          # - MONGO_DATA_DIR=/data/db
-          # - MONGO_LOG_DIR=/dev/null
+    mongodb:
+         image: mongo:latest
+         container_name: "mongodb"
+         environment:
+           - MONGO_INITDB_DATABASE=stage2
+           #- MONGO_INITDB_ROOT_PASSWORD=GH15935746
+           #- MONGO_INITDB_ROOT_USERNAME=root
+           - MONGO_DATA_DIR=/data/db
+           - MONGO_LOG_DIR=/dev/null
 
-        # ports:
-            # - 27017:27017
+         ports:
+             - 27017:27017
     zookeeper:
         image: confluentinc/cp-zookeeper:latest
         ports:
