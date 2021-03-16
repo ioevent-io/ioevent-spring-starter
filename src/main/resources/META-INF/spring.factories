@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.grizzlywave.grizzlywavestarter.configuration.configuration,com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect

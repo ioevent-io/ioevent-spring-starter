@@ -20,7 +20,7 @@ import com.grizzlywave.grizzlywavestarter.model.Order;
  * annotation and in the test class we will use this class
  **/
 @Component
-public class WaveInitAnnotation {
+public class WaveInitAnnotationTest {
 
 	@WaveInit(id ="id",target_event= "INIT_ORDER", target_topic="order")
 	public void initOrder(Order order){

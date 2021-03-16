@@ -8,7 +8,9 @@ import org.springframework.context.event.EventListener;
 
 import com.grizzlywave.grizzlywavestarter.model.Order;
 import com.grizzlywave.grizzlywavestarter.service.waveInitAnnotation;
-
+/**
+ * Grizzly Wave Starter Main Class 
+ **/
 @SpringBootApplication
 public class GrizzlyWaveStarterApplication {
 	@Autowired
@@ -16,6 +18,7 @@ public class GrizzlyWaveStarterApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(GrizzlyWaveStarterApplication.class, args);
 	}
+	
 	@EventListener(ApplicationReadyEvent.class)
 	public void shouldLogWaveInitAnnotationMethod() {
 
