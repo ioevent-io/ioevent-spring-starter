@@ -1,16 +1,14 @@
 package com.grizzlywave.grizzlywavestarter.model;
 
-
 /**
- * our model class : Order 
- * which contain id, customerId  and price as attribute
+ * our model class : Order which contain id, customerId and price as attribute
  *
  */
 public class Order {
 	private int id;
 	private int customerId;
 	private int price;
-	private String state= "pandding";
+	private String state = "pandding";
 
 	public Order(int id, int customerId, int price) {
 		this.id = id;
@@ -50,9 +48,14 @@ public class Order {
 		this.customerId = customerId;
 	}
 
+	public String orderString() {
+		return "Order [id=" + id + ", customerId=" + customerId + ", price=" + price + ", state=" + state + "]";
+	}
+
 	@Override
 	public String toString() {
-		return "Order [id=" + id + ", customerId=" + customerId + ", price=" + price + ", state=" + state + "]";
+		return "{\"id\":" + id + ",\"customerId\":" + customerId + ",\"price\":" + price + ",\"state\":\"" + state
+				+ "\"}";
 	}
 
 	public Order() {

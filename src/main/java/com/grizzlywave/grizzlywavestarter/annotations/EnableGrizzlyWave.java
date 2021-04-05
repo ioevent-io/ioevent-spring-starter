@@ -10,7 +10,9 @@ import org.springframework.context.annotation.Import;
 import com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect;
 import com.grizzlywave.grizzlywavestarter.configuration.KafkaConfig;
 import com.grizzlywave.grizzlywavestarter.configuration.KafkaTopicConfiguration;
-import com.grizzlywave.grizzlywavestarter.configuration.configuration;
+import com.grizzlywave.grizzlywavestarter.configuration.WaveConfigProperties;
+import com.grizzlywave.grizzlywavestarter.configuration.WaveTopicBeanPostProcessor;
+import com.grizzlywave.grizzlywavestarter.service.TopicServices;
 
 /**
  * EnableGrizzlyWave annotation allows us to enable the configuration class from
@@ -18,7 +20,8 @@ import com.grizzlywave.grizzlywavestarter.configuration.configuration;
  **/
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({ AnnotationAspect.class, KafkaConfig.class, configuration.class , KafkaTopicConfiguration.class})
+@Import({ AnnotationAspect.class, KafkaConfig.class, KafkaTopicConfiguration.class, WaveConfigProperties.class,
+		TopicServices.class, WaveTopicBeanPostProcessor.class })
 public @interface EnableGrizzlyWave {
 
 }

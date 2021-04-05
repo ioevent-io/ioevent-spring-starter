@@ -5,13 +5,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-
-/**
- * creation of custom annotation example @firstAnnotation which work on methods
- **/
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface firstAnnotation {
+public @interface WaveEnd {
+
+	String name() default "";
+
+	String source_event();
+
+	String source_topic();
 
 }

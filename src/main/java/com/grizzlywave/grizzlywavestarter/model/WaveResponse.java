@@ -5,6 +5,7 @@ import java.util.HashMap;
 /**
  * Class WaveResponse Contains an object and a hash map to give more information
  * about events after sending or receiving using GrizzlyWave annotations
+ * 
  * @author Ahmed
  **/
 public class WaveResponse<T> {
@@ -33,18 +34,21 @@ public class WaveResponse<T> {
 		this.object = object;
 		this.Headers = Headers;
 	}
+
 	/**
 	 * to get object
 	 **/
 	public Object getObject() {
 		return object;
 	}
+
 	/**
 	 * to set object
 	 **/
 	public void setObject(T object) {
 		this.object = object;
 	}
+
 	/**
 	 * to get Hashmap
 	 **/
@@ -52,13 +56,13 @@ public class WaveResponse<T> {
 		return Headers;
 	}
 
-	
 	/**
 	 * to set Hashmap
 	 **/
 	public void setHeaders(HashMap<String, Object> herders) {
 		Headers = herders;
 	}
+
 	/**
 	 * to get the string of our WaveResponse
 	 **/
@@ -67,5 +71,4 @@ public class WaveResponse<T> {
 		return "WaveResponse [object=" + object + ", Headers=" + Headers.toString() + "]";
 	}
 
-	
 }

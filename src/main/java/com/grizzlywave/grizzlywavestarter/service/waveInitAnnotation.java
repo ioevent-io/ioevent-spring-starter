@@ -15,15 +15,15 @@ import com.grizzlywave.grizzlywavestarter.model.WaveResponse;
 @Component
 public class waveInitAnnotation {
 
-	@WaveInit(id = "#order.getId()", target_event = "INIT_ORDER", target_topic = "order")
+	@WaveInit(id = "#order.getId()", target_event = "INIT_ORDER", target_topic = "orderprefix")
 	public WaveResponse initOrder(Order order) throws IllegalArgumentException, IllegalAccessException {
 
-	//	HashMap<String, Object> hashmap = new HashMap<String, Object>();
-	//	for (Method method : this.getClass().getMethods()) {
-	//		hashmap.put("event", method.getAnnotation(WaveInit.class).target_event());
-	//		return new WaveResponse(order, hashmap);
-	//	}
-		
+		// HashMap<String, Object> hashmap = new HashMap<String, Object>();
+		// for (Method method : this.getClass().getMethods()) {
+		// hashmap.put("event", method.getAnnotation(WaveInit.class).target_event());
+		// return new WaveResponse(order, hashmap);
+		// }
+
 		return new WaveResponse(order, new HashMap<String, Object>());
 	}
 

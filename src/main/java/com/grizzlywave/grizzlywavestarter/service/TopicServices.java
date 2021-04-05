@@ -1,42 +1,61 @@
 package com.grizzlywave.grizzlywavestarter.service;
 
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 
-@Component
+import com.grizzlywave.grizzlywavestarter.configuration.WaveConfigProperties;
+
+/**
+ * Class TopicServices where we define services on topics (create , delete ,
+ * getAllTopics...)
+ **/
+@Primary
+@Service
 public class TopicServices {
+	@Autowired
+	WaveConfigProperties waveProperties;
 	Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
-	Properties properties = new Properties() {
-		{
-			put("bootstrap.servers", "192.168.99.100:9092");
-			put("connections.max.idle.ms", 10000);
-			put("request.timeout.ms", 5000);
-		}
-	};
-	AdminClient client = AdminClient.create(properties);
 
+	@Autowired
+	AdminClient client;
 
-	public void getAllTopic() throws InterruptedException, ExecutionException {
+	/**
+	 * get a list of all topics
+	 **/
+	public List<String> getAllTopic() throws InterruptedException, ExecutionException {
 
 		ListTopicsOptions listTopicsOptions = new ListTopicsOptions();
 		listTopicsOptions.listInternal(true);
-		LOGGER.info(client.listTopics(listTopicsOptions).names().get().toString());
+		return client.listTopics(listTopicsOptions).names().get().stream()
+				.filter((a) -> a.startsWith(waveProperties.getPrefix())).collect(Collectors.toList());
 	}
 
-	public void createTopic(String topucName) {
-		
-		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(topucName, 1, (short) 1)));
+	/**
+	 * create new topic named topicName
+	 * 
+	 * @param prefix
+	 **/
+	public void createTopic(String topicName, String prefix) {
+
+		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, (short) 1)));
 		LOGGER.info(result.toString());
 	}
+
+	/**
+	 * Delete the topic "topicName"
+	 **/
 	public void deleteTopic(String topicName) {
 		client.deleteTopics(Arrays.asList(topicName));
-	} 
+	}
 }

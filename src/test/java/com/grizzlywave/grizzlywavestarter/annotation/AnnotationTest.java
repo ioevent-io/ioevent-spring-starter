@@ -16,19 +16,12 @@ import com.grizzlywave.grizzlywavestarter.model.Order;
 @SpringBootTest
 @EnableGrizzlyWave
 public class AnnotationTest {
-    @Autowired
-    CustomAnnotationTestDelegate customAnnotationTestDelegate;
+
 	@Autowired
     WaveInitAnnotationTest waveInitAnnotation;
 //	@Autowired
 //	WaveTransitionAnnotation waveTransitionAnnotation;
-/**
- * call of our first annotation example
- * */
-	@Test
-    public void shouldLogFirstAnnotationMethod() {
-       customAnnotationTestDelegate.methodWithCustomAnnotation();
-    }
+
     /**
      *call of @waveInit Annotation 
      **/
