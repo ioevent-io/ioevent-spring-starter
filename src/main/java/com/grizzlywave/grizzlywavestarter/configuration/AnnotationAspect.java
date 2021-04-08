@@ -4,7 +4,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -48,9 +50,9 @@ public class AnnotationAspect {
 	WaveConfigProperties waveProperties;
 
 	/**
-	 * Aspect method who have the annotation @waveInit publish the order to the
-	 * broker when we call @waveInit annotation . wave.id() to access annotation
-	 * parameters joinPoint.getArgs()[0].toString() to get our method parameters
+	 * Aspect method for the annotation @waveInit where it publish an object to the
+	 * broker. to access annotation parameters joinPoint.getArgs()[0].toString() to
+	 * get our method parameters
 	 **/
 	@Around(value = "@annotation(anno)", argNames = "jp, anno") //
 	public Object WaveInitAnnotationProducer(ProceedingJoinPoint joinPoint, WaveInit waveinit) throws Throwable {
@@ -87,14 +89,16 @@ public class AnnotationAspect {
 		return obj;
 	}
 
-	/** Consumer that we call with @waveTransition annotation **/
-	@Around(value = "@annotation(anno)", argNames = "jp, anno")
-	public Object receive(ProceedingJoinPoint joinPoint, WaveTransition waveTransition) throws Throwable {
+	/**
+	 * Aspect method using the advice @AfterReturning,after Consuming an object from
+	 * the broker and make change on it, @waveTransition annotation publish it again
+	 * to another topic
+	 **/
+	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
+	public void receive2(JoinPoint joinPoint, WaveTransition waveTransition, Object order) throws Throwable {
 		StopWatch watch = new StopWatch();
-		watch.start("waveTransition annotation Aspect");
-
-		Object obj = joinPoint.proceed(joinPoint.getArgs());
-		Message<Object> message = MessageBuilder.withPayload(joinPoint.getArgs()[0])
+		watch.start("waveTransition afterReturn  annotation Aspect");
+		Message<Object> message = MessageBuilder.withPayload(order)
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + waveTransition.target_topic())
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("source", waveTransition.source_event())
@@ -103,21 +107,41 @@ public class AnnotationAspect {
 		kafkaTemplate.send(message);
 		log.info("WaveTransition event sent successfully");
 		log.info(joinPoint.getArgs()[0].toString());
-
-		HashMap<String, Object> headers = new HashMap<String, Object>();
-		headers.put("destination", waveTransition.target_event());
-		headers.put("source", waveTransition.source_event());
-		headers.put("event", waveTransition.name());
-
-		obj = new WaveResponse(joinPoint.getArgs()[0], headers);
-		log.info(obj.toString());
+		log.info(order.toString());
 		watch.stop();
 		log.info(watch.prettyPrint());
-		return obj;
-
-	}
+	} // return obj;
+	/** Consumer that we call with @waveTransition annotation **/
 
 	/** Consumer that we call with @waveTransition annotation **/
+	/*
+	 * @Around(value = "@annotation(anno)", argNames = "jp, anno") public Object
+	 * receive(ProceedingJoinPoint joinPoint, WaveTransition waveTransition) throws
+	 * Throwable { StopWatch watch = new StopWatch();
+	 * watch.start("waveTransition annotation Aspect"); Object obj =
+	 * joinPoint.proceed(joinPoint.getArgs()); Message<Object> message =
+	 * MessageBuilder.withPayload(joinPoint.getArgs()[0])
+	 * .setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() +
+	 * waveTransition.target_topic()) .setHeader(KafkaHeaders.MESSAGE_KEY,
+	 * "999").setHeader(KafkaHeaders.PARTITION_ID, 0) .setHeader("source",
+	 * waveTransition.source_event()) .setHeader("destination",
+	 * waveTransition.target_event()).setHeader("event", waveTransition.name())
+	 * .build(); kafkaTemplate.send(message);
+	 * log.info("WaveTransition event sent successfully");
+	 * log.info(joinPoint.getArgs()[0].toString());
+	 * 
+	 * HashMap<String, Object> headers = new HashMap<String, Object>();
+	 * headers.put("destination", waveTransition.target_event());
+	 * headers.put("source", waveTransition.source_event()); headers.put("event",
+	 * waveTransition.name());
+	 * 
+	 * obj = new WaveResponse(joinPoint.getArgs()[0], headers);
+	 * log.info(obj.toString()); watch.stop(); log.info(watch.prettyPrint()); return
+	 * obj;
+	 * 
+	 * }
+	 */
+
 	/*
 	 * @After(value = "@annotation(anno)", argNames = "jp, anno") public void
 	 * receive2(JoinPoint joinPoint, WaveTransition waveTransition) throws Throwable
@@ -136,8 +160,23 @@ public class AnnotationAspect {
 	 * log.info(joinPoint.getArgs()[0].toString()); watch.stop();
 	 * log.info(watch.prettyPrint());} //return obj;
 	 */
+	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
+	public void receive2(JoinPoint joinPoint, WaveEnd waveEnd, Object order) throws Throwable {
+		StopWatch watch = new StopWatch();
+		watch.start("waveEnd afterReturn  annotation Aspect");
+		Message<Object> message = MessageBuilder.withPayload(order)
+				.setHeader(KafkaHeaders.TOPIC, "Wave-End").setHeader(KafkaHeaders.MESSAGE_KEY, "999")
+				.setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source", waveEnd.source_event())
+				.setHeader("event", waveEnd.name()).build();
+		kafkaTemplate.send(message);
+		log.info("WaveTransition event sent successfully");
+		log.info(joinPoint.getArgs()[0].toString());
+		log.info(order.toString());
+		watch.stop();
+		log.info(watch.prettyPrint());
+	}
 	/** @WaveEnd Aspect to close the process **/
-	@Around(value = "@annotation(anno)", argNames = "jp, anno")
+/*	@Around(value = "@annotation(anno)", argNames = "jp, anno")
 	public Object waveEnd(ProceedingJoinPoint joinPoint, WaveEnd waveEnd) throws Throwable {
 		StopWatch watch = new StopWatch();
 		watch.start("waveEnd annotation Aspect");
@@ -153,7 +192,7 @@ public class AnnotationAspect {
 		log.info(watch.prettyPrint());
 		return obj;
 
-	}
+	}*/
 
 	public String runEpressionWaveInit(ProceedingJoinPoint joinPoint, WaveInit waveinit) {
 		String event_id = waveinit.id();

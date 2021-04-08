@@ -11,6 +11,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 
+import com.grizzlywave.grizzlywavestarter.configuration.WaveBpmnPostProcessor;
 import com.grizzlywave.grizzlywavestarter.configuration.WaveConfigProperties;
 import com.grizzlywave.grizzlywavestarter.model.Order;
 import com.grizzlywave.grizzlywavestarter.service.TopicServices;
@@ -40,7 +41,8 @@ public class GrizzlyWaveStarterApplication {
 		log.info(waveInitAnnotation.initOrder(new Order(2, 2, 200)).toString());
 
 		log.info("list of topic :" + topicService.getAllTopic().toString());
-
+		log.info("BPMN PART :"+WaveBpmnPostProcessor.bpmnPart);
 	}
+	
 
 }

@@ -21,13 +21,15 @@ public class WaveTransitionAnnotation {
 
 	@WaveTransition(name = "cheked", source_event = "customerMS", source_topic = "order", target_event = "orderMS", target_topic = "customer")
 	@KafkaListener(topics = "wave-order", groupId = "my-group2", containerFactory = "userKafkaListenerFactory")
-	public void tryWveTransition(@Payload String data) throws JsonMappingException, JsonProcessingException {
+	public Order tryWveTransition(@Payload String data) throws JsonMappingException, JsonProcessingException {
 
 		Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 		LOGGER.info(Thread.currentThread().getName());
 		ObjectMapper mapper = new ObjectMapper();
 		Order order = mapper.readValue(data, Order.class);
+		order.setId(14);
+		data = order.toString();
 		System.out.println(order.toString());
-
+		return order;
 	}
 }

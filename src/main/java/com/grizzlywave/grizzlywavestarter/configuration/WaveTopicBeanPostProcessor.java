@@ -14,6 +14,7 @@ import org.springframework.beans.factory.config.DestructionAwareBeanPostProcesso
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.grizzlywavestarter.GrizzlyWaveStarterApplication;
@@ -27,8 +28,9 @@ import com.grizzlywave.grizzlywavestarter.service.TopicServices;
  * creation property is enable : this configuration will create topics mentioned
  * in all annotations if not it will generate an exception
  **/
+@Primary
 @Configuration
-public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor {
+public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor,WavePostProcessors {
 
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
@@ -79,7 +81,8 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	 * exist if not then create all them in condition that the property
 	 * auto_create_topic is true
 	 **/
-	private void process(Object bean) throws Exception {
+	@Override
+	public void process(Object bean) throws Exception {
 		for (Method method : bean.getClass().getMethods()) {
 			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
 			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);

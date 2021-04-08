@@ -15,7 +15,7 @@ import com.grizzlywave.grizzlywavestarter.model.WaveResponse;
 @Component
 public class waveInitAnnotation {
 
-	@WaveInit(id = "#order.getId()", target_event = "INIT_ORDER", target_topic = "orderprefix")
+	@WaveInit(id = "#order.getId()", target_event = "INIT_ORDER", target_topic = "order")
 	public WaveResponse initOrder(Order order) throws IllegalArgumentException, IllegalAccessException {
 
 		// HashMap<String, Object> hashmap = new HashMap<String, Object>();
