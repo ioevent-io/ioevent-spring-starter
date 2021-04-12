@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.springframework.stereotype.Component;
 
 import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
+import com.grizzlywave.grizzlywavestarter.annotations.WaveWorkFlow;
 import com.grizzlywave.grizzlywavestarter.model.Order;
 import com.grizzlywave.grizzlywavestarter.model.WaveResponse;
 
@@ -13,6 +14,7 @@ import com.grizzlywave.grizzlywavestarter.model.WaveResponse;
  * annotation and we will use this class method as a service
  **/
 @Component
+@WaveWorkFlow(name = "FirstWorkFlow")
 public class waveInitAnnotation {
 
 	@WaveInit(id = "#order.getId()", target_event = "INIT_ORDER", target_topic = "order")

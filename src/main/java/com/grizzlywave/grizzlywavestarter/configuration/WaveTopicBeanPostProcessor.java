@@ -50,7 +50,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 
 		try {
-			this.process(bean);
+			this.process(bean,beanName);
 		} catch (InterruptedException | ExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -82,7 +82,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	 * auto_create_topic is true
 	 **/
 	@Override
-	public void process(Object bean) throws Exception {
+	public void process(Object bean,String beanName) throws Exception {
 		for (Method method : bean.getClass().getMethods()) {
 			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
 			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);

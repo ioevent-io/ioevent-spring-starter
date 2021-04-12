@@ -1,7 +1,5 @@
 package com.grizzlywave.grizzlywavestarter.annotations;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

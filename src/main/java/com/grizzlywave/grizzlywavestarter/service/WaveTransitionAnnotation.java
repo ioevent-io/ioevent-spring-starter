@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
+import com.grizzlywave.grizzlywavestarter.annotations.WaveWorkFlow;
 import com.grizzlywave.grizzlywavestarter.model.Order;
 
 /**
@@ -17,6 +18,7 @@ import com.grizzlywave.grizzlywavestarter.model.Order;
  * annotation and in the test class we will use this class
  **/
 @Service
+@WaveWorkFlow(name = "WorkFlow")
 public class WaveTransitionAnnotation {
 
 	@WaveTransition(name = "cheked", source_event = "customerMS", source_topic = "order", target_event = "orderMS", target_topic = "customer")
