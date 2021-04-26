@@ -21,7 +21,7 @@ import com.grizzlywave.grizzlywavestarter.model.Order;
 @WaveWorkFlow(name = "WorkFlow")
 public class WaveTransitionAnnotation {
 
-	@WaveTransition(name = "cheked", source_event = "customerMS", source_topic = "order", target_event = "orderMS", target_topic = "customer")
+	@WaveTransition(stepName = "cheked", source_event = "customerMS", source_topic = "order", target_event = "orderMS", target_topic = "customer")
 	@KafkaListener(topics = "wave-order", groupId = "my-group2", containerFactory = "userKafkaListenerFactory")
 	public Order tryWveTransition(@Payload String data) throws JsonMappingException, JsonProcessingException {
 

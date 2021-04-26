@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.grizzlywavestarter.GrizzlyWaveStarterApplication;
+import com.grizzlywave.grizzlywavestarter.annotations.WaveEnd;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
 import com.grizzlywave.grizzlywavestarter.service.TopicServices;
@@ -86,6 +87,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		for (Method method : bean.getClass().getMethods()) {
 			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
 			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);
+			WaveEnd[] waveEnd = method.getAnnotationsByType(WaveEnd.class);
 
 			if (waveInit != null)
 				for (WaveInit x : waveInit) {
@@ -121,6 +123,26 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 									.asList(new NewTopic(waveProperties.getPrefix() + x.source_topic(), 1, (short) 1)));
 							client.createTopics(Arrays
 									.asList(new NewTopic(waveProperties.getPrefix() + x.target_topic(), 1, (short) 1)));
+
+						} else
+							throw new Exception(
+									"Topics doesn't Exist : You must Create them By Adding topics Name in Properties");
+
+					}
+				}
+			if (waveEnd != null)
+				for (WaveEnd x : waveEnd) {
+
+					if ((client.listTopics().names().get().stream().anyMatch(topicName -> topicName
+									.equalsIgnoreCase(waveProperties.getPrefix() + x.source_topic()))))
+						log.info("topics alreay exist");
+
+					else {
+						if (waveProperties.getAuto_create_topic()) {
+							log.info("creating topic : " + x.source_topic());
+							client.createTopics(Arrays
+									.asList(new NewTopic(waveProperties.getPrefix() + x.source_topic(), 1, (short) 1)));
+							
 
 						} else
 							throw new Exception(

@@ -1,7 +1,10 @@
 package com.grizzlywave.grizzlywavestarter.configuration;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +25,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
 	public static Map<String, Object> bpmnPart = new HashMap<String, Object>();
+	public static List<Map<String, Object>> bpmnlist = new ArrayList<Map<String,Object>>();
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -47,19 +51,24 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 				for (WaveInit x : waveInit) {
 					UUID uuid = UUID.randomUUID();
 
-					bpmnPart.put(uuid.toString(), this.waveInitToMap(x,workFlow,bean.getClass().getName()));
+					bpmnPart.put(uuid.toString(), this.waveInitToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
+					bpmnlist.add(this.waveInitToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 				}
 
 			if (waveTransition != null)
 				for (WaveTransition x : waveTransition) {
 					UUID uuid = UUID.randomUUID();
-					bpmnPart.put(uuid.toString(), this.waveTransitionToMap(x,workFlow,bean.getClass().getName()));
+					bpmnPart.put(uuid.toString(), this.waveTransitionToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
+					bpmnlist.add(this.waveTransitionToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
+
 
 				}
 			if (waveEnds != null)
 				for (WaveEnd x : waveEnds) {
 					UUID uuid = UUID.randomUUID();
-					bpmnPart.put(uuid.toString(), this.waveEndToMap(x,workFlow,bean.getClass().getName()));
+					bpmnPart.put(uuid.toString(), this.waveEndToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
+					bpmnlist.add(this.waveEndToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
+
 
 				}
 		}
@@ -67,11 +76,14 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 	
 
-	private Map<String, Object> waveInitToMap(WaveInit x, String waveWorkFlowName,String className) {
-		Map<String, Object> mapResult = new HashMap<String, Object>();
+	private Map<String, Object> waveInitToMap(WaveInit x, String waveWorkFlowName,String className, UUID uuid, String methodName) {
+		Map<String, Object> mapResult = new LinkedHashMap<String, Object>();
+		mapResult.put("id", uuid);
 		mapResult.put("Type", "WaveInit");
 		mapResult.put("workFlow", waveWorkFlowName);
 		mapResult.put("ClassName", className);
+		mapResult.put("MethodName", methodName);
+		mapResult.put("stepName",x.stepName());
 		mapResult.put("name", "Start");
 		mapResult.put("target_event", x.target_event());
 		mapResult.put("target_topic", x.target_topic());
@@ -79,12 +91,14 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		return mapResult;
 	}
 
-	private Map<String, Object> waveTransitionToMap(WaveTransition x,String waveWorkFlowName, String className) {
-		Map<String, Object> mapResult = new HashMap<String, Object>();
+	private Map<String, Object> waveTransitionToMap(WaveTransition x,String waveWorkFlowName, String className, UUID uuid,String methodName) {
+		Map<String, Object> mapResult = new LinkedHashMap<String, Object>();
+		mapResult.put("id", uuid);
 		mapResult.put("Type", "WaveTransition");
 		mapResult.put("workFlow", waveWorkFlowName);
 		mapResult.put("ClassName", className);
-		mapResult.put("name", x.name());
+		mapResult.put("MethodName", methodName);
+		mapResult.put("name", x.stepName());
 		mapResult.put("source_event", x.source_event());
 		mapResult.put("source_topic", x.source_topic());
 		mapResult.put("target_event", x.target_event());
@@ -93,12 +107,14 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		return mapResult;
 	}
 
-	private Map<String, Object> waveEndToMap(WaveEnd x,String waveWorkFlowName, String className) {
-		Map<String, Object> mapResult = new HashMap<String, Object>();
+	private Map<String, Object> waveEndToMap(WaveEnd x,String waveWorkFlowName, String className, UUID uuid,String methodName) {
+		Map<String, Object> mapResult = new LinkedHashMap<String, Object>();
+		mapResult.put("id", uuid);
 		mapResult.put("Type", "WaveEnd");
 		mapResult.put("workFlow", waveWorkFlowName);
 		mapResult.put("ClassName", className);
-		mapResult.put("name", x.name());
+		mapResult.put("MethodName", methodName);
+		mapResult.put("StepName", x.stepName());
 		mapResult.put("source_event", x.source_event());
 		mapResult.put("source_topic", x.source_topic());
 

@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.event.EventListener;
 
 import com.grizzlywave.grizzlywavestarter.configuration.WaveBpmnPostProcessor;
@@ -21,6 +22,7 @@ import com.grizzlywave.grizzlywavestarter.service.waveInitAnnotation;
  * Grizzly Wave Starter Main Class
  **/
 @SpringBootApplication
+@EnableEurekaClient
 @EnableConfigurationProperties(WaveConfigProperties.class)
 public class GrizzlyWaveStarterApplication {
 
@@ -39,7 +41,6 @@ public class GrizzlyWaveStarterApplication {
 			throws IllegalArgumentException, IllegalAccessException, InterruptedException, ExecutionException {
 
 		log.info(waveInitAnnotation.initOrder(new Order(2, 2, 200)).toString());
-
 		log.info("list of topic :" + topicService.getAllTopic().toString());
 		log.info("BPMN PART :"+WaveBpmnPostProcessor.bpmnPart);
 	}

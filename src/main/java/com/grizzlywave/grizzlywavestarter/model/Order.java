@@ -49,13 +49,14 @@ public class Order {
 	}
 
 	public String orderString() {
-		return "Order [id=" + id + ", customerId=" + customerId + ", price=" + price + ", state=" + state + "]";
+		return "{ \"id\":" + id + ",\"customerId\":" + customerId + ",\"price\":" + price + ",\"state\":\"" + state
+				+ "\"}";
 	}
 
 	@Override
 	public String toString() {
-		return "{\"id\":" + id + ",\"customerId\":" + customerId + ",\"price\":" + price + ",\"state\":\"" + state
-				+ "\"}";
+		return "Order [id=" + id + ", customerId=" + customerId + ", price=" + price + ", state=" + state + "]";
+
 	}
 
 	public Order() {

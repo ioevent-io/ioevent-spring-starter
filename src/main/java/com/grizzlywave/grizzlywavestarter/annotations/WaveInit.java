@@ -19,6 +19,8 @@ public @interface WaveInit {
 	public String target_event();
 
 	public String target_topic();
+	
+	public String stepName() default "Start";
 
 
 }

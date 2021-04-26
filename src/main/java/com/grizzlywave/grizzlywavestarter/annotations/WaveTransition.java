@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WaveTransition {
 
-	String name() default "";
+	String stepName() default "";
 
 	String source_event();
 

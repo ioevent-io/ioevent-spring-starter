@@ -1,5 +1,6 @@
 package com.grizzlywave.grizzlywavestarter.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,6 +18,11 @@ public class WaveController {
 	@GetMapping("/BPMN")
 	public Map<String,Object> getBpmnPart(){
 		return WaveBpmnPostProcessor.bpmnPart;
+		
+	}
+	@GetMapping("/ListBPMN")
+	public List<Map<String, Object>> getBpmnlist(){
+		return WaveBpmnPostProcessor.bpmnlist;
 		
 	}
 }

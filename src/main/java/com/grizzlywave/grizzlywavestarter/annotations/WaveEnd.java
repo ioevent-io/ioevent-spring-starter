@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WaveEnd {
 
-	String name() default "";
+	String stepName() default "END";
 
 	String source_event();
 

@@ -1,0 +1,37 @@
+2021-04-26 12:29:43,817 INFO com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect [main] 2
+2021-04-26 12:29:44,372 INFO com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect [main] StopWatch '': running time = 960780700 ns
+---------------------------------------------
+ns         %     Task name
+---------------------------------------------
+960780700  100%  waveInit annotation Aspect
+
+2021-04-26 12:29:44,373 INFO com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect [main] 
+{
+"StartTime" : "2021-04-26T11:29:43:0410Z" 
+ "correlationId" : "16d10420-a92b-4e9f-b12a-230e0e080ecd" 
+ "EventType" : "Init" 
+ "WorkFlow" : "FirstWorkFlow" 
+ "event" : "INIT_ORDER" 
+ "Payload" : "Order [id=2, customerId=2, price=200, state=pandding]" 
+ "EndTime" : "2021-04-26T11:29:44:0371Z" 
+ "Duration" : "960" 
+ }
+2021-04-26 12:29:45,209 INFO com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect [org.springframework.kafka.KafkaListenerEndpointContainer#0-0-C-1] StopWatch '': running time = 6291700 ns
+---------------------------------------------
+ns         %     Task name
+---------------------------------------------
+006291700  100%  waveTransition afterReturn  annotation Aspect
+
+2021-04-26 12:29:45,211 INFO com.grizzlywave.grizzlywavestarter.configuration.AnnotationAspect [org.springframework.kafka.KafkaListenerEndpointContainer#0-0-C-1] 
+{
+"StartTime" : "2021-04-26T11:29:45:0202Z" 
+ "correlationId" : "" 
+ "EventType" : "Transition" 
+ "WorkFlow" : "WorkFlow" 
+ "StepName" : "cheked" 
+ "Source event" : "customerMS" 
+ "Target event" : "orderMS" 
+ "Payload" : "Order [id=14, customerId=2, price=200, state=pandding]" 
+ "EndTime" : "2021-04-26T11:29:45:0209Z" 
+ "Duration" : "6" 
+ }

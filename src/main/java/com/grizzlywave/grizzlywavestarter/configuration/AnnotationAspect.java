@@ -1,7 +1,13 @@
 package com.grizzlywave.grizzlywavestarter.configuration;
 
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.aspectj.lang.JoinPoint;
@@ -29,6 +35,7 @@ import org.springframework.util.StopWatch;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveEnd;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
 import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
+import com.grizzlywave.grizzlywavestarter.annotations.WaveWorkFlow;
 import com.grizzlywave.grizzlywavestarter.model.WaveResponse;
 
 /**
@@ -57,35 +64,47 @@ public class AnnotationAspect {
 	@Around(value = "@annotation(anno)", argNames = "jp, anno") //
 	public Object WaveInitAnnotationProducer(ProceedingJoinPoint joinPoint, WaveInit waveinit) throws Throwable {
 		StopWatch watch = new StopWatch();
+		/**Map contain informations to be logged**/
+		Map<String, Object> logMap = new LinkedHashMap<String, Object>();
 		watch.start("waveInit annotation Aspect");
-		// Logger LOGGER =
-		// Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
+		logMap.put("StartTime", getISODate(new Date()));
 		UUID uuid = UUID.randomUUID();
-		// get the expression from the annotation
+		/**log the id of workflow instance **/
+		logMap.put("correlationId", uuid);
+		/**log the event type (Annotation type)**/
+		logMap.put("EventType", "Init");
+		/**log the workFlow Name**/
+		logMap.put("WorkFlow", joinPoint.getTarget().getClass().getAnnotation(WaveWorkFlow.class).name());
+		/**get the expression from the annotation**/
 		String event_id = runEpressionWaveInit(joinPoint, waveinit);
-		// create the message to produce it in the broker
+
+		/** create the message to produce it in the broker**/
 		Message<Object> message = MessageBuilder.withPayload(joinPoint.getArgs()[0])
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + waveinit.target_topic())
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("WorkFlow_ID", uuid).setHeader("source", "orderMS").setHeader("orderID", event_id)
-				.setHeader("destination", waveinit.target_event()).setHeader("event", "Start").build();
+				.setHeader("destination", waveinit.target_event()).setHeader("event", waveinit.target_event()).build();
 		kafkaTemplate.send(message);
-		log.info("WaveInit event sent successfully ");
-		/*
+	//	log.info("WaveInit event sent successfully ");
+		/**
 		 * to proceed the current method with new arguments Object[] newArguments = new
 		 * Object[1]; newArguments[0] = new Order(5, 7, 47); Object obj =
 		 * joinPoint.proceed(newArguments);
-		 */
+		 **/
 		Object obj = joinPoint.proceed();
-		// create WaveResponse
+		/** create WaveResponse **/
 		HashMap<String, Object> headers = new HashMap<String, Object>();
 		headers.put("destination", waveinit.target_event());
 		headers.put("orderID", event_id);
 		headers.put("event", "Start");
-
+		logMap.put("event", waveinit.target_event());
 		obj = new WaveResponse(joinPoint.getArgs()[0], headers);
+		logMap.put("Payload", joinPoint.getArgs()[0].toString());
 		watch.stop();
+		logMap.put("EndTime", getISODate(new Date()));
+		logMap.put("Duration", watch.getTotalTimeMillis());
 		log.info(watch.prettyPrint());
+		log.info(prettyPrint(logMap));
 		return obj;
 	}
 
@@ -95,22 +114,38 @@ public class AnnotationAspect {
 	 * to another topic
 	 **/
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void receive2(JoinPoint joinPoint, WaveTransition waveTransition, Object order) throws Throwable {
+	public void receive2(JoinPoint joinPoint, WaveTransition waveTransition, Object object) throws Throwable {
+		Map<String, Object> logMap = new LinkedHashMap<String, Object>();
+		logMap.put("StartTime", getISODate(new Date()));
 		StopWatch watch = new StopWatch();
 		watch.start("waveTransition afterReturn  annotation Aspect");
-		Message<Object> message = MessageBuilder.withPayload(order)
+		/**log the id of workflow instance **/
+		logMap.put("correlationId", "");
+		/**log the event type (Annotation type)**/
+		logMap.put("EventType", "Transition");
+		/**log the workFlow Name**/
+		logMap.put("WorkFlow", joinPoint.getTarget().getClass().getAnnotation(WaveWorkFlow.class).name());
+		logMap.put("StepName",waveTransition.stepName());
+		Message<Object> message = MessageBuilder.withPayload(object)
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + waveTransition.target_topic())
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("source", waveTransition.source_event())
-				.setHeader("destination", waveTransition.target_event()).setHeader("event", waveTransition.name())
+				.setHeader("destination", waveTransition.target_event()).setHeader("event", waveTransition.stepName())
 				.build();
 		kafkaTemplate.send(message);
-		log.info("WaveTransition event sent successfully");
-		log.info(joinPoint.getArgs()[0].toString());
-		log.info(order.toString());
+		//log.info("WaveTransition event sent successfully");
+		//log.info(joinPoint.getArgs()[0].toString());
+		//log.info(object.toString());
+		logMap.put("Source event", waveTransition.source_event());		
+		logMap.put("Target event", waveTransition.target_event());
+		logMap.put("Payload", object);
 		watch.stop();
+		logMap.put("EndTime", getISODate(new Date()));
+		logMap.put("Duration", watch.getTotalTimeMillis());
 		log.info(watch.prettyPrint());
+		log.info(prettyPrint(logMap));
 	} // return obj;
+
 	/** Consumer that we call with @waveTransition annotation **/
 
 	/** Consumer that we call with @waveTransition annotation **/
@@ -161,38 +196,55 @@ public class AnnotationAspect {
 	 * log.info(watch.prettyPrint());} //return obj;
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void receive2(JoinPoint joinPoint, WaveEnd waveEnd, Object order) throws Throwable {
+	public void receive2(JoinPoint joinPoint, WaveEnd waveEnd, Object object) throws Throwable {
 		StopWatch watch = new StopWatch();
+		Map<String, Object> logMap = new LinkedHashMap<String, Object>();
+		logMap.put("StartTime", getISODate(new Date()));
 		watch.start("waveEnd afterReturn  annotation Aspect");
-		Message<Object> message = MessageBuilder.withPayload(order)
-				.setHeader(KafkaHeaders.TOPIC, "Wave-End").setHeader(KafkaHeaders.MESSAGE_KEY, "999")
-				.setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source", waveEnd.source_event())
-				.setHeader("event", waveEnd.name()).build();
-		kafkaTemplate.send(message);
-		log.info("WaveTransition event sent successfully");
-		log.info(joinPoint.getArgs()[0].toString());
-		log.info(order.toString());
+		/**log the id of workflow instance **/
+		logMap.put("correlationId", "");
+		/**log the event type (Annotation type)**/
+		logMap.put("EventType", "End");
+		/**log the workFlow Name**/
+		logMap.put("WorkFlow", joinPoint.getTarget().getClass().getAnnotation(WaveWorkFlow.class).name());
+		/*
+		 * Message<Object> message = MessageBuilder.withPayload(order)
+		 * .setHeader(KafkaHeaders.TOPIC,
+		 * waveProperties.getPrefix()+"Wave-End").setHeader(KafkaHeaders.MESSAGE_KEY,
+		 * "999") .setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source",
+		 * waveEnd.source_event()) .setHeader("event", waveEnd.name()).build();
+		 * kafkaTemplate.send(message);
+		 */
+	//	log.info("WaveTransition event sent successfully");
+	//	log.info(joinPoint.getArgs()[0].toString());
+	//	log.info(object.toString());
+		logMap.put("event", waveEnd.source_event());
+		logMap.put("Payload", object);
 		watch.stop();
+		logMap.put("EndTime", getISODate(new Date()));
+		logMap.put("Duration", watch.getTotalTimeMillis());
 		log.info(watch.prettyPrint());
+		log.info(prettyPrint(logMap));
+		
 	}
-	/** @WaveEnd Aspect to close the process **/
-/*	@Around(value = "@annotation(anno)", argNames = "jp, anno")
-	public Object waveEnd(ProceedingJoinPoint joinPoint, WaveEnd waveEnd) throws Throwable {
-		StopWatch watch = new StopWatch();
-		watch.start("waveEnd annotation Aspect");
-		Object obj = joinPoint.proceed();
-		Message<Object> message = MessageBuilder.withPayload(joinPoint.getArgs()[0])
-				.setHeader(KafkaHeaders.TOPIC, "Wave-End").setHeader(KafkaHeaders.MESSAGE_KEY, "999")
-				.setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source", waveEnd.source_event())
-				.setHeader("event", waveEnd.name()).build();
-		kafkaTemplate.send(message);
-		log.info("WaveEnd event sent successfully");
-		log.info(joinPoint.getArgs()[0].toString());
-		watch.stop();
-		log.info(watch.prettyPrint());
-		return obj;
 
-	}*/
+	/** @WaveEnd Aspect to close the process **/
+	/*
+	 * @Around(value = "@annotation(anno)", argNames = "jp, anno") public Object
+	 * waveEnd(ProceedingJoinPoint joinPoint, WaveEnd waveEnd) throws Throwable {
+	 * StopWatch watch = new StopWatch(); watch.start("waveEnd annotation Aspect");
+	 * Object obj = joinPoint.proceed(); Message<Object> message =
+	 * MessageBuilder.withPayload(joinPoint.getArgs()[0])
+	 * .setHeader(KafkaHeaders.TOPIC,
+	 * "Wave-End").setHeader(KafkaHeaders.MESSAGE_KEY, "999")
+	 * .setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("source",
+	 * waveEnd.source_event()) .setHeader("event", waveEnd.name()).build();
+	 * kafkaTemplate.send(message); log.info("WaveEnd event sent successfully");
+	 * log.info(joinPoint.getArgs()[0].toString()); watch.stop();
+	 * log.info(watch.prettyPrint()); return obj;
+	 * 
+	 * }
+	 */
 
 	public String runEpressionWaveInit(ProceedingJoinPoint joinPoint, WaveInit waveinit) {
 		String event_id = waveinit.id();
@@ -210,4 +262,26 @@ public class AnnotationAspect {
 		}
 		return event_id;
 	}
+
+	public String prettyPrint(Map<String, Object> map) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('\n');
+
+		sb.append("{");
+		sb.append("\n");
+		for (Map.Entry mapentry : map.entrySet()) {
+			sb.append("\"").append(mapentry.getKey()).append("\" : \"").append(mapentry.getValue().toString())
+					.append("\" \n ");
+		}
+		sb.append("}");
+
+		return sb.toString();
+	}
+
+	private static String getISODate(Date date) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSSS'Z'");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		return dateFormat.format(date);
+	}
+
 }

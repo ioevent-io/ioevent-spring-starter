@@ -8,4 +8,14 @@ grizzly-wave:
 spring:
    kafka:
      bootstrap-servers: 192.168.99.100:9092
-   
+
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: localhost
+
+
