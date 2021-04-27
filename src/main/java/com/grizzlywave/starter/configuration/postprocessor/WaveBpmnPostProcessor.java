@@ -1,32 +1,41 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
-import com.grizzlywave.grizzlywavestarter.GrizzlyWaveStarterApplication;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveEnd;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveWorkFlow;
+import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
+import com.grizzlywave.starter.annotations.WaveEnd;
+import com.grizzlywave.starter.annotations.WaveInit;
+import com.grizzlywave.starter.annotations.WaveTransition;
+import com.grizzlywave.starter.annotations.WaveWorkFlow;
+import com.grizzlywave.starter.configuration.WaveConfigProperties;
+import com.grizzlywave.starter.handler.ConsumerRecordsHandler;
+import com.grizzlywave.starter.handler.FileWritingRecordsHandler;
+import com.grizzlywave.starter.listener.Listener;
 
 @Configuration
 public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcessors {
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
-	public static Map<String, Object> bpmnPart = new HashMap<String, Object>();
-	public static List<Map<String, Object>> bpmnlist = new ArrayList<Map<String,Object>>();
-
+	@Autowired
+	WaveConfigProperties waveProperties;
+	
+	@Autowired
+	List<Map<String, Object>> bpmnlist;
+	
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		try {
@@ -51,14 +60,13 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 				for (WaveInit x : waveInit) {
 					UUID uuid = UUID.randomUUID();
 
-					bpmnPart.put(uuid.toString(), this.waveInitToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 					bpmnlist.add(this.waveInitToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 				}
 
 			if (waveTransition != null)
 				for (WaveTransition x : waveTransition) {
+					//this.createListener(waveProperties.getPrefix()+x.source_topic());
 					UUID uuid = UUID.randomUUID();
-					bpmnPart.put(uuid.toString(), this.waveTransitionToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 					bpmnlist.add(this.waveTransitionToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 
 
@@ -66,7 +74,6 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			if (waveEnds != null)
 				for (WaveEnd x : waveEnds) {
 					UUID uuid = UUID.randomUUID();
-					bpmnPart.put(uuid.toString(), this.waveEndToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 					bpmnlist.add(this.waveEndToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 
 
@@ -132,5 +139,25 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			}
 			}
 		return workflowName;
+	}
+	public void createListener(String topicName) {
+		 Properties props = new Properties();
+	        props.setProperty("bootstrap.servers", "192.168.99.100:9092");
+	        props.setProperty("enable.auto.commit", "true");
+	        props.setProperty("auto.commit.interval.ms", "1000");
+	        props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+	        props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+	        props.put("group.id", "consumer-group-1");
+	        props.put("enable.auto.commit", "true");
+	        props.put("auto.commit.interval.ms", "1000");
+	        props.put("auto.offset.reset", "earliest");
+	        props.put("session.timeout.ms", "30000");
+	        props.put("topicName", topicName);
+	        final Consumer<String, String> consumer = new KafkaConsumer<>(props);
+	        final ConsumerRecordsHandler<String, String> recordsHandler = new FileWritingRecordsHandler();
+	        final Listener consumerApplication = new Listener(consumer, recordsHandler);
+	        Runtime.getRuntime().addShutdownHook(new Thread(consumerApplication::shutdown));
+
+	        consumerApplication.runConsume(props);
 	}
 }

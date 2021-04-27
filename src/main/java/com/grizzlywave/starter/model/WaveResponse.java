@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.model;
+package com.grizzlywave.starter.model;
 
 import java.util.HashMap;
 

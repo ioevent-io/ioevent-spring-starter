@@ -2,12 +2,10 @@ package com.grizzlywave.grizzlywavestarter.annotation;
 
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.grizzlywave.grizzlywavestarter.annotations.EnableGrizzlyWave;
-import com.grizzlywave.grizzlywavestarter.model.Order;
+import com.grizzlywave.starter.annotations.EnableGrizzlyWave;
 
 /**
  * test for our annotations call 
@@ -17,10 +15,6 @@ import com.grizzlywave.grizzlywavestarter.model.Order;
 @EnableGrizzlyWave
 public class AnnotationTest {
 
-	@Autowired
-    WaveInitAnnotationTest waveInitAnnotation;
-//	@Autowired
-//	WaveTransitionAnnotation waveTransitionAnnotation;
 
     /**
      *call of @waveInit Annotation 
@@ -28,7 +22,6 @@ public class AnnotationTest {
     @Test
     public void shouldLogWaveInitAnnotationMethod() {
     	
-    	waveInitAnnotation.initOrder(new Order(2, 5, 200));
     }
   
 }

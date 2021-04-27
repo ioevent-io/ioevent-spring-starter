@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration.swagger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

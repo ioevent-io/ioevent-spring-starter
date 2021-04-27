@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -17,11 +17,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
-import com.grizzlywave.grizzlywavestarter.GrizzlyWaveStarterApplication;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveEnd;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveInit;
-import com.grizzlywave.grizzlywavestarter.annotations.WaveTransition;
-import com.grizzlywave.grizzlywavestarter.service.TopicServices;
+import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
+import com.grizzlywave.starter.annotations.WaveEnd;
+import com.grizzlywave.starter.annotations.WaveInit;
+import com.grizzlywave.starter.annotations.WaveTransition;
+import com.grizzlywave.starter.configuration.WaveConfigProperties;
+import com.grizzlywave.starter.service.TopicServices;
 
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,

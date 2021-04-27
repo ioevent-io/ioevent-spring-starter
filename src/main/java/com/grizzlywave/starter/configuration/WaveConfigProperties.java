@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -7,6 +7,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+/**
+ * Class for wave properties that can be specified in the properties file : 
+ * - topic_names : list of topics that the user want to create,
+ * - prefix : prefix for the topics default "Wave-", 
+ * - auto_create_topic : create the topics used in code automatically if true.
+ **/
 @Primary
 @Configuration
 @ConfigurationProperties(prefix = "grizzly-wave")
@@ -18,6 +24,7 @@ public class WaveConfigProperties {
 
 	private Boolean auto_create_topic = true;
 
+	
 	public String getPrefix() {
 		return prefix;
 	}

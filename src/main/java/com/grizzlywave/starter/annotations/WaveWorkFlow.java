@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.annotations;
+package com.grizzlywave.starter.annotations;
 
 
 

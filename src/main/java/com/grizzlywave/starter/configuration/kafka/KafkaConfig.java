@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration.kafka;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -27,14 +28,15 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @EnableKafka
 @Configuration
 public class KafkaConfig {
-	@Value(value = "${spring.kafka.bootstrap-servers}")
-	private String kafkaBootStrap;
+
+	@Autowired
+	KafkaProperties kafkaProperties;
 
 	@Bean
 	public AdminClient AdminClient() {
 		Properties properties = new Properties() {
 			{
-				put("bootstrap.servers", kafkaBootStrap);
+				put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
 				put("connections.max.idle.ms", 10000);
 				put("request.timeout.ms", 5000);
 			}
@@ -47,7 +49,7 @@ public class KafkaConfig {
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
 
-		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootStrap);
+		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
@@ -63,7 +65,7 @@ public class KafkaConfig {
 	public ConsumerFactory<String, String> userConsumerFactory() {
 		Map<String, Object> config = new HashMap<>();
 
-		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootStrap);
+		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id");
 		config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		// config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,

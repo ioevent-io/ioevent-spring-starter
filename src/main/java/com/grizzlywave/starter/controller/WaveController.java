@@ -1,28 +1,23 @@
-package com.grizzlywave.grizzlywavestarter.controller;
+package com.grizzlywave.starter.controller;
 
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.grizzlywave.grizzlywavestarter.configuration.WaveBpmnPostProcessor;
 
 @CrossOrigin(origins = "*")
 @RestController
 public class WaveController {
 
+	@Autowired
+	 List<Map<String, Object>>	bpmnlist;
 	
-	
-	@GetMapping("/BPMN")
-	public Map<String,Object> getBpmnPart(){
-		return WaveBpmnPostProcessor.bpmnPart;
-		
-	}
 	@GetMapping("/ListBPMN")
 	public List<Map<String, Object>> getBpmnlist(){
-		return WaveBpmnPostProcessor.bpmnlist;
-		
+	//	return WaveBpmnPostProcessor.bpmnlist;
+		return bpmnlist;
 	}
 }

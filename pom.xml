@@ -16,8 +16,9 @@
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
-						<spring-cloud.version>2020.0.2</spring-cloud.version>
-		
+		<spring-cloud.version>2020.0.2</spring-cloud.version>
+		<org.projectlombok.version>1.18.16</org.projectlombok.version>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -60,7 +61,13 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
-		 <dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${org.projectlombok.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
@@ -75,7 +82,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-<dependencyManagement>
+	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>

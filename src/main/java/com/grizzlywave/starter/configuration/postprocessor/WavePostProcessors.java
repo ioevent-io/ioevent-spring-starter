@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.configuration;
+package com.grizzlywave.starter.configuration.postprocessor;
 
 public interface WavePostProcessors {
 

@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.service;
+package com.grizzlywave.starter.service;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import com.grizzlywave.grizzlywavestarter.configuration.WaveConfigProperties;
+import com.grizzlywave.starter.configuration.WaveConfigProperties;
 
 /**
  * Class TopicServices where we define services on topics (create , delete ,
