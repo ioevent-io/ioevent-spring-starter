@@ -21,7 +21,7 @@ public class AnnotationTest {
      **/
     @Test
     public void shouldLogWaveInitAnnotationMethod() {
-    	
+    	System.out.println("starter test");
     }
   
 }

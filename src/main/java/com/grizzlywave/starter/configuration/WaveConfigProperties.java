@@ -24,7 +24,6 @@ public class WaveConfigProperties {
 
 	private Boolean auto_create_topic = true;
 
-	
 	public String getPrefix() {
 		return prefix;
 	}
