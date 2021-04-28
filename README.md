@@ -21,12 +21,17 @@ this framework uses the Event Streams to establish connection and exchange messa
 3.Add @EnableGrizzlyWave Annotation in your main class
 
 4.set your own properties in application.properties specifying your :
+
 *  Kafka Properties :  spring.kafka.bootstrap-servers: (ex: 192.168.99.100:9092 )
 
 * Eureka Client Properties : eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/
 
-* Grizzly Wave properties : grizzly-wave.topic_names: MyTopic //to create your own topic manually 
+* Grizzly Wave properties : 
+
+							grizzly-wave.topic_names: MyTopic //to create your own topic manually 
+
    							grizzly-wave.prefix: MyOrganization // prefix for the topics (default "Wave-")
+							
     						grizzly-wave.auto_create_topic: false // to disable topics auto creation
 
 5.use the annotaion @WaveWorkFlow(name = "MyWorkFLow") on classes which implemenst methods with (@WaveInit , @WaveTransition , @WaveEnd) annotations
