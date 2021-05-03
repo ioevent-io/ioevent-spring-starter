@@ -21,8 +21,7 @@ import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
 import com.grizzlywave.starter.annotations.WaveEnd;
 import com.grizzlywave.starter.annotations.WaveInit;
 import com.grizzlywave.starter.annotations.WaveTransition;
-import com.grizzlywave.starter.configuration.WaveConfigProperties;
-import com.grizzlywave.starter.service.TopicServices;
+import com.grizzlywave.starter.configuration.properties.WaveProperties;
 
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,
@@ -37,7 +36,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
 	@Autowired
-	WaveConfigProperties waveProperties;
+	WaveProperties waveProperties;
 
 	@Autowired
 	private ApplicationContext context;
@@ -54,10 +53,9 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		try {
 			this.process(bean,beanName);
 		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			//log.er
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			SpringApplication.exit(context);
 		}
@@ -68,12 +66,13 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof TopicServices) {
+	/*	if (bean instanceof TopicServices) {
 			waveProperties.getTopic_names().stream()
 					.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
 			log.info("topics created");
 		}
 
+		*/
 		return bean;
 	}
 

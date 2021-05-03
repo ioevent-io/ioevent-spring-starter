@@ -1,7 +1,5 @@
 package com.grizzlywave.starter.model;
 
-import java.util.HashMap;
-
 /**
  * Class WaveResponse Contains an object and a hash map to give more information
  * about events after sending or receiving using GrizzlyWave annotations
@@ -17,7 +15,7 @@ public class WaveResponse<T> {
 	/**
 	 * HashMap to add more information about event
 	 **/
-	HashMap<String, Object> Headers;
+	WaveResponseHeader Headers;
 
 	/**
 	 * Constructor from super class
@@ -29,7 +27,7 @@ public class WaveResponse<T> {
 	/**
 	 * constructor using parameters
 	 **/
-	public WaveResponse(T object, HashMap<String, Object> Headers) {
+	public WaveResponse(T object, WaveResponseHeader Headers) {
 		// TODO Auto-generated constructor stub
 		this.object = object;
 		this.Headers = Headers;
@@ -50,16 +48,16 @@ public class WaveResponse<T> {
 	}
 
 	/**
-	 * to get Hashmap
+	 * to get Header
 	 **/
-	public HashMap<String, Object> getHeaders() {
+	public WaveResponseHeader getHeaders() {
 		return Headers;
 	}
 
 	/**
-	 * to set Hashmap
+	 * to set Headers
 	 **/
-	public void setHeaders(HashMap<String, Object> herders) {
+	public void setHeaders(WaveResponseHeader herders) {
 		Headers = herders;
 	}
 

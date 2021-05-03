@@ -15,26 +15,26 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Async;
 
-import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
 import com.grizzlywave.starter.annotations.WaveEnd;
 import com.grizzlywave.starter.annotations.WaveInit;
 import com.grizzlywave.starter.annotations.WaveTransition;
 import com.grizzlywave.starter.annotations.WaveWorkFlow;
-import com.grizzlywave.starter.configuration.WaveConfigProperties;
+import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.handler.ConsumerRecordsHandler;
 import com.grizzlywave.starter.handler.FileWritingRecordsHandler;
 import com.grizzlywave.starter.listener.Listener;
 
 @Configuration
 public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcessors {
-	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
+	private static final Logger log = LoggerFactory.getLogger(WaveBpmnPostProcessor.class);
 
 	@Autowired
-	WaveConfigProperties waveProperties;
+	private WaveProperties waveProperties;
 	
 	@Autowired
-	List<Map<String, Object>> bpmnlist;
+	private List<Map<String, Object>> bpmnlist;
 	
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -47,7 +47,36 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 		return bean;
 	}
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+	/*	for (Method method : bean.getClass().getMethods()) {
+			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
+			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);
+			WaveEnd[] waveEnds = method.getAnnotationsByType(WaveEnd.class);
+			log.info("the anno"+waveEnds.length);
+			log.info("the anno"+waveInit.length);
+			log.info("the anno"+waveTransition.length);
+			if (waveInit != null)
+				for (WaveInit x : waveInit) {
+					log.info("the anno"+x.stepName());
+				}
 
+			if (waveTransition != null)
+				for (WaveTransition x : waveTransition) {
+					log.info("the anno"+x.stepName());
+
+
+				}
+			if (waveEnds != null)
+				for (WaveEnd x : waveEnds) {
+					log.info("the anno"+x.stepName());
+
+
+				}
+		}*/
+		return bean;
+	}
+	
 	@Override
 	public void process(Object bean,String workFlow) throws Exception {
 		
@@ -65,7 +94,8 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			if (waveTransition != null)
 				for (WaveTransition x : waveTransition) {
-					//this.createListener(waveProperties.getPrefix()+x.source_topic());
+					log.info("initial thread"+Thread.currentThread().getId());
+					this.createListener(waveProperties.getPrefix()+x.source_topic());
 					UUID uuid = UUID.randomUUID();
 					bpmnlist.add(this.waveTransitionToMap(x,workFlow,bean.getClass().getName(),uuid,method.getName()));
 
@@ -140,6 +170,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			}
 		return workflowName;
 	}
+	@Async
 	public void createListener(String topicName) {
 		 Properties props = new Properties();
 	        props.setProperty("bootstrap.servers", "192.168.99.100:9092");

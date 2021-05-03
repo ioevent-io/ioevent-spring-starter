@@ -8,11 +8,19 @@ import java.util.Properties;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
+import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor;
 import com.grizzlywave.starter.handler.ConsumerRecordsHandler;
 
 /** Listener under dev */
+
+@Component
 public class Listener {
+	private static final Logger log = LoggerFactory.getLogger(WaveBpmnPostProcessor.class);
 
 	private volatile boolean keepConsuming = true;
 	private ConsumerRecordsHandler<String, String> recordsHandler;
@@ -23,14 +31,15 @@ public class Listener {
 		this.consumer = consumer;
 		this.recordsHandler = recordsHandler;
 	}
-
+	@Async
 	public void runConsume(final Properties consumerProps) {
+		log.info("@Async thread"+Thread.currentThread().getId());
 		try {
 			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
 			while (keepConsuming) {
 				final ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(1));
 				recordsHandler.process(consumerRecords);
-			}
+				   			}
 		} finally {
 			consumer.close();
 		}

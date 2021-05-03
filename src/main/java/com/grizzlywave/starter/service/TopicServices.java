@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import com.grizzlywave.starter.configuration.WaveConfigProperties;
+import com.grizzlywave.starter.configuration.properties.WaveProperties;
 
 /**
  * Class TopicServices where we define services on topics (create , delete ,
@@ -24,7 +24,7 @@ import com.grizzlywave.starter.configuration.WaveConfigProperties;
 @Service
 public class TopicServices {
 	@Autowired
-	WaveConfigProperties waveProperties;
+	WaveProperties waveProperties;
 	Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 
 	@Autowired

@@ -4,15 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-import com.grizzlywave.starter.configuration.aspect.AnnotationAspect;
+import com.grizzlywave.starter.configuration.aspect.WaveEndAspect;
+import com.grizzlywave.starter.configuration.aspect.WaveInitAspect;
+import com.grizzlywave.starter.configuration.aspect.WaveTransitionAspect;
 import com.grizzlywave.starter.configuration.kafka.KafkaConfig;
 import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor;
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
+import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.controller.WaveController;
 import com.grizzlywave.starter.service.TopicServices;
 
@@ -20,41 +24,46 @@ import com.grizzlywave.starter.service.TopicServices;
  * class for wave configuration which contains all configurations needed by a
  * project which use GrizzlyWave
  **/
+@EnableKafka
+@EnableAsync
 @Configuration
 @Import({ KafkaConfig.class })
 public class WaveConfiguration {
 	@Bean
-	@ConditionalOnMissingBean
-	WaveConfigProperties WaveConfigProperties() {
-		return new WaveConfigProperties();
+	WaveProperties WaveProperties() {
+		return new WaveProperties();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
 	public TopicServices TopicServices() {
 		return new TopicServices();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
 	public WaveTopicBeanPostProcessor WaveTopicBeanPostProcessor() {
 		return new WaveTopicBeanPostProcessor();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
 	public WaveBpmnPostProcessor WaveBpmnPostProcessor() {
 		return new WaveBpmnPostProcessor();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	public AnnotationAspect AnnotationAspect() {
-		return new AnnotationAspect();
+	public WaveInitAspect WaveInitAspect() {
+		return new WaveInitAspect();
+	}
+	@Bean
+	public WaveTransitionAspect WaveTransitionAspect() {
+		return new WaveTransitionAspect();
+	}
+	
+	@Bean
+	public WaveEndAspect WaveEndAspect() {
+		return new WaveEndAspect();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
 	public WaveController WaveController() {
 		return new WaveController();
 	}
@@ -63,4 +72,6 @@ public class WaveConfiguration {
 	public List<Map<String, Object>> bpmnlist() {
 		return new ArrayList<Map<String, Object>>();
 	}
+	 
+
 }

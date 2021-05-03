@@ -1,4 +1,4 @@
-package com.grizzlywave.starter.configuration;
+package com.grizzlywave.starter.configuration.properties;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Primary;
 @Primary
 @Configuration
 @ConfigurationProperties(prefix = "grizzly-wave")
-public class WaveConfigProperties {
+public class WaveProperties {
 
 	private List<String> topic_names;
 
