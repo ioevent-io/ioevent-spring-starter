@@ -146,6 +146,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		return waveinitBpmnPart;
 	}
 
+	
 	private WaveBpmnPart waveTransitionToMap(WaveTransition x, String waveWorkFlowName, String className, UUID uuid,
 			String methodName) {
 		WaveBpmnPart wavetransitionBpmnPart = new WaveBpmnPart(uuid, "WaveTransition", className, methodName,
