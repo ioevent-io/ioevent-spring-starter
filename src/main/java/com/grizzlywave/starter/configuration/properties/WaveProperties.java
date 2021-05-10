@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 /**
  * Class for wave properties that can be specified in the properties file : 
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Primary;
  * - prefix : prefix for the topics default "Wave-", 
  * - auto_create_topic : create the topics used in code automatically if true.
  **/
-@Primary
 @Configuration
 @ConfigurationProperties(prefix = "grizzly-wave")
 public class WaveProperties {

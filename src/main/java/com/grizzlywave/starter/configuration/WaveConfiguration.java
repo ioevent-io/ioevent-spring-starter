@@ -2,13 +2,15 @@ package com.grizzlywave.starter.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Executor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.grizzlywave.starter.configuration.aspect.WaveEndAspect;
 import com.grizzlywave.starter.configuration.aspect.WaveInitAspect;
@@ -18,6 +20,8 @@ import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.controller.WaveController;
+import com.grizzlywave.starter.listener.ListenerCreator;
+import com.grizzlywave.starter.model.WaveBpmnPart;
 import com.grizzlywave.starter.service.TopicServices;
 
 /**
@@ -25,10 +29,12 @@ import com.grizzlywave.starter.service.TopicServices;
  * project which use GrizzlyWave
  **/
 @EnableKafka
-@EnableAsync
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass=true)
+@EnableAsync
 @Import({ KafkaConfig.class })
 public class WaveConfiguration {
+
 	@Bean
 	WaveProperties WaveProperties() {
 		return new WaveProperties();
@@ -38,7 +44,19 @@ public class WaveConfiguration {
 	public TopicServices TopicServices() {
 		return new TopicServices();
 	}
-
+	@Bean ListenerCreator ListenerCreator() {
+		return new ListenerCreator();
+	}
+	@Bean
+	public Executor asyncExecutor() {
+	    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+	    executor.setCorePoolSize(5);
+	    executor.setMaxPoolSize(5);
+	    executor.setQueueCapacity(500);
+	    executor.setThreadNamePrefix("Asynchronous Process-");
+	    executor.initialize();
+	    return executor;
+	}
 	@Bean
 	public WaveTopicBeanPostProcessor WaveTopicBeanPostProcessor() {
 		return new WaveTopicBeanPostProcessor();
@@ -48,6 +66,7 @@ public class WaveConfiguration {
 	public WaveBpmnPostProcessor WaveBpmnPostProcessor() {
 		return new WaveBpmnPostProcessor();
 	}
+	
 
 	@Bean
 	public WaveInitAspect WaveInitAspect() {
@@ -69,8 +88,8 @@ public class WaveConfiguration {
 	}
 
 	@Bean("bpmnlist")
-	public List<Map<String, Object>> bpmnlist() {
-		return new ArrayList<Map<String, Object>>();
+	public List<WaveBpmnPart> bpmnlist() {
+		return new ArrayList<WaveBpmnPart>();
 	}
 	 
 

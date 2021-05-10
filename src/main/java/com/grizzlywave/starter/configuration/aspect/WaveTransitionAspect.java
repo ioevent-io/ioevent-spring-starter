@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -14,6 +13,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +27,7 @@ import com.grizzlywave.starter.logger.EventLogger;
  * to another topic
  **/
 @Aspect
-@Configuration
+@Component
 public class WaveTransitionAspect {
 	private static final Logger log = LoggerFactory.getLogger(WaveTransitionAspect.class);
 
