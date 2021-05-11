@@ -3,8 +3,6 @@ package com.grizzlywave.starter.configuration.aspect;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.expression.ExpressionParser;
@@ -21,15 +19,17 @@ import com.grizzlywave.starter.annotations.WaveTransition;
 import com.grizzlywave.starter.annotations.WaveWorkFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.logger.EventLogger;
+
+import lombok.extern.slf4j.Slf4j;
 /**
  * Aspect method using the advice @AfterReturning,after Consuming an object from
  * the broker and make change on it, @waveTransition annotation publish it again
  * to another topic
  **/
+@Slf4j
 @Aspect
 @Component
 public class WaveTransitionAspect {
-	private static final Logger log = LoggerFactory.getLogger(WaveTransitionAspect.class);
 
 	ExpressionParser parser = new SpelExpressionParser();
 	LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();

@@ -36,13 +36,13 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
 	@Autowired
-	WaveProperties waveProperties;
+	private WaveProperties waveProperties;
 
 	@Autowired
 	private ApplicationContext context;
 
 	@Autowired
-	AdminClient client;
+	private AdminClient client;
 
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 

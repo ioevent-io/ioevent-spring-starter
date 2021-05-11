@@ -14,7 +14,7 @@ import com.grizzlywave.starter.model.WaveBpmnPart;
 public class WaveController {
 
 	@Autowired
-	 List<WaveBpmnPart>	bpmnlist;
+	private List<WaveBpmnPart>	bpmnlist;
 	
 	@GetMapping("/ListBPMN")
 	public List<WaveBpmnPart> getBpmnlist(){

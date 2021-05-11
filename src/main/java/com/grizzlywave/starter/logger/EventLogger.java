@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.UUID;
 
+/**class event logger used to log wave Annotation aspect */
 public class EventLogger {
 	private UUID correlationId;
 	private String workflow;

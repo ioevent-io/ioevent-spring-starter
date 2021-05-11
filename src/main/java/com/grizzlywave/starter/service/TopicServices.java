@@ -24,11 +24,11 @@ import com.grizzlywave.starter.configuration.properties.WaveProperties;
 @Service
 public class TopicServices {
 	@Autowired
-	WaveProperties waveProperties;
+	private WaveProperties waveProperties;
 	Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 
 	@Autowired
-	AdminClient client;
+	private AdminClient client;
 
 	/**
 	 * get a list of all topics

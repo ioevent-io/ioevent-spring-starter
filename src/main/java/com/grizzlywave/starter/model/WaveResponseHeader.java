@@ -1,5 +1,7 @@
 package com.grizzlywave.starter.model;
 
+
+
 public class WaveResponseHeader {
 	private String workflow;
 	private String sourceEvent;

@@ -26,7 +26,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 public class KafkaConfig {
 
 	@Autowired
-	KafkaProperties kafkaProperties;
+	private KafkaProperties kafkaProperties;
 
 	@Bean
 	public AdminClient AdminClient() {

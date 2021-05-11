@@ -8,13 +8,14 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.grizzlywave.starter.handler.ConsumerRecordsHandler;
-import com.grizzlywave.starter.handler.FileWritingRecordsHandler;
-
+import com.grizzlywave.starter.handler.RecordsHandler;
+/**
+ *class service to create listener each listener will be created on a single thread using @Async  
+ **/
 @Service
 public class ListenerCreator {
 
-	Listener listener;
+	private Listener listener;
 
 	public void setbean(Object bean) {
 		this.listener.setBean(bean);
@@ -36,9 +37,8 @@ public class ListenerCreator {
 		props.put("session.timeout.ms", "30000");
 		props.put("topicName", topicName);
 		final Consumer<String, String> consumer = new KafkaConsumer<>(props);
-		final ConsumerRecordsHandler<String, String> recordsHandler = new FileWritingRecordsHandler();
+		final RecordsHandler recordsHandler = new RecordsHandler();
 		final Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method);
-		Runtime.getRuntime().addShutdownHook(new Thread(consumerApplication::shutdown));
 		this.listener = consumerApplication;
 		consumerApplication.runConsume(props);
 		return this.listener;

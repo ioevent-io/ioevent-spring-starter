@@ -70,7 +70,6 @@ public class WaveInitAspect {
 				.setHeader("WorkFlow_ID", uuid).setHeader("source", "orderMS").setHeader("orderID", event_id)
 				.setHeader("destination", waveinit.target_event()).setHeader("event", waveinit.target_event()).build();
 		kafkaTemplate.send(message);
-		// log.info("WaveInit event sent successfully ");
 		Object obj = joinPoint.proceed();
 		/** create WaveResponse **/
 		WaveResponseHeader headers = new WaveResponseHeader(workflow, "___", waveinit.target_event(), "Init");

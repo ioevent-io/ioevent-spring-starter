@@ -1,7 +1,7 @@
 package com.grizzlywave.starter.model;
 
 import java.util.UUID;
-
+/** this class have information to be used in the construction of the bpmn*/
 public class WaveBpmnPart {
 
 	private UUID id;
