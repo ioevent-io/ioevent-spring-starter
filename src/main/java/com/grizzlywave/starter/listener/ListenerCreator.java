@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.grizzlywave.starter.handler.RecordsHandler;
 /**
@@ -23,6 +24,7 @@ public class ListenerCreator {
 
 
 	@Async
+	@Transactional
 	public Listener createListener(Object bean, Method method, String topicName) throws Throwable {
 		Properties props = new Properties();
 		props.setProperty("bootstrap.servers", "192.168.99.100:9092");

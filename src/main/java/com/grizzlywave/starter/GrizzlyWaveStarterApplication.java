@@ -25,9 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties(WaveProperties.class)
 public class GrizzlyWaveStarterApplication {
 
-	
 	public static void main(String[] args) {
-		SpringApplication.run(GrizzlyWaveStarterApplication.class, args);
+	  SpringApplication.run(GrizzlyWaveStarterApplication.class, args);
 	}
 	@Autowired
 	 private ApplicationContext applicationContext;
@@ -38,7 +37,7 @@ public class GrizzlyWaveStarterApplication {
 	@EventListener(ApplicationReadyEvent.class)
 	public void invokeServiceMethod()
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Object myService = applicationContext.getBean(LogAnnotaionService.class);
+		Object myService = applicationContext.getBean(logAnnitaionService.getClass());
 		for (Method method : myService.getClass().getDeclaredMethods()) {
 			if (method.getName().equals("annotatedMethod")) {		
 				method.invoke(myService, null);
