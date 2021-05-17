@@ -13,7 +13,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.grizzlywave.starter.configuration.aspect.LogAspect;
 import com.grizzlywave.starter.configuration.aspect.WaveEndAspect;
 import com.grizzlywave.starter.configuration.aspect.WaveInitAspect;
 import com.grizzlywave.starter.configuration.aspect.WaveTransitionAspect;
@@ -22,9 +21,9 @@ import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.controller.WaveController;
+import com.grizzlywave.starter.handler.RecordsHandler;
 import com.grizzlywave.starter.listener.ListenerCreator;
 import com.grizzlywave.starter.model.WaveBpmnPart;
-import com.grizzlywave.starter.service.LogAnnotaionService;
 import com.grizzlywave.starter.service.TopicServices;
 
 /**
@@ -43,11 +42,7 @@ public class WaveConfiguration {
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
 		return new com.grizzlywave.starter.configuration.context.AppContext();
 	}
-	@ConditionalOnMissingBean
-	@Bean
-	public LogAnnotaionService LogAnnotaionService() {
-		return new LogAnnotaionService();
-	}
+
 	@ConditionalOnMissingBean
 	@Bean
 	public WaveProperties WaveProperties() {
@@ -58,7 +53,8 @@ public class WaveConfiguration {
 	public TopicServices TopicServices() {
 		return new TopicServices();
 	}
-	@Bean 
+	
+	@Bean
 	public ListenerCreator ListenerCreator() {
 		return new ListenerCreator();
 	}
@@ -81,11 +77,7 @@ public class WaveConfiguration {
 	public WaveBpmnPostProcessor WaveBpmnPostProcessor() {
 		return new WaveBpmnPostProcessor();
 	}
-	@ConditionalOnMissingBean
-	@Bean
-	public LogAspect LogAspect() {
-		return new LogAspect();
-	}
+	
 	
 	@Bean
 	public WaveInitAspect WaveInitAspect() {
@@ -111,6 +103,8 @@ public class WaveConfiguration {
 	public List<WaveBpmnPart> bpmnlist() {
 		return new ArrayList<WaveBpmnPart>();
 	}
-	
+	@Bean
+	public RecordsHandler recordsHandler()
+	{return new RecordsHandler();}
 
 }

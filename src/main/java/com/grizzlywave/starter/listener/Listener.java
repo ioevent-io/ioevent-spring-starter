@@ -1,7 +1,5 @@
 package com.grizzlywave.starter.listener;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Collections;
@@ -14,7 +12,10 @@ import com.grizzlywave.starter.handler.RecordsHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Listener to consume from topic and send the records consumed to the Records Handler */
+/**
+ * Listener to consume from topic and send the records consumed to the Records
+ * Handler
+ */
 
 @Slf4j
 public class Listener {
@@ -25,23 +26,26 @@ public class Listener {
 	private Object bean;
 	private Method method;
 
-	
-
-	public Listener(final Consumer<String, String> consumer,
-			final RecordsHandler recordsHandler, Object bean, Method method) {
+	/** listener constructor */
+	public Listener(final Consumer<String, String> consumer, RecordsHandler recordsHandler, Object bean,
+			Method method) {
 		this.consumer = consumer;
 		this.recordsHandler = recordsHandler;
-		this.bean=bean;
-		this.method=method;
+		this.bean = bean;
+		this.method = method;
 	}
-	
+
+	/**
+	 * run consumer to subscribe to the target topic and start consuming ,as soon as
+	 * we get a record we send the record to the handler
+	 **/
 	public void runConsume(final Properties consumerProps) throws Throwable {
 		try {
 			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
 			while (keepConsuming) {
 				final ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(1));
-				recordsHandler.process(consumerRecords,this.bean,this.method);
-				   			}
+				recordsHandler.process(consumerRecords, this.bean, this.method);
+			}
 		} finally {
 			consumer.close();
 		}
@@ -51,13 +55,6 @@ public class Listener {
 		keepConsuming = false;
 	}
 
-	public static Properties loadProperties(String fileName) throws IOException {
-		final Properties props = new Properties();
-		final FileInputStream input = new FileInputStream(fileName);
-		props.load(input);
-		input.close();
-		return props;
-	}
 	public Object getBean() {
 		return bean;
 	}

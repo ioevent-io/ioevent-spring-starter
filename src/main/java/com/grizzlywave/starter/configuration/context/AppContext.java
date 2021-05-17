@@ -4,6 +4,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+
+
+/**
+ * class to get the current application context 
+ **/
 public class AppContext implements ApplicationContextAware{
     private static ApplicationContext ctx = null;
     public static ApplicationContext getApplicationContext() {

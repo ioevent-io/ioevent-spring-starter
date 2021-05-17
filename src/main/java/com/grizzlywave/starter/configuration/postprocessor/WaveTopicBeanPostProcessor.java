@@ -22,6 +22,7 @@ import com.grizzlywave.starter.annotations.WaveEnd;
 import com.grizzlywave.starter.annotations.WaveInit;
 import com.grizzlywave.starter.annotations.WaveTransition;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.service.TopicServices;
 
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,
@@ -66,13 +67,13 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-	/*	if (bean instanceof TopicServices) {
+		if (bean instanceof TopicServices) {
 			waveProperties.getTopic_names().stream()
 					.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
 			log.info("topics created");
 		}
 
-		*/
+		
 		return bean;
 	}
 

@@ -5,44 +5,38 @@ import java.util.Properties;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.grizzlywave.starter.handler.RecordsHandler;
+
+import lombok.extern.slf4j.Slf4j;
+
 /**
- *class service to create listener each listener will be created on a single thread using @Async  
+ * class service to create listener each listener will be created on a single
+ * thread using @Async
  **/
-@Service
+@Slf4j
 public class ListenerCreator {
 
-	private Listener listener;
+	@Autowired
+	private RecordsHandler recordsHandler;
+	@Autowired
+	private KafkaProperties kafkaProperties;
 
-	public void setbean(Object bean) {
-		this.listener.setBean(bean);
-	}
-
-
+	/** create listener on a single thread for the method and the topic given */
 	@Async
-	@Transactional
-	public Listener createListener(Object bean, Method method, String topicName) throws Throwable {
+	public Listener createListener(Object bean, Method method, String topicName, String groupId) throws Throwable {
 		Properties props = new Properties();
-		props.setProperty("bootstrap.servers", "192.168.99.100:9092");
-		props.setProperty("enable.auto.commit", "true");
-		props.setProperty("auto.commit.interval.ms", "1000");
+		props.setProperty("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
 		props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		props.put("group.id", "consumer-group-1");
-		props.put("enable.auto.commit", "true");
-		props.put("auto.commit.interval.ms", "1000");
-		props.put("auto.offset.reset", "earliest");
-		props.put("session.timeout.ms", "30000");
-		props.put("topicName", topicName);
-		final Consumer<String, String> consumer = new KafkaConsumer<>(props);
-		final RecordsHandler recordsHandler = new RecordsHandler();
-		final Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method);
-		this.listener = consumerApplication;
+		props.setProperty("group.id", groupId);
+		props.setProperty("topicName", topicName);
+		Consumer<String, String> consumer = new KafkaConsumer<>(props);
+		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method);
 		consumerApplication.runConsume(props);
-		return this.listener;
+		return consumerApplication;
 	}
 }

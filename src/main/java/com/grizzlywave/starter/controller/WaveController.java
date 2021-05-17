@@ -18,7 +18,6 @@ public class WaveController {
 	
 	@GetMapping("/ListBPMN")
 	public List<WaveBpmnPart> getBpmnlist(){
-	//	return WaveBpmnPostProcessor.bpmnlist;
 		return bpmnlist;
 	}
 }

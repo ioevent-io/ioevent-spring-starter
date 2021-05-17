@@ -70,7 +70,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			if (waveTransition.length!=0)
 				for (WaveTransition x : waveTransition) {
-					ListenerCreator.createListener(bean, method, waveProperties.getPrefix() + x.source_topic());
+					ListenerCreator.createListener(bean, method, waveProperties.getPrefix() + x.source_topic(),waveProperties.getGroup_id());
 					UUID uuid = UUID.randomUUID();
 					bpmnlist.add(this.waveTransitionBpmnPart(x, workFlow, bean.getClass().getName(), uuid, method.getName()));
 
@@ -78,14 +78,14 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			if (waveEnds.length!=0)
 				for (WaveEnd x : waveEnds) {
 					UUID uuid = UUID.randomUUID();
-					ListenerCreator.createListener(bean,method,waveProperties.getPrefix()+x.source_topic());
+					ListenerCreator.createListener(bean,method,waveProperties.getPrefix()+x.source_topic(),waveProperties.getGroup_id());
 					bpmnlist.add(this.waveEndBpmnPart(x, workFlow, bean.getClass().getName(), uuid, method.getName()));
 
 				}
 		}
 	}
 
-/**methods to create wave BPMN Parts from annotations */
+/**methods to create wave BPMN Parts from annotations **/
 	private WaveBpmnPart waveInitBpmnPart(WaveInit x, String waveWorkFlowName, String className, UUID uuid,
 			String methodName) {
 		WaveBpmnPart waveinitBpmnPart = new WaveBpmnPart(uuid, "WaveInit", className, methodName, x.stepName(),

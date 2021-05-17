@@ -10,16 +10,20 @@ import org.springframework.context.annotation.Configuration;
  * Class for wave properties that can be specified in the properties file : 
  * - topic_names : list of topics that the user want to create,
  * - prefix : prefix for the topics default "Wave-", 
+ * - group_id : group id for kafka consumer,
  * - auto_create_topic : create the topics used in code automatically if true.
  **/
 @Configuration
 @ConfigurationProperties(prefix = "grizzly-wave")
 public class WaveProperties {
 
+	
+
 	private List<String> topic_names;
 
 	private String prefix = "Wave-";
-
+	
+	private String group_id= "wave";
 	private Boolean auto_create_topic = true;
 
 	public String getPrefix() {
@@ -38,6 +42,14 @@ public class WaveProperties {
 		this.topic_names = topic_names;
 	}
 
+	public String getGroup_id() {
+		return group_id;
+	}
+
+	public void setGroup_id(String group_id) {
+		this.group_id = group_id;
+	}
+	
 	public Boolean getAuto_create_topic() {
 		return auto_create_topic;
 	}
