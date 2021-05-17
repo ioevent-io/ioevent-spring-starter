@@ -37,7 +37,7 @@ import com.grizzlywave.starter.service.TopicServices;
 @Import({ KafkaConfig.class })
 public class WaveConfiguration {
 
-	
+	///testing new brach
 	@Bean
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
 		return new com.grizzlywave.starter.configuration.context.AppContext();
