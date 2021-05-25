@@ -3,6 +3,7 @@ package com.grizzlywave.starter.logger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -11,7 +12,7 @@ public class EventLogger {
 	private UUID correlationId;
 	private String workflow;
 	private String stepName;
-	private String sourceEvent;
+	private List<String> sourceEvent;
 	private String targetEvent;
 	private String eventType;
 	private Object payload;
@@ -23,7 +24,7 @@ public class EventLogger {
 		super();
 	}
 
-	public EventLogger(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(UUID correlationId, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -32,9 +33,9 @@ public class EventLogger {
 		this.targetEvent = targetEvent;
 		this.eventType = eventType;
 		this.payload = payload;
-	}
+	} 
 
-	public EventLogger(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(UUID correlationId, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
 			String eventType, Object payload, String startTime, String endTime, Long duration) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -72,11 +73,11 @@ public class EventLogger {
 		this.stepName = stepName;
 	}
 
-	public String getSourceEvent() {
+	public List<String> getSourceEvent() {
 		return sourceEvent;
 	}
 
-	public void setSourceEvent(String sourceEvent) {
+	public void setSourceEvent(List<String> sourceEvent) {
 		this.sourceEvent = sourceEvent;
 	}
 
@@ -143,7 +144,7 @@ public class EventLogger {
 		return dateFormat.format(date);
 	}
 
-	public void setting(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public void setting(UUID correlationId, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;

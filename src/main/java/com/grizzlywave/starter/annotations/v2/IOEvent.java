@@ -32,7 +32,7 @@ public @interface IOEvent {
     /**
      * Target Event
      */
-    TargetEvent target() default @TargetEvent();
+    TargetEvent[] target() default @TargetEvent();
     
     /**
      * Gateway Target Event

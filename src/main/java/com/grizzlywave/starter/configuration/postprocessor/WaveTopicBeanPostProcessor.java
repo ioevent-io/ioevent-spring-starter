@@ -21,7 +21,9 @@ import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
 import com.grizzlywave.starter.annotations.WaveEnd;
 import com.grizzlywave.starter.annotations.WaveInit;
 import com.grizzlywave.starter.annotations.WaveTransition;
+import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
 /**
@@ -32,7 +34,7 @@ import com.grizzlywave.starter.service.TopicServices;
  **/
 @Primary
 @Configuration
-public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor,WavePostProcessors {
+public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor, WavePostProcessors {
 
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
@@ -45,6 +47,9 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Autowired
 	private AdminClient client;
 
+	@Autowired
+	private IOEventService ioEventService;
+
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 
 	@Nullable
@@ -52,10 +57,10 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 
 		try {
-			this.process(bean,beanName);
+			this.process(bean, beanName);
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
-			//log.er
+			// log.er
 		} catch (Exception e) {
 			e.printStackTrace();
 			SpringApplication.exit(context);
@@ -73,7 +78,6 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 			log.info("topics created");
 		}
 
-		
 		return bean;
 	}
 
@@ -84,20 +88,16 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	 * auto_create_topic is true
 	 **/
 	@Override
-	public void process(Object bean,String beanName) throws Exception {
+	public void process(Object bean, String beanName) throws Exception {
 		for (Method method : bean.getClass().getMethods()) {
 			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
 			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);
 			WaveEnd[] waveEnd = method.getAnnotationsByType(WaveEnd.class);
-
+			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 			if (waveInit != null)
 				for (WaveInit x : waveInit) {
 
-					if (client.listTopics().names().get().stream().anyMatch(
-							topicName -> topicName.equalsIgnoreCase(waveProperties.getPrefix() + x.target_topic())))
-						log.info("topic alreay exist");
-
-					else {
+					if (!topicExist(x.target_topic())) {
 						if (waveProperties.getAuto_create_topic()) {
 							log.info("creating topic : " + x.target_topic());
 							client.createTopics(Arrays
@@ -111,13 +111,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 			if (waveTransition != null)
 				for (WaveTransition x : waveTransition) {
 
-					if ((client.listTopics().names().get().stream().anyMatch(
-							topicName -> topicName.equalsIgnoreCase(waveProperties.getPrefix() + x.target_topic())))
-							&& (client.listTopics().names().get().stream().anyMatch(topicName -> topicName
-									.equalsIgnoreCase(waveProperties.getPrefix() + x.source_topic()))))
-						log.info("topics alreay exist");
-
-					else {
+					if ((!topicExist(x.source_topic())) || (!topicExist(x.target_topic()))) {
 						if (waveProperties.getAuto_create_topic()) {
 							log.info("creating topic : " + x.target_topic() + " , " + x.source_topic());
 							client.createTopics(Arrays
@@ -134,16 +128,11 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 			if (waveEnd != null)
 				for (WaveEnd x : waveEnd) {
 
-					if ((client.listTopics().names().get().stream().anyMatch(topicName -> topicName
-									.equalsIgnoreCase(waveProperties.getPrefix() + x.source_topic()))))
-						log.info("topics alreay exist");
-
-					else {
+					if (!topicExist(x.source_topic())) {
 						if (waveProperties.getAuto_create_topic()) {
 							log.info("creating topic : " + x.source_topic());
 							client.createTopics(Arrays
 									.asList(new NewTopic(waveProperties.getPrefix() + x.source_topic(), 1, (short) 1)));
-							
 
 						} else
 							throw new Exception(
@@ -151,11 +140,40 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 					}
 				}
+			if (ioEvents.length != 0) {
+				for (IOEvent ioEvent : ioEvents) {
+					for (String topicName : ioEventService.getTopics(ioEvent)) {
+						if (!topicExist(topicName)) {
+
+							if (waveProperties.getAuto_create_topic()) {
+								log.info("creating topic : " + topicName);
+								client.createTopics(Arrays
+										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 1)));
+
+							} else
+								throw new Exception(
+										"Topics doesn't Exist : You must Create them By Adding topics Name in Properties");
+
+						}
+					}
+				}
+			}
 
 		}
 
 	}
 
+	private boolean topicExist(String topic) throws InterruptedException, ExecutionException {
+		if ((client.listTopics().names().get().stream()
+				.anyMatch(topicName -> topicName.equalsIgnoreCase(waveProperties.getPrefix() + topic)))) {
+			log.info("topic : "+waveProperties.getPrefix()+topic +"alreay exist");
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
 		// TODO Auto-generated method stub

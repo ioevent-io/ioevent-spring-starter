@@ -75,16 +75,13 @@ public class WaveInitAspect {
 		WaveResponseHeader headers = new WaveResponseHeader(workflow, "___", waveinit.target_event(), "Init");
 		obj = new WaveResponse(joinPoint.getArgs()[0], headers);
 		watch.stop();
-		eventLogger.setting(uuid, workflow, "Start", "___", waveinit.target_event(), "Init",
+		eventLogger.setting(uuid, workflow, "Start", null, waveinit.target_event(), "Init",
 				joinPoint.getArgs()[0].toString());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 		return obj;
 	}
-	
-	
-
 
 	/**
 	 * to proceed the current method with new arguments Object[] newArguments = new
@@ -108,6 +105,5 @@ public class WaveInitAspect {
 		}
 		return event_id;
 	}
-
 
 }

@@ -11,7 +11,12 @@ spring:
      consumer:
         group-id: "firstgroup"
         
-
+logging:
+  level:
+    org:
+      springframework:
+        web: INFO
+      apache.kafka: warn
 #eureka:
 #  client:
  #   registerWithEureka: true

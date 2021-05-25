@@ -1,12 +1,11 @@
 package com.grizzlywave.starter.configuration.aspect;
 
+import java.util.Arrays;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -31,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class WaveTransitionAspect {
 
-	ExpressionParser parser = new SpelExpressionParser();
-	LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
@@ -58,7 +55,7 @@ public class WaveTransitionAspect {
 				.build();
 		kafkaTemplate.send(message);
 		watch.stop();
-		eventLogger.setting(null, workflow, waveTransition.stepName(), waveTransition.source_event(),
+		eventLogger.setting(null, workflow, waveTransition.stepName(), Arrays.asList(waveTransition.source_event()),
 				waveTransition.target_event(), "Transition", object);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
