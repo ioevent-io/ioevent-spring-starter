@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.configuration.context.AppContext;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.service.IOEventService;
@@ -20,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 public class RecordsHandler {
 
 	private String recordTarget;
+	
+	ObjectMapper mapper = new ObjectMapper();
 
 	@Autowired
 	private AppContext ctx;
@@ -42,8 +45,17 @@ public class RecordsHandler {
 
 			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
 				if (met.getName().equals(method.getName())) {
-					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()), args);
-				}
+					Class<?>[] params = method.getParameterTypes();
+				    if (params.length == 1) {
+				    	if (params[0].equals(String.class)) {
+							met.invoke(ctx.getApplicationContext().getBean(bean.getClass()), args);
+
+						}
+				    	else {
+							met.invoke(ctx.getApplicationContext().getBean(bean.getClass()), mapper.readValue(args.toString(),params[0]));
+
+						}
+				}}
 			}
 
 		}

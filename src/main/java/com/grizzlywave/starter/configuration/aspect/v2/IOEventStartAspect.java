@@ -54,7 +54,7 @@ public class IOEventStartAspect {
 			}
 			
 			watch.stop();
-			eventLogger.setting(uuid, ioEvent.startEvent().key(), "Start",null,target, "Init",
+			eventLogger.setting(uuid, ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
 					joinPoint.getArgs()[0].toString()); 
 			eventLogger.stopEvent(watch.getTotalTimeMillis());
 			String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
