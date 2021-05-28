@@ -75,7 +75,7 @@ public class WaveInitAspect {
 		WaveResponseHeader headers = new WaveResponseHeader(workflow, "___", waveinit.target_event(), "Init");
 		obj = new WaveResponse(joinPoint.getArgs()[0], headers);
 		watch.stop();
-		eventLogger.setting(uuid, workflow, "Start", null, waveinit.target_event(), "Init",
+		eventLogger.setting(uuid.toString(), workflow, "Start", null, waveinit.target_event(), "Init",
 				joinPoint.getArgs()[0].toString());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);

@@ -72,10 +72,13 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		
 		if (bean instanceof TopicServices) {
-			waveProperties.getTopic_names().stream()
-					.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
-			log.info("topics created");
+			if (waveProperties.getTopic_names()!=null) {
+				waveProperties.getTopic_names().stream()
+				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
+		log.info("topics created");
+			}
 		}
 
 		return bean;

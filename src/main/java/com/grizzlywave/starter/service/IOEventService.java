@@ -6,14 +6,21 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class IOEventService {
-
 	
+	@SendRecordInfo
+	public String sendID(String idString) {
+		log.info("method inside handler");
+		return "done";
+	}
 	
 	public List<String> getSourceNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();

@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class RecordsHandler {
 
+	
+
 	private String recordTarget;
 	
 	ObjectMapper mapper = new ObjectMapper();
@@ -28,11 +30,11 @@ public class RecordsHandler {
 	private AppContext ctx;
 	@Autowired
 	private IOEventService ioEventService;
-
+	
+	
 	/** method which call doInvoke Method **/
 	public void process(ConsumerRecords<String, String> consumerRecords, Object bean, Method method) throws Throwable {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
-
 			this.doInvoke(method, bean, consumerRecord.value());
 		}
 
@@ -42,7 +44,6 @@ public class RecordsHandler {
 	public void doInvoke(Method method, Object bean, Object args) throws Throwable {
 		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
 		if (beanmObject != null) {
-
 			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
 				if (met.getName().equals(method.getName())) {
 					Class<?>[] params = method.getParameterTypes();
@@ -68,7 +69,9 @@ public class RecordsHandler {
 				if (header.key().equals("targetEvent")) {
 					recordTarget = new String(header.value());
 				}
-				;
+				if (header.key().equals("WorkFlow_ID")) {
+				 	ioEventService.sendID(new String(header.value()));
+				};
 			});
 			for (BeanMethodPair pair : beanMethodPairs) {
 				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
@@ -81,4 +84,5 @@ public class RecordsHandler {
 
 		}
 	}
+	
 }

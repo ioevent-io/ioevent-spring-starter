@@ -48,13 +48,13 @@ public class IOEventStartAspect {
 			UUID uuid = UUID.randomUUID();
 			String target ="";
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid,targetEvent);
+				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid.toString(),targetEvent);
 				kafkaTemplate.send(message);
 				target+=targetEvent.name()+",";
 			}
 			
 			watch.stop();
-			eventLogger.setting(uuid, ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
+			eventLogger.setting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
 					joinPoint.getArgs()[0].toString()); 
 			eventLogger.stopEvent(watch.getTotalTimeMillis());
 			String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
@@ -64,7 +64,7 @@ public class IOEventStartAspect {
 	}
 
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, UUID uuid, TargetEvent targetEvent) {
+	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent) {
 		return MessageBuilder.withPayload(payload)
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + targetEvent.topic())
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
