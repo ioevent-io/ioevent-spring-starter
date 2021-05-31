@@ -22,7 +22,6 @@ public class RecordsHandler {
 
 	
 
-	private String recordTarget;
 	
 	ObjectMapper mapper = new ObjectMapper();
 
@@ -64,18 +63,23 @@ public class RecordsHandler {
 
 	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs)
 			throws Throwable {
+		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 			consumerRecord.headers().forEach(header -> {
 				if (header.key().equals("targetEvent")) {
-					recordTarget = new String(header.value());
+					waveRecordInfo.setTargetName(new String(header.value()));
 				}
 				if (header.key().equals("WorkFlow_ID")) {
-				 	ioEventService.sendID(new String(header.value()));
+					waveRecordInfo.setId(new String(header.value()));
 				};
+				if (header.key().equals("WorkFlow Name")) {
+					waveRecordInfo.setWorkFlowName(new String(header.value()));
+				}
 			});
 			for (BeanMethodPair pair : beanMethodPairs) {
 				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
-					if (SourceName.equals(recordTarget)) {
+					if (SourceName.equals(waveRecordInfo.getTargetName())) {
+						ioEventService.sendWaveRecordInfo(waveRecordInfo);
 						this.doInvoke(pair.getMethod(), pair.getBean(), consumerRecord.value());
 
 					}

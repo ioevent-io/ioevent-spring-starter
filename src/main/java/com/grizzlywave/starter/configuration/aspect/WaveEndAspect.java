@@ -1,7 +1,5 @@
 package com.grizzlywave.starter.configuration.aspect;
 
-import java.util.Arrays;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -35,7 +33,7 @@ public class WaveEndAspect {
 		watch.start("waveEnd afterReturn  annotation Aspect");
 		String workflow = joinPoint.getTarget().getClass().getAnnotation(WaveWorkFlow.class).name();
 		watch.stop();
-		eventLogger.setting(null, workflow, waveEnd.stepName(),Arrays.asList(waveEnd.source_event()), "__", "End", object);
+		eventLogger.setting(null, workflow, waveEnd.stepName(),waveEnd.source_event(), "__", "End", object);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);

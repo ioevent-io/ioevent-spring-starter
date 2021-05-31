@@ -1,7 +1,5 @@
 package com.grizzlywave.starter.configuration.aspect;
 
-import java.util.Arrays;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -55,7 +53,7 @@ public class WaveTransitionAspect {
 				.build();
 		kafkaTemplate.send(message);
 		watch.stop();
-		eventLogger.setting(null, workflow, waveTransition.stepName(), Arrays.asList(waveTransition.source_event()),
+		eventLogger.setting(null, workflow, waveTransition.stepName(), waveTransition.source_event(),
 				waveTransition.target_event(), "Transition", object);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);

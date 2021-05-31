@@ -9,6 +9,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+import com.grizzlywave.starter.handler.WaveRecordInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,9 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class IOEventService {
 	
 	@SendRecordInfo
-	public String sendID(String idString) {
-		log.info("method inside handler");
-		return "done";
+	public void sendWaveRecordInfo(WaveRecordInfo waveRecordInfo) {
 	}
 	
 	public List<String> getSourceNames(IOEvent ioEvent) {

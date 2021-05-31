@@ -1,7 +1,5 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
-import java.util.UUID;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -21,6 +19,7 @@ import com.grizzlywave.starter.annotations.v2.IOEventResponse;
 import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
 
@@ -31,8 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class IOEventTransitionAspect {
 
-	private UUID uuid=null;
-	private String id="";
+	private WaveRecordInfo waveRecordInfo=new WaveRecordInfo();
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -51,8 +49,7 @@ public class IOEventTransitionAspect {
 
 	@Before(value = "classpointcut() && @annotation(audit)")
 	public void methodHandlerAspect(JoinPoint pjp,SendRecordInfo audit) throws Throwable {
-		log.info("method handler aspect works");
-		this.id=(String) pjp.getArgs()[0];	
+		this.waveRecordInfo =WaveRecordInfo.class.cast(pjp.getArgs()[0]);
 	}
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
@@ -66,7 +63,7 @@ public class IOEventTransitionAspect {
 			if (ioEvent.gatewayTarget().target().length != 0) {
 				if (ioEvent.gatewayTarget().parallel()) {
 					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-						Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.id);
+						Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo);
 						kafkaTemplate.send(message);
 						target += targetEvent.name() + ",";
 					}
@@ -76,7 +73,7 @@ public class IOEventTransitionAspect {
 					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 						if (ioEventResponse.getString().equals(targetEvent.name())) {
 							Message<Object> message = this.buildStartMessage(ioEvent, ioEventResponse.getBody(),
-									targetEvent,this.id);
+									targetEvent,this.waveRecordInfo);
 							kafkaTemplate.send(message);
 							target += targetEvent.name() + ",";
 						}
@@ -86,13 +83,13 @@ public class IOEventTransitionAspect {
 				}
 			} else {
 				for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-					Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.id);
+					Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo);
 					kafkaTemplate.send(message);
 					target += targetEvent.name() + ",";
 				}
 			}
 			watch.stop();
-			eventLogger.setting(this.id, "", ioEvent.name(), ioEventService.getSourceNames(ioEvent), target, "Transition",
+			eventLogger.setting(this.waveRecordInfo.getId(), this.waveRecordInfo.getWorkFlowName(), ioEvent.name(), this.waveRecordInfo.getTargetName(), target, "Transition",
 					object);
 			eventLogger.stopEvent(watch.getTotalTimeMillis());
 			String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
@@ -100,15 +97,15 @@ public class IOEventTransitionAspect {
 		}
 	}
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,String uuid) {
+	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo) {
 		String topic = targetEvent.topic();
 		if (topic.equals("")) {
 			topic = ioEvent.topic();
 
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
-				.setHeader("WorkFlow_ID",uuid).setHeader("source", ioEventService.getSourceNames(ioEvent))
+				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("WorkFlow Name",waveRecordInfo.getWorkFlowName())
+				.setHeader("WorkFlow_ID",waveRecordInfo.getId()).setHeader("source", ioEventService.getSourceNames(ioEvent))
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).build();
 	}
 

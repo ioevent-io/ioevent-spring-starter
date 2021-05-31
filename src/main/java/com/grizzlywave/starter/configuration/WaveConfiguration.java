@@ -42,7 +42,7 @@ import com.grizzlywave.starter.service.TopicServices;
 @EnableAsync
 @Import({ KafkaConfig.class })
 public class WaveConfiguration {
-
+	
 	@Bean
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
 		return new com.grizzlywave.starter.configuration.context.AppContext();

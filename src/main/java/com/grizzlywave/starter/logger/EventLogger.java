@@ -3,7 +3,6 @@ package com.grizzlywave.starter.logger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
 /**class event logger used to log wave Annotation aspect */
@@ -11,7 +10,7 @@ public class EventLogger {
 	private String correlationId;
 	private String workflow;
 	private String stepName;
-	private List<String> sourceEvent;
+	private String sourceEvent;
 	private String targetEvent;
 	private String eventType;
 	private Object payload;
@@ -23,7 +22,7 @@ public class EventLogger {
 		super();
 	}
 
-	public EventLogger(String correlationId, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -34,7 +33,7 @@ public class EventLogger {
 		this.payload = payload;
 	} 
 
-	public EventLogger(String correlationId, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
 			String eventType, Object payload, String startTime, String endTime, Long duration) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -72,11 +71,11 @@ public class EventLogger {
 		this.stepName = stepName;
 	}
 
-	public List<String> getSourceEvent() {
+	public String getSourceEvent() {
 		return sourceEvent;
 	}
 
-	public void setSourceEvent(List<String> sourceEvent) {
+	public void setSourceEvent(String sourceEvent) {
 		this.sourceEvent = sourceEvent;
 	}
 
@@ -143,12 +142,12 @@ public class EventLogger {
 		return dateFormat.format(date);
 	}
 
-	public void setting(String id, String workflow, String stepName, List<String> sourceEvent, String targetEvent,
+	public void setting(String id, String workflow, String stepName, String string, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = id;
 		this.workflow = workflow;
 		this.stepName=stepName;
-		this.sourceEvent=sourceEvent;
+		this.sourceEvent=string;
 		this.targetEvent=targetEvent;
 		this.eventType=eventType;
 		this.payload=payload;
