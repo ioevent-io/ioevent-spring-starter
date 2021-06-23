@@ -1,12 +1,13 @@
 package com.grizzlywave.starter.handler;
 
 public class WaveRecordInfo {
-	String id;
-	String workFlowName;
-	String targetName;
+	private String id;
+
+	private String workFlowName;
+	
+	private String targetName;
 
 	public WaveRecordInfo() {
-		super();
 	}
 
 	public WaveRecordInfo(String id, String workFlowName, String targetName) {

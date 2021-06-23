@@ -1,6 +1,8 @@
 package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 
@@ -9,6 +11,7 @@ public class BeanMethodPair {
 	private Object bean;
 	private Method method;
 	private IOEvent ioEvent;
+	private List<String> sourceEventsArrived = new ArrayList<String>();
 	public BeanMethodPair() {
 	}
 
@@ -40,6 +43,16 @@ public class BeanMethodPair {
 
 	public void setIoEvent(IOEvent ioEvent) {
 		this.ioEvent = ioEvent;
+	}
+
+	public List<String> getSourceEventsArrived() {
+		return sourceEventsArrived;
+	}
+	public void addSourceEventsArrived(String sourceEvent) {
+		this.sourceEventsArrived.add(sourceEvent);
+	}
+	public void setSourceEventsArrived(List<String> sourceEventsArrived) {
+		this.sourceEventsArrived = sourceEventsArrived;
 	}
 
 	@Override

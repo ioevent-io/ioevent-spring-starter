@@ -38,7 +38,7 @@ public class IOEventEndAspect {
 
 	@Autowired
 	private IOEventService ioEventService;
-	private WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
+	private WaveRecordInfo waveRecordInfo ;
 
 	@Pointcut("execution(* com.grizzlywave.starter.service..*.*(..))")
 	public void classpointcut() {
@@ -80,8 +80,8 @@ public class IOEventEndAspect {
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
-				.setHeader("WorkFlow Name", ioEvent.endEvent().key()).setHeader("targetEvent", targetEvent)
-				.setHeader("WorkFlow_ID", waveRecordInfo.getId())
+				.setHeader("Process_Name", ioEvent.endEvent().key()).setHeader("targetEvent", targetEvent)
+				.setHeader("Correlation_id", waveRecordInfo.getId())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("StepName", ioEvent.name())
 				.build();
 	}

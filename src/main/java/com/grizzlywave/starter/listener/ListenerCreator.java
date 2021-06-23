@@ -24,6 +24,7 @@ public class ListenerCreator {
 
 	@Autowired
 	private RecordsHandler recordsHandler;
+	
 	@Autowired
 	private KafkaProperties kafkaProperties;
 

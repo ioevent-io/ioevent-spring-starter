@@ -9,6 +9,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 public class IOEventService {
 	
 	@SendRecordInfo
-	public void sendWaveRecordInfo(WaveRecordInfo waveRecordInfo) {
+	public  String sendWaveRecordInfo(WaveRecordInfo waveRecordInfo){
+		return "RecordInfo sent";
 	}
-	
+
 	public List<String> getSourceNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 
@@ -37,6 +39,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<String> getTargetNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 
@@ -53,6 +56,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<TargetEvent> getTargets(IOEvent ioEvent) {
 		List<TargetEvent> result = new ArrayList<TargetEvent>();
 
@@ -69,6 +73,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<SourceEvent> getSources(IOEvent ioEvent) {
 		List<SourceEvent> result = new ArrayList<SourceEvent>();
 
@@ -85,6 +90,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<String> getTopics(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 		if (!ioEvent.topic().equals("")) {
@@ -112,6 +118,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<String> getSourceTopic(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 		if (!ioEvent.topic().equals("")) {
@@ -122,7 +129,7 @@ public class IOEventService {
 				result.add(sourceEvent.topic());
 			}
 		}
-	
+
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
 			if (!sourceEvent.topic().equals("")) {
 				result.add(sourceEvent.topic());
@@ -130,5 +137,22 @@ public class IOEventService {
 		}
 
 		return result;
+	}
+
+	public boolean sameList(List<String> firstList, List<String> secondList) {
+		return (firstList.size() == secondList.size() && firstList.containsAll(secondList)
+				&& secondList.containsAll(firstList));
+	}
+
+	public IOEventType getIOEventType(IOEvent ioEvent) {
+		if (!ioEvent.startEvent().key().equals("")) {
+			return IOEventType.START;
+		}
+		else if (!ioEvent.endEvent().key().equals("")) {
+			return IOEventType.END;
+		}
+		else {
+			return IOEventType.TRANSITION;
+		}
 	}
 }

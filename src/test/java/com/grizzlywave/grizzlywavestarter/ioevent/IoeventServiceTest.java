@@ -1,4 +1,4 @@
-package com.grizzlywave.grizzlywavestarter.annotation;
+package com.grizzlywave.grizzlywavestarter.ioevent;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import com.grizzlywave.starter.annotations.v2.GatewayTargetEvent;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * test for our annotations call
  **/
 @Slf4j
-public class AnnotationTest {
+public class IoeventServiceTest {
 
 	@InjectMocks
 	IOEventService ioEventService = new IOEventService();
@@ -138,5 +139,10 @@ public class AnnotationTest {
 
 		}
 		
+	}
+	@Test
+	public void shouldReturnRecordInfoSent() {
+		WaveRecordInfo waveRecordInfo=new WaveRecordInfo("id", "processName", "target");
+		Assert.assertTrue(ioEventService.sendWaveRecordInfo(waveRecordInfo).equals("RecordInfo sent"));
 	}
 }

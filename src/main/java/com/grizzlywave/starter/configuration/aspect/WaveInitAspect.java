@@ -27,9 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.WaveInit;
 import com.grizzlywave.starter.annotations.WaveWorkFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.WaveResponse;
+import com.grizzlywave.starter.domain.WaveResponseHeader;
 import com.grizzlywave.starter.logger.EventLogger;
-import com.grizzlywave.starter.model.WaveResponse;
-import com.grizzlywave.starter.model.WaveResponseHeader;
 
 /**
  * Aspect method for the annotation @waveInit where it publish an object to the

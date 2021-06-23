@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Listener {
 
 	private volatile boolean keepConsuming = true;
-	private RecordsHandler recordsHandler;
+	final private RecordsHandler recordsHandler;
 	private Consumer<String, String> consumer;
 	private Object bean;
 	private Method method;
@@ -38,7 +38,7 @@ public class Listener {
 	/** listener constructor 
 	 * @param ioEvent 
 	 * @param topicName */
-	public Listener(final Consumer<String, String> consumer, RecordsHandler recordsHandler, Object bean,
+	public Listener(final Consumer<String, String> consumer,final RecordsHandler recordsHandler, Object bean,
 			Method method, IOEvent ioEvent, String topicName) {
 		this.consumer = consumer;
 		this.recordsHandler = recordsHandler;

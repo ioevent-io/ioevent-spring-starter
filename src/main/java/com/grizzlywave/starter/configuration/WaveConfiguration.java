@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -24,11 +25,11 @@ import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.controller.WaveController;
+import com.grizzlywave.starter.domain.IOEventBpmnPart;
+import com.grizzlywave.starter.domain.WaveBpmnPart;
 import com.grizzlywave.starter.handler.RecordsHandler;
 import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
-import com.grizzlywave.starter.model.IOEventBpmnPart;
-import com.grizzlywave.starter.model.WaveBpmnPart;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
@@ -124,7 +125,7 @@ public class WaveConfiguration {
 	}
 	@Bean("iobpmnlist")
 	public List<IOEventBpmnPart> iobpmnlist() {
-		return new ArrayList<IOEventBpmnPart>();
+		return new LinkedList<IOEventBpmnPart>();
 	}
 	@Bean("listeners")
 	public List<Listener> listeners() {

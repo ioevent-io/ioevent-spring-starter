@@ -14,10 +14,10 @@ import com.grizzlywave.starter.annotations.WaveTransition;
 import com.grizzlywave.starter.annotations.WaveWorkFlow;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventBpmnPart;
+import com.grizzlywave.starter.domain.WaveBpmnPart;
 import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
-import com.grizzlywave.starter.model.IOEventBpmnPart;
-import com.grizzlywave.starter.model.WaveBpmnPart;
 import com.grizzlywave.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +51,8 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			this.process(bean, this.getworkFlow(bean, bean.getClass().getAnnotationsByType(WaveWorkFlow.class)));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Throwable e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return bean;
@@ -132,7 +130,12 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 	/** methods to create IOEvent BPMN Parts from annotations **/
 	private IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
-		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, uuid, ioEvent.startEvent().key(), ioEvent.name(),
+		String processName="";
+		if (!ioEvent.startEvent().key().equals(""))
+		{processName=ioEvent.startEvent().key();}
+		else if (!ioEvent.endEvent().key().equals("")) 
+		{processName=ioEvent.endEvent().key();}
+		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, uuid, processName,ioEventService.getIOEventType(ioEvent), ioEvent.name(),
 				className, methodName);
 		return ioeventBpmnPart;
 	}
