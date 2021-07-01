@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
@@ -59,7 +60,7 @@ public class IOEventEndAspect {
 			String workflow = ioEvent.endEvent().key();
 			String target = "";
 			Message<Object> message = this.buildEventMessage(ioEvent, joinPoint.getArgs()[0], "END",
-					this.waveRecordInfo);
+					this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
 
 			watch.stop();
@@ -72,7 +73,7 @@ public class IOEventEndAspect {
 	}
 
 	private Message<Object> buildEventMessage(IOEvent ioEvent, Object payload, String targetEvent,
-			WaveRecordInfo waveRecordInfo) {
+			WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = ioEvent.topic();
 		if (topic.equals("")) {
 			topic = ioEvent.topic();
@@ -82,7 +83,8 @@ public class IOEventEndAspect {
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("Process_Name", ioEvent.endEvent().key()).setHeader("targetEvent", targetEvent)
 				.setHeader("Correlation_id", waveRecordInfo.getId())
-				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("StepName", ioEvent.name())
+				.setHeader("EventType", IOEventType.END.toString())
+				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime)
 				.build();
 	}
 

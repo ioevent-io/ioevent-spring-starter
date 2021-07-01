@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
 
@@ -50,7 +51,7 @@ public class IOEventStartAspect {
 			UUID uuid = UUID.randomUUID();
 			String target ="";
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid.toString(),targetEvent);
+				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid.toString(),targetEvent,eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
 				target+=targetEvent.name()+",";
 			}
@@ -65,14 +66,15 @@ public class IOEventStartAspect {
 	}
 
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent) {
+	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
 		return MessageBuilder.withPayload(payload)
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + targetEvent.topic())
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("Correlation_id",uuid).setHeader("StepName", ioEvent.name())
+				.setHeader("EventType", IOEventType.START.toString())
 				.setHeader("source",new ArrayList<String>(Arrays.asList("Start")))
 				.setHeader("targetEvent", targetEvent.name())
-				.setHeader("Process_Name", ioEvent.startEvent().key()).build();
+				.setHeader("Process_Name", ioEvent.startEvent().key()).setHeader("Start Time", startTime).build();
 	}
 
 }

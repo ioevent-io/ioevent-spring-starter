@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.logger;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -141,7 +142,14 @@ public class EventLogger {
 		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		return dateFormat.format(date);
 	}
-
+	public Long getTimestamp(String stringDate) throws ParseException
+	{
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSSS'Z'");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date date = dateFormat.parse(stringDate);
+		
+		return date.getTime();
+	}
 	public void setting(String id, String workflow, String stepName, String string, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = id;

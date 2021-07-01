@@ -20,6 +20,7 @@ import com.grizzlywave.starter.annotations.v2.IOEventResponse;
 import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
@@ -66,7 +67,7 @@ public class IOEventTransitionAspect {
 			if (ioEvent.gatewayTarget().target().length != 0) {
 				if (ioEvent.gatewayTarget().parallel()) {
 					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-						Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo);
+						Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 						kafkaTemplate.send(message);
 						target += targetEvent.name() + ",";
 					}
@@ -76,9 +77,10 @@ public class IOEventTransitionAspect {
 					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 						if (ioEventResponse.getString().equals(targetEvent.name())) {
 							Message<Object> message = this.buildStartMessage(ioEvent, ioEventResponse.getBody(),
-									targetEvent,this.waveRecordInfo);
+									targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 							kafkaTemplate.send(message);
 							target += targetEvent.name() + ",";
+							log.info("sent to :"+targetEvent.name());
 						}
 
 					}
@@ -86,7 +88,7 @@ public class IOEventTransitionAspect {
 				}
 			} else {
 				for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-					Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo);
+					Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 					kafkaTemplate.send(message);
 					target += targetEvent.name() + ",";
 				}
@@ -100,7 +102,7 @@ public class IOEventTransitionAspect {
 		}
 	}
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo) {
+	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (topic.equals("")) {
 			topic = ioEvent.topic();
@@ -108,8 +110,10 @@ public class IOEventTransitionAspect {
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
-				.setHeader("Correlation_id",waveRecordInfo.getId()).setHeader("source", ioEventService.getSourceNames(ioEvent))
-				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).build();
+				.setHeader("Correlation_id",waveRecordInfo.getId())
+				.setHeader("EventType", IOEventType.TRANSITION.toString())
+				.setHeader("source", ioEventService.getSourceNames(ioEvent))
+				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
 
 }
