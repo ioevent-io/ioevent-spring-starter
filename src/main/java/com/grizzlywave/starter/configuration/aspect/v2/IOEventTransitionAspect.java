@@ -109,7 +109,7 @@ public class IOEventTransitionAspect {
 
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, "999").setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
+				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
 				.setHeader("Correlation_id",waveRecordInfo.getId())
 				.setHeader("EventType", IOEventType.TRANSITION.toString())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))

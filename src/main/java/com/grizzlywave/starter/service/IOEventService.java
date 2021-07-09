@@ -39,6 +39,15 @@ public class IOEventService {
 		}
 		return result;
 	}
+	public List<String> getParalleListSource(IOEvent ioEvent) {
+		List<String> result = new ArrayList<String>();
+		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
+			if (!sourceEvent.name().equals("")) {
+				result.add(sourceEvent.name());
+			}
+		}
+		return result;
+	}
 
 	public List<String> getTargetNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();

@@ -18,12 +18,43 @@
 		<java.version>11</java.version>
 		<spring-cloud.version>2020.0.2</spring-cloud.version>
 		<org.projectlombok.version>1.18.16</org.projectlombok.version>
+		<ksqldb.version>0.18.0</ksqldb.version>
 
 	</properties>
+	<repositories>
+		<repository>
+			<id>ksqlDB</id>
+			<name>ksqlDB</name>
+			<url>https://ksqldb-maven.s3.amazonaws.com/maven/</url>
+		</repository>
+		<repository>
+			<id>confluent</id>
+			<name>Confluent</name>
+			<url>https://jenkins-confluent-packages-beta-maven.s3.amazonaws.com/7.0.0-beta210423230724/2/maven/</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>ksqlDB</id>
+			<url>https://ksqldb-maven.s3.amazonaws.com/maven/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>confluent</id>
+			<url>https://jenkins-confluent-packages-beta-maven.s3.amazonaws.com/7.0.0-beta210423230724/2/maven/</url>
+		</pluginRepository>
+	</pluginRepositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
+
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>logback-classic</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -41,6 +72,17 @@
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.confluent.ksql</groupId>
+			<artifactId>ksqldb-api-client</artifactId>
+			<version>${ksqldb.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- Swagger -->
 		<dependency>
@@ -92,7 +134,9 @@
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
+
 	</dependencyManagement>
+	
 	<build>
 		<plugins>
 			<plugin>

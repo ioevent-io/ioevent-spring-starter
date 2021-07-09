@@ -2,6 +2,7 @@ package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.admin.AdminClient;
@@ -26,6 +27,8 @@ import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
+import io.confluent.ksql.api.client.Client;
+
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,
  * create topics mentioned in property Grizzly-wave topic-names , if the auto
@@ -49,6 +52,9 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 	@Autowired
 	private IOEventService ioEventService;
+	
+	@Autowired
+	private Client KsqlClient;
 
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 
@@ -74,6 +80,12 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		
 		if (bean instanceof TopicServices) {
+			((TopicServices) bean).createTopic("parallelEvent","");
+			try {
+				createKtable();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
 			if (waveProperties.getTopic_names()!=null) {
 				waveProperties.getTopic_names().stream()
 				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
@@ -82,6 +94,20 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		}
 
 		return bean;
+	}
+
+	private void createKtable() throws InterruptedException, ExecutionException {
+		String createAccountTable = "CREATE TABLE IF NOT EXISTS parallelEvent (\n"
+                + "  id string PRIMARY KEY,\n"
+                + "  targets STRING\n"
+                + ") WITH (\n"
+                + "  KAFKA_TOPIC = 'parallelEvent',\n"
+                + "  VALUE_FORMAT='JSON'\n"
+                + ");";	
+		final Map<String, Object> properties = Map.of("auto.offset.reset", "earliest");
+		log.info(KsqlClient.executeStatement(createAccountTable, properties).get().toString());	
+		String createQueryableTable = "CREATE TABLE IF NOT EXISTS QUERYABLE_parallelEvent AS SELECT * FROM parallelEvent;";
+		log.info(KsqlClient.executeStatement(createQueryableTable, properties).get().toString());	
 	}
 
 	/**

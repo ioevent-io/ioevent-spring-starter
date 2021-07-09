@@ -15,6 +15,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
+import io.confluent.ksql.api.client.Client;
+import io.confluent.ksql.api.client.ClientOptions;
+
 /**
  * class that contain the Configuration of the Broker Kafka
  **/
@@ -35,7 +38,14 @@ public class KafkaConfig {
 		AdminClient client = AdminClient.create(properties);
 		return client;
 	}
-
+	@Bean
+	public Client KsqlClient() {
+		ClientOptions options = ClientOptions.create()
+		        .setHost("192.168.99.100")
+		        .setPort(8088);
+		    return Client.create(options);
+	}
+	
 	@Bean
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
