@@ -100,8 +100,17 @@ public class Listener {
 	public void setBeanMethodPairs(List<BeanMethodPair> beanMethodPairs) {
 		this.beanMethodPairs = beanMethodPairs;
 	}
-	public void addBeanMethod(BeanMethodPair beanMethodPair) {
-		this.beanMethodPairs.add(beanMethodPair);
+	public void addBeanMethod(BeanMethodPair beanMethod) {
+		boolean valid=true;
+		for (BeanMethodPair beanMethodPair : beanMethodPairs) {
+			if ((beanMethod.getBean().equals(beanMethodPair.getBean())&&beanMethod.getMethod().equals(beanMethodPair.getMethod()))) {
+				valid=false;
+			}
+		}
+		if (valid) {
+			this.beanMethodPairs.add(beanMethod);
+
+		}
 		
 	}
 }

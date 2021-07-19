@@ -11,6 +11,7 @@ public class BeanMethodPair {
 	private Object bean;
 	private Method method;
 	private IOEvent ioEvent;
+
 	private List<String> sourceEventsArrived = new ArrayList<String>();
 	public BeanMethodPair() {
 	}
@@ -18,7 +19,8 @@ public class BeanMethodPair {
 	public BeanMethodPair(Object bean, Method method,IOEvent ioEvent) {
 		this.bean = bean;
 		this.method = method;
-		this.ioEvent=ioEvent;
+		this.ioEvent=ioEvent; 
+		
 	}
 
 	public Object getBean() {

@@ -19,11 +19,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
-import com.grizzlywave.starter.annotations.WaveEnd;
-import com.grizzlywave.starter.annotations.WaveInit;
-import com.grizzlywave.starter.annotations.WaveTransition;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
@@ -91,8 +89,9 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
 		log.info("topics created");
 			}
-		}
+			ioEventService.sendParallelEventInfo(new ParallelEventInfo("first event",Arrays.asList("first target")));
 
+		}
 		return bean;
 	}
 
@@ -119,56 +118,8 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Override
 	public void process(Object bean, String beanName) throws Exception {
 		for (Method method : bean.getClass().getMethods()) {
-			WaveInit[] waveInit = method.getAnnotationsByType(WaveInit.class);
-			WaveTransition[] waveTransition = method.getAnnotationsByType(WaveTransition.class);
-			WaveEnd[] waveEnd = method.getAnnotationsByType(WaveEnd.class);
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
-			if (waveInit != null)
-				for (WaveInit x : waveInit) {
-
-					if (!topicExist(x.target_topic())) {
-						if (waveProperties.getAuto_create_topic()) {
-							log.info("creating topic : " + x.target_topic());
-							client.createTopics(Arrays
-									.asList(new NewTopic(waveProperties.getPrefix() + x.target_topic(), 1, (short) 1)));
-						} else
-							throw new Exception(
-									"Topics doesn't Exist : You must Create them By Adding topics Name in Properties");
-					}
-				}
-
-			if (waveTransition != null)
-				for (WaveTransition x : waveTransition) {
-
-					if ((!topicExist(x.source_topic())) || (!topicExist(x.target_topic()))) {
-						if (waveProperties.getAuto_create_topic()) {
-							log.info("creating topic : " + x.target_topic() + " , " + x.source_topic());
-							client.createTopics(Arrays
-									.asList(new NewTopic(waveProperties.getPrefix() + x.source_topic(), 1, (short) 1)));
-							client.createTopics(Arrays
-									.asList(new NewTopic(waveProperties.getPrefix() + x.target_topic(), 1, (short) 1)));
-
-						} else
-							throw new Exception(
-									"Topics doesn't Exist : You must Create them By Adding topics Name in Properties");
-
-					}
-				}
-			if (waveEnd != null)
-				for (WaveEnd x : waveEnd) {
-
-					if (!topicExist(x.source_topic())) {
-						if (waveProperties.getAuto_create_topic()) {
-							log.info("creating topic : " + x.source_topic());
-							client.createTopics(Arrays
-									.asList(new NewTopic(waveProperties.getPrefix() + x.source_topic(), 1, (short) 1)));
-
-						} else
-							throw new Exception(
-									"Topics doesn't Exist : You must Create them By Adding topics Name in Properties");
-
-					}
-				}
+		 
 			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
 					for (String topicName : ioEventService.getTopics(ioEvent)) {

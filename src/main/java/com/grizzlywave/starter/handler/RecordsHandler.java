@@ -14,6 +14,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.context.AppContext;
@@ -45,34 +47,46 @@ public class RecordsHandler {
 	/** method which call doInvoke Method **/
 	public void process(ConsumerRecords<String, String> consumerRecords, Object bean, Method method) throws Throwable {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
-			this.doInvoke(method, bean, consumerRecord.value());
+			this.InvokeWithOneParameter(method, bean, consumerRecord.value());
 		}
 
 	}
 
+	public Object parseConsumedValue(Object consumedValue,Class<?> type) throws JsonMappingException, JsonProcessingException {
+		if (type.equals(String.class)) {
+			return consumedValue;
+		}
+		else {
+			return mapper.readValue(consumedValue.toString(), type);
+		}
+	}
 	/** method to invoke the method from a specific bean **/
-	public void doInvoke(Method method, Object bean, Object args) throws Throwable {
+	public void InvokeWithOneParameter(Method method, Object bean, Object args) throws Throwable {
 		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
 		if (beanmObject != null) {
 			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
 				if (met.getName().equals(method.getName())) {
 					Class<?>[] params = method.getParameterTypes();
-					if (params.length == 1) {
-						if (params[0].equals(String.class)) {
-							met.invoke(ctx.getApplicationContext().getBean(bean.getClass()), args);
+					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),parseConsumedValue(args,params[0]));
 
-						} else {
-							met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),
-									mapper.readValue(args.toString(), params[0]));
-
-						}
-					}
+						
 				}
 			}
 
 		}
 	}
+	public void InvokeWithtwoParameter(Method method, Object bean, Object arg1,Object arg2) throws Throwable {
+		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
+		if (beanmObject != null) {
+			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
+				if (met.getName().equals(method.getName())) {
+					Class<?>[] params = method.getParameterTypes();
+					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),parseConsumedValue(arg1,params[0]),arg2);
+				
+			}
 
+		}}
+	}
 	/**
 	 * method called when the listener consume event , the method scan the header
 	 * from consumer records and create waveRecordInfo from it , check if the target
@@ -94,17 +108,16 @@ public class RecordsHandler {
 						if (pair.getIoEvent().gatewaySource().parallel()) {
 							if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
 								ioEventService.sendWaveRecordInfo(waveRecordInfo);
-								this.doInvoke(pair.getMethod(), pair.getBean(), consumerRecord.value());
+								this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
 							} 
 							else {
 								log.info("parallel event arrived : "+waveRecordInfo.getTargetName());
 							}
 
 						} else {
-
+ 
 							ioEventService.sendWaveRecordInfo(waveRecordInfo);
-							log.info(consumerRecord.key());
-							this.doInvoke(pair.getMethod(), pair.getBean(), consumerRecord.value());
+							this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
 
 						}
 
@@ -112,6 +125,19 @@ public class RecordsHandler {
 				}
 			}
 
+		}
+	}
+
+	private void invokeMethod(BeanMethodPair pair, String consumerValue, WaveRecordInfo waveRecordInfo) throws Throwable {
+
+		if (pair.getMethod().getParameterCount()==1) {
+			this.InvokeWithOneParameter(pair.getMethod(), pair.getBean(), consumerValue);
+		}
+		else if (pair.getMethod().getParameterCount()==2) {
+			this.InvokeWithtwoParameter(pair.getMethod(), pair.getBean(), consumerValue,waveRecordInfo.getTargetName());
+		}
+		else {
+			log.error("the method "+pair.getMethod().getName()+" must had one or two parameters");
 		}
 	}
 
@@ -138,7 +164,6 @@ public class RecordsHandler {
 			
 		}
 		else {
-			log.info("row don't exist");
 			List<String> list=new ArrayList<String>();
 			list.add(waveRecordInfo.getTargetName());
 			parallelEventInfo = new ParallelEventInfo(waveRecordInfo.getId(),list);

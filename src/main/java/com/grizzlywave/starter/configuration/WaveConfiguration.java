@@ -14,9 +14,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.grizzlywave.starter.configuration.aspect.WaveEndAspect;
-import com.grizzlywave.starter.configuration.aspect.WaveInitAspect;
-import com.grizzlywave.starter.configuration.aspect.WaveTransitionAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventTransitionAspect;
@@ -98,20 +95,6 @@ public class WaveConfiguration {
 	@Bean
 	public IOEventEndAspect IOEventEndAspect() {
 		return new IOEventEndAspect();
-	}
-	@Bean
-	public WaveInitAspect WaveInitAspect() {
-		return new WaveInitAspect();
-	}
-	
-	@Bean
-	public WaveTransitionAspect WaveTransitionAspect() {
-		return new WaveTransitionAspect();
-	}
-	
-	@Bean
-	public WaveEndAspect WaveEndAspect() {
-		return new WaveEndAspect();
 	}
 	@ConditionalOnMissingBean
 	@Bean
