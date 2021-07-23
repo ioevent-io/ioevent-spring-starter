@@ -1,4 +1,4 @@
-package com.grizzlywave.starter.model;
+package com.grizzlywave.starter.domain;
 
 /**
  * Class WaveResponse Contains an object and a hash map to give more information

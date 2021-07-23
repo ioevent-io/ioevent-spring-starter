@@ -1,4 +1,4 @@
-package com.grizzlywave.starter.model;
+package com.grizzlywave.starter.domain;
 
 import java.util.UUID;
 /** this class have information to be used in the construction of the bpmn*/

@@ -1,14 +1,14 @@
 package com.grizzlywave.starter.logger;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 
 /**class event logger used to log wave Annotation aspect */
 public class EventLogger {
-	private UUID correlationId;
+	private String correlationId;
 	private String workflow;
 	private String stepName;
 	private String sourceEvent;
@@ -23,7 +23,7 @@ public class EventLogger {
 		super();
 	}
 
-	public EventLogger(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -32,9 +32,9 @@ public class EventLogger {
 		this.targetEvent = targetEvent;
 		this.eventType = eventType;
 		this.payload = payload;
-	}
+	} 
 
-	public EventLogger(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
 			String eventType, Object payload, String startTime, String endTime, Long duration) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
@@ -48,11 +48,11 @@ public class EventLogger {
 		this.duration = duration;
 	}
 
-	public UUID getCorrelationId() {
+	public String getCorrelationId() {
 		return correlationId;
 	}
 
-	public void setCorrelationId(UUID correlationId) {
+	public void setCorrelationId(String correlationId) {
 		this.correlationId = correlationId;
 	}
 
@@ -142,13 +142,20 @@ public class EventLogger {
 		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		return dateFormat.format(date);
 	}
-
-	public void setting(UUID correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public Long getTimestamp(String stringDate) throws ParseException
+	{
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSSS'Z'");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date date = dateFormat.parse(stringDate);
+		
+		return date.getTime();
+	}
+	public void setting(String id, String workflow, String stepName, String string, String targetEvent,
 			String eventType, Object payload) {
-		this.correlationId = correlationId;
+		this.correlationId = id;
 		this.workflow = workflow;
 		this.stepName=stepName;
-		this.sourceEvent=sourceEvent;
+		this.sourceEvent=string;
 		this.targetEvent=targetEvent;
 		this.eventType=eventType;
 		this.payload=payload;

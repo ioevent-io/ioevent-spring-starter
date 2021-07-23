@@ -2,12 +2,16 @@ package com.grizzlywave.starter.listener;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
+import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.handler.RecordsHandler;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,18 +25,28 @@ import lombok.extern.slf4j.Slf4j;
 public class Listener {
 
 	private volatile boolean keepConsuming = true;
-	private RecordsHandler recordsHandler;
+	final private RecordsHandler recordsHandler;
 	private Consumer<String, String> consumer;
 	private Object bean;
 	private Method method;
+	private String topic;
+	private List<BeanMethodPair> beanMethodPairs=new ArrayList<BeanMethodPair>();
+	
 
-	/** listener constructor */
-	public Listener(final Consumer<String, String> consumer, RecordsHandler recordsHandler, Object bean,
-			Method method) {
+	
+
+	/** listener constructor 
+	 * @param ioEvent 
+	 * @param topicName */
+	public Listener(final Consumer<String, String> consumer,final RecordsHandler recordsHandler, Object bean,
+			Method method, IOEvent ioEvent, String topicName) {
 		this.consumer = consumer;
 		this.recordsHandler = recordsHandler;
 		this.bean = bean;
 		this.method = method;
+		this.topic=topicName;
+		this.beanMethodPairs.add(new BeanMethodPair(bean, method,ioEvent));
+		
 	}
 
 	/**
@@ -43,8 +57,9 @@ public class Listener {
 		try {
 			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
 			while (keepConsuming) {
-				final ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(1));
-				recordsHandler.process(consumerRecords, this.bean, this.method);
+				 ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(1));
+				recordsHandler.process(consumerRecords, this.beanMethodPairs);
+
 			}
 		} finally {
 			consumer.close();
@@ -69,5 +84,33 @@ public class Listener {
 
 	public void setMethod(Method method) {
 		this.method = method;
+	}
+	public String getTopic() {
+		return topic;
+	}
+
+	public void setTopic(String topic) {
+		this.topic = topic;
+	}
+	
+	public List<BeanMethodPair> getBeanMethodPairs() {
+		return beanMethodPairs;
+	}
+
+	public void setBeanMethodPairs(List<BeanMethodPair> beanMethodPairs) {
+		this.beanMethodPairs = beanMethodPairs;
+	}
+	public void addBeanMethod(BeanMethodPair beanMethod) {
+		boolean valid=true;
+		for (BeanMethodPair beanMethodPair : beanMethodPairs) {
+			if ((beanMethod.getBean().equals(beanMethodPair.getBean())&&beanMethod.getMethod().equals(beanMethodPair.getMethod()))) {
+				valid=false;
+			}
+		}
+		if (valid) {
+			this.beanMethodPairs.add(beanMethod);
+
+		}
+		
 	}
 }

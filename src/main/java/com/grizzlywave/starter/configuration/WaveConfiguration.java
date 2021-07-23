@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -13,17 +14,20 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.grizzlywave.starter.configuration.aspect.WaveEndAspect;
-import com.grizzlywave.starter.configuration.aspect.WaveInitAspect;
-import com.grizzlywave.starter.configuration.aspect.WaveTransitionAspect;
+import com.grizzlywave.starter.configuration.aspect.v2.IOEventEndAspect;
+import com.grizzlywave.starter.configuration.aspect.v2.IOEventStartAspect;
+import com.grizzlywave.starter.configuration.aspect.v2.IOEventTransitionAspect;
 import com.grizzlywave.starter.configuration.kafka.KafkaConfig;
 import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor;
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.controller.WaveController;
+import com.grizzlywave.starter.domain.IOEventBpmnPart;
+import com.grizzlywave.starter.domain.WaveBpmnPart;
 import com.grizzlywave.starter.handler.RecordsHandler;
+import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
-import com.grizzlywave.starter.model.WaveBpmnPart;
+import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
 /**
@@ -36,7 +40,6 @@ import com.grizzlywave.starter.service.TopicServices;
 @EnableAsync
 @Import({ KafkaConfig.class })
 public class WaveConfiguration {
-
 	
 	@Bean
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
@@ -51,9 +54,12 @@ public class WaveConfiguration {
 
 	@Bean
 	public TopicServices TopicServices() {
-		return new TopicServices();
+		return new TopicServices(); 
 	}
-	
+	@Bean
+	public RecordsHandler recordsHandler()
+	{return new RecordsHandler();}
+
 	@Bean
 	public ListenerCreator ListenerCreator() {
 		return new ListenerCreator();
@@ -78,20 +84,17 @@ public class WaveConfiguration {
 		return new WaveBpmnPostProcessor();
 	}
 	
-	
 	@Bean
-	public WaveInitAspect WaveInitAspect() {
-		return new WaveInitAspect();
+	public IOEventStartAspect IOEventStartAspect() {
+		return new IOEventStartAspect();
 	}
-	
 	@Bean
-	public WaveTransitionAspect WaveTransitionAspect() {
-		return new WaveTransitionAspect();
+	public IOEventTransitionAspect IOEventTransitionAspect() {
+		return new IOEventTransitionAspect();
 	}
-	
 	@Bean
-	public WaveEndAspect WaveEndAspect() {
-		return new WaveEndAspect();
+	public IOEventEndAspect IOEventEndAspect() {
+		return new IOEventEndAspect();
 	}
 	@ConditionalOnMissingBean
 	@Bean
@@ -103,8 +106,17 @@ public class WaveConfiguration {
 	public List<WaveBpmnPart> bpmnlist() {
 		return new ArrayList<WaveBpmnPart>();
 	}
+	@Bean("iobpmnlist")
+	public List<IOEventBpmnPart> iobpmnlist() {
+		return new LinkedList<IOEventBpmnPart>();
+	}
+	@Bean("listeners")
+	public List<Listener> listeners() {
+		return new ArrayList<Listener>();
+	}
+	
 	@Bean
-	public RecordsHandler recordsHandler()
-	{return new RecordsHandler();}
-
+	public IOEventService IOEventService() {
+		return new IOEventService();
+	}
 }

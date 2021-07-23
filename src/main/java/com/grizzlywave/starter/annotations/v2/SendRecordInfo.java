@@ -1,4 +1,4 @@
-package com.grizzlywave.starter.annotations;
+package com.grizzlywave.starter.annotations.v2;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,12 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface WaveEnd {
-
-	String stepName() default "END";
-
-	String source_event();
-
-	String source_topic();
+public @interface SendRecordInfo {
 
 }
