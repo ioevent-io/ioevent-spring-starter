@@ -22,6 +22,7 @@ services:
   
   zookeeper:
     image: confluentinc/cp-zookeeper
+    container_name: zookeeper
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data:Z
       - zookeeper-log:/var/lib/zookeeper/log:Z
@@ -31,6 +32,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka
+    hostname: kafka
     container_name: kafka
     volumes:
       - kafka-data:/var/lib/kafka:Z
@@ -46,7 +48,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
       KAFKA_LISTENERS: LISTENER_INSIDE://0.0.0.0:29092,LISTENER_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_INSIDE://kafka:29092,LISTENER_HOST://192.168.99.100:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INSIDE://kafka:29092,LISTENER_HOST://0.0.0.0:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INSIDE:PLAINTEXT,LISTENER_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INSIDE
       #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
@@ -61,6 +63,7 @@ services:
 
   schema-registry:
     image: confluentinc/cp-schema-registry
+    container_name: schema-registry
     depends_on:
       - kafka
     environment:
@@ -71,6 +74,7 @@ services:
   
   kafkahq:
     image: tchiotludo/akhq
+    container_name: kafkahq
     environment:
       AKHQ_CONFIGURATION: |
         akhq:
@@ -89,3 +93,48 @@ services:
     links:
       - kafka
       - schema-registry
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.18.0
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      - kafka
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: kafka:9092
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.18.0
+    container_name: ksqldb-cli
+    depends_on:
+      - kafka
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+  # elasticsearch:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    # container_name: elasticsearch
+    # ports:
+      # - "9200:9200"
+      # - "9300:9300"
+    # restart: always
+    # #volumes:
+     # #- "./mapping.sh:/usr/local/bin/elastic-mapping.sh"
+    # environment:
+      # - node.name=elasticsearch
+      # - discovery.type=single-node
+# #     - discovery.seed_hosts=elasticsearch
+# #     - cluster.initial_master_nodes=elasticsearch
+      # - cluster.name=docker-cluster
+      # - bootstrap.memory_lock=true
+      # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    # #command: 
+     # # - elastic-mapping.sh 
+    # deploy:
+      # resources:
+        # limits:
+          # memory: 3gb

@@ -8,6 +8,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -25,7 +26,10 @@ public class KafkaConfig {
 
 	@Autowired
 	private KafkaProperties kafkaProperties;
-
+	
+	@Value("${Ksql.server}")
+	private String KsqlServer;
+	
 	@Bean
 	public AdminClient AdminClient() {
 		Properties properties = new Properties() {
@@ -41,7 +45,7 @@ public class KafkaConfig {
 	@Bean
 	public Client KsqlClient() {
 		ClientOptions options = ClientOptions.create()
-		        .setHost("192.168.99.100")
+		        .setHost(KsqlServer)
 		        .setPort(8088);
 		    return Client.create(options);
 	}
