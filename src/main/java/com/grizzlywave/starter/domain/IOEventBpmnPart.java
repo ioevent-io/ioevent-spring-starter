@@ -137,7 +137,13 @@ public class IOEventBpmnPart {
 
 	public Map<String, String> addTarget(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
+		boolean isSuffix=false;
+		String suffix="";
 		for (TargetEvent targetEvent : ioEvent.target()) {
+			if (!targetEvent.suffix().equals("")) {
+				isSuffix = true ;
+				suffix=targetEvent.suffix();
+			}
 			if (!targetEvent.name().equals("")) {
 				result.put(targetEvent.name(), targetEvent.topic());
 			}
@@ -145,6 +151,14 @@ public class IOEventBpmnPart {
 		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
 			if (!targetEvent.name().equals("")) {
 				result.put(targetEvent.name(), targetEvent.topic());
+			}
+		}
+		if (isSuffix) {
+			for (SourceEvent sourceEvent : ioEvent.source()) {
+				if (!sourceEvent.name().equals("")) {
+					result.put(sourceEvent.name()+suffix, sourceEvent.topic());
+
+				}
 			}
 		}
 		return result;
