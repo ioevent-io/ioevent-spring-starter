@@ -46,7 +46,6 @@ public class ListenerCreator {
 		listeners.add(consumerApplication);
 		log.info("listener lunched for " + method);
 		consumerApplication.runConsume(props);
-		log.info("listener created for " + method);
 		return consumerApplication;
 	}
 }

@@ -15,6 +15,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StopWatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
@@ -43,32 +44,38 @@ public class IOEventStartAspect {
 	@Around(value = "@annotation(anno)", argNames = "jp, anno") //
 	public Object iOEventAnnotationAspect(ProceedingJoinPoint joinPoint, IOEvent ioEvent) throws Throwable {
 		Object obj = joinPoint.proceed();
-		if (!ioEvent.startEvent().key().equals("")) {
+		
+		if (!ioEvent.startEvent().key().isEmpty()) {
+			
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
+			
 			eventLogger.startEventLog();
 			watch.start("IOEvent annotation Start Aspect");
+			
 			UUID uuid = UUID.randomUUID();
 			String target ="";
+
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid.toString(),targetEvent,eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
 				target+=targetEvent.name()+",";
-			}
-			watch.stop();
-			eventLogger.setting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
-					joinPoint.getArgs()[0].toString()); 
-			eventLogger.stopEvent(watch.getTotalTimeMillis());
-			String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
-			log.info(jsonObject);
+			}		
+			prepareAndDisplayEventLogger(eventLogger,uuid,ioEvent,target,joinPoint,watch);
 		} 
 		return obj;
 	}
 
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
+
+	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
+		String topic = targetEvent.topic();
+		if (topic.equals("")) {
+			topic = ioEvent.topic();
+
+		}
 		return MessageBuilder.withPayload(payload)
-				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + targetEvent.topic())
+				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(KafkaHeaders.PARTITION_ID, 0)
 				.setHeader("Correlation_id",uuid).setHeader("StepName", ioEvent.name())
 				.setHeader("EventType", IOEventType.START.toString())
@@ -77,4 +84,13 @@ public class IOEventStartAspect {
 				.setHeader("Process_Name", ioEvent.startEvent().key()).setHeader("Start Time", startTime).build();
 	}
 
+	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String target,
+			ProceedingJoinPoint joinPoint, StopWatch watch) throws JsonProcessingException {
+		watch.stop();
+		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
+				joinPoint.getArgs()[0].toString()); 
+		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
+		log.info(jsonObject);		
+	}
 }

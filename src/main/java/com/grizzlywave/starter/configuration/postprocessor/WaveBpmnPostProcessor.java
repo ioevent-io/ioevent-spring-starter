@@ -1,6 +1,5 @@
 package com.grizzlywave.starter.configuration.postprocessor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
-import com.grizzlywave.starter.annotations.v2.EventBody;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventBpmnPart;
@@ -69,13 +67,11 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
-					if (ioEvent.startEvent().key().equals("")) {
+					if (ioEvent.startEvent().key().isEmpty()) {
 						for (String topicName : ioEventService.getSourceTopic(ioEvent)) {
-
 							if (!ListenerExist(topicName, bean, method, ioEvent)) {
 								ListenerCreator.createListener(bean, method, ioEvent,
 										waveProperties.getPrefix() + topicName, waveProperties.getGroup_id());
-								methodparams(method);
 								Thread.sleep(1000);
 							}
 						}
@@ -95,7 +91,6 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			if (listener != null) {
 				String t = listener.getTopic();
 				if (t.equals(waveProperties.getPrefix() + topicName)) {
-					methodparams(method);
 
 					listener.addBeanMethod(new BeanMethodPair(bean, method, ioEvent));
 					
@@ -105,26 +100,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 		return false;
 	}
-	private void methodparams(Method method) {
-		Class<?>[] paramType =method.getParameterTypes();
-		Annotation[][] paramAnn =method.getParameterAnnotations();
-		for (Class<?> Type : paramType) {
-			//log.info(Type.getName());
-		}
 
-		for (Annotation[] annotatedType : paramAnn) {
-			for (Annotation annotation : annotatedType) {
-				if (annotation instanceof EventBody) {
-					
-//					log.info(annotation.annotationType().getName());
-
-
-				}
-			}
-		
-	
-		}
-	}
 	
 
 	/** methods to create IOEvent BPMN Parts from annotations **/

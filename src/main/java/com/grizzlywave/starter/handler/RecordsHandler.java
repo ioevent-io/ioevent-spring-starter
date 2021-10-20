@@ -101,24 +101,20 @@ public class RecordsHandler {
 
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
-			WaveRecordInfo waveRecordInfo = this.scanHeaders(consumerRecord);
+			WaveRecordInfo waveRecordInfo = this.getWaveHeaders(consumerRecord);
 			for (BeanMethodPair pair : beanMethodPairs) {
+				
 				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
+				
 					if (SourceName.equals(waveRecordInfo.getTargetName())) {
+					
 						if (pair.getIoEvent().gatewaySource().parallel()) {
-							if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
-								ioEventService.sendWaveRecordInfo(waveRecordInfo);
-								this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
-							} 
-							else {
-								log.info("parallel event arrived : "+waveRecordInfo.getTargetName());
-							}
-
+							
+							parallelInvoke(pair,consumerRecord,waveRecordInfo);
+							
 						} else {
- 
-							ioEventService.sendWaveRecordInfo(waveRecordInfo);
-							this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
-
+							
+							simpleInvoke(pair,consumerRecord,waveRecordInfo);
 						}
 
 					}
@@ -126,6 +122,24 @@ public class RecordsHandler {
 			}
 
 		}
+	}
+
+	private void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
+			WaveRecordInfo waveRecordInfo) throws Throwable {
+		if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
+			ioEventService.sendWaveRecordInfo(waveRecordInfo);
+			this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
+		} 
+		else {
+			log.info("parallel event arrived : "+waveRecordInfo.getTargetName());
+		}
+		
+	}
+
+	private void simpleInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
+			WaveRecordInfo waveRecordInfo) throws Throwable {
+		ioEventService.sendWaveRecordInfo(waveRecordInfo);
+		this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);		
 	}
 
 	private void invokeMethod(BeanMethodPair pair, String consumerValue, WaveRecordInfo waveRecordInfo) throws Throwable {
@@ -191,7 +205,7 @@ public class RecordsHandler {
 		return output;
 	}
 
-	public WaveRecordInfo scanHeaders(ConsumerRecord<String, String> consumerRecord) {
+	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals("targetEvent")) {
