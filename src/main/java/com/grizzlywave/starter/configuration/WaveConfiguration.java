@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import com.grizzlywave.starter.configuration.eureka.EurekaConfig;
 import com.netflix.discovery.EurekaClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 /**
  * class for wave configuration which contains all configurations needed by a
  * project which use GrizzlyWave
@@ -45,18 +48,19 @@ import org.springframework.stereotype.Service;
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass=true)
 @EnableAsync
-@Import({ KafkaConfig.class })
+@Import({ KafkaConfig.class,EurekaConfig.class })
 @Service
 public class WaveConfiguration {
 
-	@Autowired
-	private EurekaClient eurekaClient;
+//	@Autowired
+//	private EurekaClient eurekaClient;
+//
+//	@ConditionalOnExpression( "'${grizzly-wave.eureka}'!='enable'")
+//	@Bean
+//	void  reloadProps() {
+//		eurekaClient.shutdown();
+//	}
 
-	@ConditionalOnExpression( "'${grizzly-wave.eureka}'!='enable'")
-	@Bean
-	void  reloadProps() {
-		eurekaClient.shutdown();
-	}
 	@Bean
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
 		return new com.grizzlywave.starter.configuration.context.AppContext();
@@ -100,9 +104,10 @@ public class WaveConfiguration {
 	public WaveBpmnPostProcessor WaveBpmnPostProcessor() {
 		return new WaveBpmnPostProcessor();
 	}
-	//@ConditionalOnExpression( "${wave.eureka.enable:true}")
-	@ConditionalOnMissingBean
 
+
+
+	@ConditionalOnMissingBean
 	@Bean
 	public IOEventStartAspect IOEventStartAspect() {
 		return new IOEventStartAspect();
