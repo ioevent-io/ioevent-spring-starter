@@ -59,7 +59,6 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Nullable
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-
 		try {
 			this.process(bean, beanName);
 		} catch (InterruptedException | ExecutionException e) {
