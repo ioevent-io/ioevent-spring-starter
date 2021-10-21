@@ -5,7 +5,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import com.grizzlywave.starter.configuration.eureka.EurekaConfig;
+import com.netflix.discovery.EurekaClient;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.netflix.eureka.http.EurekaClientHttpRequestFactorySupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -29,6 +36,9 @@ import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 /**
  * class for wave configuration which contains all configurations needed by a
@@ -38,13 +48,24 @@ import com.grizzlywave.starter.service.TopicServices;
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass=true)
 @EnableAsync
-@Import({ KafkaConfig.class })
+@Import({ KafkaConfig.class,EurekaConfig.class })
+@Service
 public class WaveConfiguration {
-	
+
+//	@Autowired
+//	private EurekaClient eurekaClient;
+//
+//	@ConditionalOnExpression( "'${grizzly-wave.eureka}'!='enable'")
+//	@Bean
+//	void  reloadProps() {
+//		eurekaClient.shutdown();
+//	}
+
 	@Bean
 	public com.grizzlywave.starter.configuration.context.AppContext AppContext() {
 		return new com.grizzlywave.starter.configuration.context.AppContext();
 	}
+
 
 	@ConditionalOnMissingBean
 	@Bean
@@ -54,7 +75,7 @@ public class WaveConfiguration {
 
 	@Bean
 	public TopicServices TopicServices() {
-		return new TopicServices(); 
+		return new TopicServices();
 	}
 	@Bean
 	public RecordsHandler recordsHandler()
@@ -66,13 +87,13 @@ public class WaveConfiguration {
 	}
 	@Bean
 	public Executor asyncExecutor() {
-	    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-	    executor.setCorePoolSize(5);
-	    executor.setMaxPoolSize(5);
-	    executor.setQueueCapacity(500);
-	    executor.setThreadNamePrefix("Asynchronous Process-");
-	    executor.initialize();
-	    return executor;
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(5);
+		executor.setMaxPoolSize(5);
+		executor.setQueueCapacity(500);
+		executor.setThreadNamePrefix("Asynchronous Process-");
+		executor.initialize();
+		return executor;
 	}
 	@Bean
 	public WaveTopicBeanPostProcessor WaveTopicBeanPostProcessor() {
@@ -83,7 +104,10 @@ public class WaveConfiguration {
 	public WaveBpmnPostProcessor WaveBpmnPostProcessor() {
 		return new WaveBpmnPostProcessor();
 	}
-	
+
+
+
+	@ConditionalOnMissingBean
 	@Bean
 	public IOEventStartAspect IOEventStartAspect() {
 		return new IOEventStartAspect();
@@ -114,7 +138,7 @@ public class WaveConfiguration {
 	public List<Listener> listeners() {
 		return new ArrayList<Listener>();
 	}
-	
+
 	@Bean
 	public IOEventService IOEventService() {
 		return new IOEventService();
