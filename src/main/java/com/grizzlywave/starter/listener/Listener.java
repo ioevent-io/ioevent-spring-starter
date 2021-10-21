@@ -58,7 +58,9 @@ public class Listener {
 			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
 			while (keepConsuming) {
 				 ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(1));
-				recordsHandler.process(consumerRecords, this.beanMethodPairs);
+				 if (!consumerRecords.isEmpty()) {
+						recordsHandler.process(consumerRecords, this.beanMethodPairs);
+				}
 
 			}
 		} finally {

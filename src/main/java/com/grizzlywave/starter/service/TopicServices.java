@@ -3,7 +3,6 @@ package com.grizzlywave.starter.service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.AdminClient;
@@ -16,16 +15,18 @@ import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Class TopicServices where we define services on topics (create , delete ,
  * getAllTopics...)
  **/
+@Slf4j
 @Primary
 @Service
 public class TopicServices {
 	@Autowired
 	private WaveProperties waveProperties;
-	Logger LOGGER = Logger.getLogger(Thread.currentThread().getStackTrace()[0].getClassName());
 
 	@Autowired
 	private AdminClient client;
@@ -38,7 +39,7 @@ public class TopicServices {
 		ListTopicsOptions listTopicsOptions = new ListTopicsOptions();
 		listTopicsOptions.listInternal(true);
 		return client.listTopics(listTopicsOptions).names().get().stream()
-				.filter((a) -> a.startsWith(waveProperties.getPrefix())).collect(Collectors.toList());
+				.filter(a -> a.startsWith(waveProperties.getPrefix())).collect(Collectors.toList());
 	}
 
 	/**
@@ -49,7 +50,7 @@ public class TopicServices {
 	public void createTopic(String topicName, String prefix) {
 
 		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, (short) 1)));
-		LOGGER.info(result.toString());
+		log.info(result.toString());
 	}
 
 	/**

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class ListenerCreator {
+	
 
 	@Autowired
 	private RecordsHandler recordsHandler;
@@ -34,7 +35,7 @@ public class ListenerCreator {
 	/** create listener on a single thread for the method and the topic given 
 	 * @param ioEvent */
 	@Async
-	public Listener createListener(Object bean, Method method, IOEvent ioEvent, String topicName, String groupId) throws Throwable {
+	public Listener createListener(Object bean, Method method, IOEvent ioEvent, String topicName, String groupId,Thread t1) throws Throwable {
 		Properties props = new Properties();
 		props.setProperty("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
 		props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -44,9 +45,13 @@ public class ListenerCreator {
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method,ioEvent,topicName);
 		listeners.add(consumerApplication);
+
+		synchronized (method) {
+
+			method.notifyAll();
+		}
 		log.info("listener lunched for " + method);
 		consumerApplication.runConsume(props);
-		log.info("listener created for " + method);
 		return consumerApplication;
 	}
 }

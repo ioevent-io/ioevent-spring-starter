@@ -150,7 +150,7 @@ public class EventLogger {
 		
 		return date.getTime();
 	}
-	public void setting(String id, String workflow, String stepName, String string, String targetEvent,
+	public void loggerSetting(String id, String workflow, String stepName, String string, String targetEvent,
 			String eventType, Object payload) {
 		this.correlationId = id;
 		this.workflow = workflow;

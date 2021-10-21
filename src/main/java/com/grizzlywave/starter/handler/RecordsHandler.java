@@ -101,24 +101,20 @@ public class RecordsHandler {
 
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
-			WaveRecordInfo waveRecordInfo = this.scanHeaders(consumerRecord);
+			WaveRecordInfo waveRecordInfo = this.getWaveHeaders(consumerRecord);
 			for (BeanMethodPair pair : beanMethodPairs) {
+				
 				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
+				
 					if (SourceName.equals(waveRecordInfo.getTargetName())) {
+					
 						if (pair.getIoEvent().gatewaySource().parallel()) {
-							if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
-								ioEventService.sendWaveRecordInfo(waveRecordInfo);
-								this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
-							} 
-							else {
-								log.info("parallel event arrived : "+waveRecordInfo.getTargetName());
-							}
-
+							
+							parallelInvoke(pair,consumerRecord,waveRecordInfo);
+							
 						} else {
- 
-							ioEventService.sendWaveRecordInfo(waveRecordInfo);
-							this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
-
+							
+							simpleInvoke(pair,consumerRecord,waveRecordInfo);
 						}
 
 					}
@@ -126,6 +122,24 @@ public class RecordsHandler {
 			}
 
 		}
+	}
+
+	private void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
+			WaveRecordInfo waveRecordInfo) throws Throwable {
+		if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
+			ioEventService.sendWaveRecordInfo(waveRecordInfo);
+			this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
+		} 
+		else {
+			log.info("parallel event arrived : "+waveRecordInfo.getTargetName());
+		}
+		
+	}
+
+	private void simpleInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
+			WaveRecordInfo waveRecordInfo) throws Throwable {
+		ioEventService.sendWaveRecordInfo(waveRecordInfo);
+		this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);		
 	}
 
 	private void invokeMethod(BeanMethodPair pair, String consumerValue, WaveRecordInfo waveRecordInfo) throws Throwable {
@@ -143,14 +157,13 @@ public class RecordsHandler {
 
 	private Boolean checkTable(WaveRecordInfo waveRecordInfo, IOEvent ioEvent)
 			throws InterruptedException, ExecutionException {
-		ParallelEventInfo	parallelEventInfo=new ParallelEventInfo();
 		Boolean canInvoke = false;
 		String selectInstace = "SELECT * FROM QUERYABLE_parallelEvent WHERE id =\'" + waveRecordInfo.getId() + "\';";
 		Row row = KsqlClient.streamQuery(selectInstace).get().poll();
 		if (row != null) {
 			List<String> arrivedSourceString = parseStringToArray((String) row.getValue("TARGETS"));
 			arrivedSourceString.add(waveRecordInfo.getTargetName());
-			 parallelEventInfo = new ParallelEventInfo((String) row.getValue("ID"), arrivedSourceString);
+			ParallelEventInfo parallelEventInfo = new ParallelEventInfo((String) row.getValue("ID"), arrivedSourceString);
 			if(ioEventService.sameList(arrivedSourceString, ioEventService.getParalleListSource(ioEvent))) {
 				canInvoke=true;
 				this.sendParallelEventInfo(parallelEventInfo);	
@@ -166,7 +179,7 @@ public class RecordsHandler {
 		else {
 			List<String> list=new ArrayList<String>();
 			list.add(waveRecordInfo.getTargetName());
-			parallelEventInfo = new ParallelEventInfo(waveRecordInfo.getId(),list);
+			ParallelEventInfo	parallelEventInfo = new ParallelEventInfo(waveRecordInfo.getId(),list);
 			this.sendParallelEventInfo(parallelEventInfo);	
 		}
 	return canInvoke;
@@ -191,7 +204,7 @@ public class RecordsHandler {
 		return output;
 	}
 
-	public WaveRecordInfo scanHeaders(ConsumerRecord<String, String> consumerRecord) {
+	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals("targetEvent")) {
@@ -200,7 +213,6 @@ public class RecordsHandler {
 			if (header.key().equals("Correlation_id")) {
 				waveRecordInfo.setId(new String(header.value()));
 			}
-			;
 			if (header.key().equals("Process_Name")) {
 				waveRecordInfo.setWorkFlowName(new String(header.value()));
 			}

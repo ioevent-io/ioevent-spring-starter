@@ -1,6 +1,5 @@
 package com.grizzlywave.starter.configuration.postprocessor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
-import com.grizzlywave.starter.annotations.v2.EventBody;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventBpmnPart;
@@ -25,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcessors {
+	public static Boolean listenerCreatorStatus=true;
 
 	@Autowired
 	private WaveProperties waveProperties;
@@ -67,23 +66,24 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 
-			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
-					if (ioEvent.startEvent().key().equals("")) {
+					
+					if (ioEvent.startEvent().key().isEmpty()) {
+					
 						for (String topicName : ioEventService.getSourceTopic(ioEvent)) {
-
+						
 							if (!ListenerExist(topicName, bean, method, ioEvent)) {
-								ListenerCreator.createListener(bean, method, ioEvent,
-										waveProperties.getPrefix() + topicName, waveProperties.getGroup_id());
-								methodparams(method);
-								Thread.sleep(1000);
+								synchronized (method) {
+									ListenerCreator.createListener(bean, method, ioEvent,
+											waveProperties.getPrefix() + topicName, waveProperties.getGroup_id(),Thread.currentThread());
+									method.wait();
+								}
 							}
 						}
 					}
-
 					UUID uuid = UUID.randomUUID();
 					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), uuid, method.getName()));
-				}
+				
 			}
 		}
 	}
@@ -95,7 +95,6 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 			if (listener != null) {
 				String t = listener.getTopic();
 				if (t.equals(waveProperties.getPrefix() + topicName)) {
-					methodparams(method);
 
 					listener.addBeanMethod(new BeanMethodPair(bean, method, ioEvent));
 					
@@ -105,34 +104,15 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 		return false;
 	}
-	private void methodparams(Method method) {
-		Class<?>[] paramType =method.getParameterTypes();
-		Annotation[][] paramAnn =method.getParameterAnnotations();
-		for (Class<?> Type : paramType) {
-			//log.info(Type.getName());
-		}
 
-		for (Annotation[] annotatedType : paramAnn) {
-			for (Annotation annotation : annotatedType) {
-				if (annotation instanceof EventBody) {
-					
-//					log.info(annotation.annotationType().getName());
-
-
-				}
-			}
-		
-	
-		}
-	}
 	
 
 	/** methods to create IOEvent BPMN Parts from annotations **/
 	private IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
 		String processName = "";
-		if (!ioEvent.startEvent().key().equals("")) {
+		if (!ioEvent.startEvent().key().isEmpty()) {
 			processName = ioEvent.startEvent().key();
-		} else if (!ioEvent.endEvent().key().equals("")) {
+		} else if (!ioEvent.endEvent().key().isEmpty()) {
 			processName = ioEvent.endEvent().key();
 		}
 		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, uuid, processName,

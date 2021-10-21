@@ -1,11 +1,12 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
+import java.text.ParseException;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -14,6 +15,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StopWatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.IOEventResponse;
@@ -44,12 +46,8 @@ public class IOEventTransitionAspect {
 	@Autowired
 	private IOEventService ioEventService;
 
-	@Pointcut("execution(* com.grizzlywave.starter.service..*.*(..))")
-	public void classpointcut() {
-	}
-
-
-	@Around(value = "classpointcut() && @annotation(audit)")
+	
+	@Around(value = "@annotation(audit)")
 	public Object SendRecordInfoAspect(ProceedingJoinPoint pjp,SendRecordInfo audit) throws Throwable {
 		this.waveRecordInfo =WaveRecordInfo.class.cast(pjp.getArgs()[0]);
 		Object obj = pjp.proceed();
@@ -57,62 +55,99 @@ public class IOEventTransitionAspect {
 	}
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object object) throws Throwable {
-		if (ioEvent.startEvent().key().equals("") && (ioEvent.endEvent().key().equals(""))) {
+	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws Throwable {
+		
+		
+		if (isTransition(ioEvent)) {
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
 			StopWatch watch = new StopWatch();
 			watch.start("IOEvent annotation Transition Aspect");
-			String target = "";
+			String targets = "";
 			if (ioEvent.gatewayTarget().target().length != 0) {
 				if (ioEvent.gatewayTarget().parallel()) {
-					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-						Message<Object> message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
-						kafkaTemplate.send(message);
-						target += targetEvent.name() + ",";
-					}
+					
+					targets = parallelEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
+					
 				} else if (ioEvent.gatewayTarget().exclusive()) {
-					IOEventResponse<Object> ioEventResponse = IOEventResponse.class.cast(object);
-					for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-						if (ioEventResponse.getString().equals(targetEvent.name())) {
-							Message<Object> message = this.buildStartMessage(ioEvent, ioEventResponse.getBody(),
-									targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
-							kafkaTemplate.send(message);
-							target += targetEvent.name() + ",";
-							log.info("sent to :"+targetEvent.name());
-						}
-
-					}
-
-				}
-			} else {
-			
-				for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-					Message<Object> message ;
-					if (!targetEvent.suffix().equals("")) {
-						
-						 message = this.buildSuffixMessage(ioEvent, object, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
-						 kafkaTemplate.send(message);
-							target += waveRecordInfo.getTargetName()+targetEvent.suffix();
-					}
-					else {
-						 message = this.buildStartMessage(ioEvent, object, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
-						 kafkaTemplate.send(message);
-							target += targetEvent.name() + ",";
-					}
+					
+					targets = exclusiveEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
 					
 				}
+			} else {
+		
+					targets = simpleEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
 			}
-			watch.stop();
-			eventLogger.setting(this.waveRecordInfo.getId(), this.waveRecordInfo.getWorkFlowName(), ioEvent.name(), this.waveRecordInfo.getTargetName(), target, "Transition",
-					object);
-			eventLogger.stopEvent(watch.getTotalTimeMillis());
-			String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
-			log.info(jsonObject);
+			
+			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,joinPoint,watch,returnObject);
 		}
 	}
 
-	private Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
+	
+	private String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+			WaveRecordInfo waveRecordInfo2, EventLogger eventLogger) throws ParseException {
+		
+		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
+			
+			Message<Object> message ;
+			
+			if (!targetEvent.suffix().equals("")) {
+				
+				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				 kafkaTemplate.send(message);
+					targets += waveRecordInfo.getTargetName()+targetEvent.suffix();
+			}
+			else {
+				 message = this.buildTransitionMessage(ioEvent, returnObject, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				 kafkaTemplate.send(message);
+					targets += targetEvent.name() + ",";
+			}
+			
+		}		return targets;
+	}
+
+	private String exclusiveEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+			WaveRecordInfo waveRecordInfo2, EventLogger eventLogger) throws ParseException {
+		
+		IOEventResponse<Object> ioEventResponse = IOEventResponse.class.cast(returnObject);
+		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
+			if (ioEventResponse.getString().equals(targetEvent.name())) {
+				Message<Object> message = this.buildTransitionMessage(ioEvent, ioEventResponse.getBody(),
+						targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				kafkaTemplate.send(message);
+				targets += targetEvent.name() + ",";
+				log.info("sent to :"+targetEvent.name());
+			}
+
+		}
+		return targets;
+	}
+
+	private String parallelEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+			WaveRecordInfo waveRecordInfo2, EventLogger eventLogger) throws ParseException {
+		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
+			Message<Object> message = this.buildTransitionMessage(ioEvent, returnObject, targetEvent,this.waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+			kafkaTemplate.send(message);
+			targets += targetEvent.name() + ",";
+		}
+		return targets;
+	}
+
+	private void prepareAndDisplayEventLogger(EventLogger eventLogger, WaveRecordInfo waveRecordInfo2, IOEvent ioEvent,
+			String target, JoinPoint joinPoint, StopWatch watch,Object returnObject) throws JsonProcessingException {
+		watch.stop();
+		eventLogger.loggerSetting(this.waveRecordInfo.getId(), this.waveRecordInfo.getWorkFlowName(), ioEvent.name(), this.waveRecordInfo.getTargetName(), target, "Transition",
+				returnObject);
+		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
+		log.info(jsonObject);		
+	}
+
+	private boolean isTransition(IOEvent ioEvent) {
+		return (ioEvent.startEvent().key().isEmpty() && ioEvent.endEvent().key().isEmpty());
+	}
+
+	private Message<Object> buildTransitionMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (topic.equals("")) {
 			topic = ioEvent.topic();
