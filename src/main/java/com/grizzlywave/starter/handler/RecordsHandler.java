@@ -157,14 +157,13 @@ public class RecordsHandler {
 
 	private Boolean checkTable(WaveRecordInfo waveRecordInfo, IOEvent ioEvent)
 			throws InterruptedException, ExecutionException {
-		ParallelEventInfo	parallelEventInfo=new ParallelEventInfo();
 		Boolean canInvoke = false;
 		String selectInstace = "SELECT * FROM QUERYABLE_parallelEvent WHERE id =\'" + waveRecordInfo.getId() + "\';";
 		Row row = KsqlClient.streamQuery(selectInstace).get().poll();
 		if (row != null) {
 			List<String> arrivedSourceString = parseStringToArray((String) row.getValue("TARGETS"));
 			arrivedSourceString.add(waveRecordInfo.getTargetName());
-			 parallelEventInfo = new ParallelEventInfo((String) row.getValue("ID"), arrivedSourceString);
+			ParallelEventInfo parallelEventInfo = new ParallelEventInfo((String) row.getValue("ID"), arrivedSourceString);
 			if(ioEventService.sameList(arrivedSourceString, ioEventService.getParalleListSource(ioEvent))) {
 				canInvoke=true;
 				this.sendParallelEventInfo(parallelEventInfo);	
@@ -180,7 +179,7 @@ public class RecordsHandler {
 		else {
 			List<String> list=new ArrayList<String>();
 			list.add(waveRecordInfo.getTargetName());
-			parallelEventInfo = new ParallelEventInfo(waveRecordInfo.getId(),list);
+			ParallelEventInfo	parallelEventInfo = new ParallelEventInfo(waveRecordInfo.getId(),list);
 			this.sendParallelEventInfo(parallelEventInfo);	
 		}
 	return canInvoke;
@@ -214,7 +213,6 @@ public class RecordsHandler {
 			if (header.key().equals("Correlation_id")) {
 				waveRecordInfo.setId(new String(header.value()));
 			}
-			;
 			if (header.key().equals("Process_Name")) {
 				waveRecordInfo.setWorkFlowName(new String(header.value()));
 			}

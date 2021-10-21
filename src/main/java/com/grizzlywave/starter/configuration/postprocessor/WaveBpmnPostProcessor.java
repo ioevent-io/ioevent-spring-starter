@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcessors {
+	public static Boolean listenerCreatorStatus=true;
 
 	@Autowired
 	private WaveProperties waveProperties;
@@ -65,21 +66,24 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 
-			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
+					
 					if (ioEvent.startEvent().key().isEmpty()) {
+					
 						for (String topicName : ioEventService.getSourceTopic(ioEvent)) {
+						
 							if (!ListenerExist(topicName, bean, method, ioEvent)) {
-								ListenerCreator.createListener(bean, method, ioEvent,
-										waveProperties.getPrefix() + topicName, waveProperties.getGroup_id());
-								Thread.sleep(1000);
+								synchronized (method) {
+									ListenerCreator.createListener(bean, method, ioEvent,
+											waveProperties.getPrefix() + topicName, waveProperties.getGroup_id(),Thread.currentThread());
+									method.wait();
+								}
 							}
 						}
 					}
-
 					UUID uuid = UUID.randomUUID();
 					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), uuid, method.getName()));
-				}
+				
 			}
 		}
 	}
@@ -106,9 +110,9 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	/** methods to create IOEvent BPMN Parts from annotations **/
 	private IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
 		String processName = "";
-		if (!ioEvent.startEvent().key().equals("")) {
+		if (!ioEvent.startEvent().key().isEmpty()) {
 			processName = ioEvent.startEvent().key();
-		} else if (!ioEvent.endEvent().key().equals("")) {
+		} else if (!ioEvent.endEvent().key().isEmpty()) {
 			processName = ioEvent.endEvent().key();
 		}
 		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, uuid, processName,

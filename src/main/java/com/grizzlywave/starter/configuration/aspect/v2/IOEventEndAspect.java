@@ -63,12 +63,12 @@ public class IOEventEndAspect {
 		}
 	}
 
+	
 	public Message<Object> buildEventMessage(IOEvent ioEvent, Object payload, String targetEvent,
 			WaveRecordInfo waveRecordInfo, Long startTime) {
 		String topic = ioEvent.topic();
-		if (topic.equals("")) {
+		if (topic.isEmpty()) {
 			topic = ioEvent.topic();
-
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0)
