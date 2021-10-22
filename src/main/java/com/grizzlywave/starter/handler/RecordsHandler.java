@@ -22,6 +22,7 @@ import com.grizzlywave.starter.configuration.context.AppContext;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.service.IOEventService;
+import com.grizzlywave.starter.service.WaveContextHolder;
 
 import io.confluent.ksql.api.client.Client;
 import io.confluent.ksql.api.client.Row;
@@ -96,7 +97,7 @@ public class RecordsHandler {
 	 * aspect and call doinvoke()
 	 **/
 
-	public synchronized void process(ConsumerRecords<String, String> consumerRecords,
+	public  void process(ConsumerRecords<String, String> consumerRecords,
 			List<BeanMethodPair> beanMethodPairs) throws Throwable {
 
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
@@ -107,7 +108,7 @@ public class RecordsHandler {
 				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
 				
 					if (SourceName.equals(waveRecordInfo.getTargetName())) {
-					
+					WaveContextHolder.setContext(waveRecordInfo);
 						if (pair.getIoEvent().gatewaySource().parallel()) {
 							
 							parallelInvoke(pair,consumerRecord,waveRecordInfo);
@@ -127,7 +128,6 @@ public class RecordsHandler {
 	private void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			WaveRecordInfo waveRecordInfo) throws Throwable {
 		if (this.checkTable(waveRecordInfo, pair.getIoEvent())) {
-			ioEventService.sendWaveRecordInfo(waveRecordInfo);
 			this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);
 		} 
 		else {
@@ -138,7 +138,6 @@ public class RecordsHandler {
 
 	private void simpleInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			WaveRecordInfo waveRecordInfo) throws Throwable {
-		ioEventService.sendWaveRecordInfo(waveRecordInfo);
 		this.invokeMethod(pair, consumerRecord.value(),waveRecordInfo);		
 	}
 
