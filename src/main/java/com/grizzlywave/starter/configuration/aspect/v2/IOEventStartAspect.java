@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -45,7 +46,7 @@ public class IOEventStartAspect {
 	public Object iOEventAnnotationAspect(ProceedingJoinPoint joinPoint, IOEvent ioEvent) throws Throwable {
 		Object obj = joinPoint.proceed();
 		
-		if (!ioEvent.startEvent().key().isEmpty()) {
+		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
 			
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
@@ -70,7 +71,7 @@ public class IOEventStartAspect {
 
 	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
 		String topic = targetEvent.topic();
-		if (topic.equals("")) {
+		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
 
 		}

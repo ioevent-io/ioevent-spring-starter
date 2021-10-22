@@ -11,12 +11,10 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
-import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
-import com.grizzlywave.starter.handler.WaveRecordInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,10 +24,7 @@ public class IOEventService {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	@SendRecordInfo
-	public  String sendWaveRecordInfo(WaveRecordInfo waveRecordInfo){
-		return "RecordInfo sent";
-	}
+	
  
 	public void sendParallelEventInfo(ParallelEventInfo parallelEventInfo) {
 		Message<ParallelEventInfo> message = MessageBuilder.withPayload(parallelEventInfo).setHeader(KafkaHeaders.TOPIC, "parallelEvent")

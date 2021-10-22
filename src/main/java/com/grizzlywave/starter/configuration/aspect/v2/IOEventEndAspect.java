@@ -1,9 +1,9 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
+import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,12 +15,12 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
-import com.grizzlywave.starter.annotations.v2.SendRecordInfo;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
+import com.grizzlywave.starter.service.WaveContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,16 +39,13 @@ public class IOEventEndAspect {
 
 	@Autowired
 	private IOEventService ioEventService;
-	private WaveRecordInfo waveRecordInfo;
 
-	@Before(value = "@annotation(audit)")
-	public void methodHandlerAspect(JoinPoint pjp, SendRecordInfo audit) throws Throwable {
-		this.waveRecordInfo = WaveRecordInfo.class.cast(pjp.getArgs()[0]);
-	}
+	
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object object) throws Throwable {
-		if (!ioEvent.endEvent().key().isEmpty()) {
+		if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
+			WaveRecordInfo waveRecordInfo= WaveContextHolder.getContext();
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
@@ -56,10 +53,10 @@ public class IOEventEndAspect {
 			String workflow = ioEvent.endEvent().key();
 			String target = "END";
 			Message<Object> message = this.buildEventMessage(ioEvent, joinPoint.getArgs()[0], target,
-					this.waveRecordInfo, eventLogger.getTimestamp(eventLogger.getStartTime()));
+					waveRecordInfo, eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
 
-			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, joinPoint, watch);
+			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, joinPoint, watch,waveRecordInfo);
 		}
 	}
 
@@ -67,7 +64,7 @@ public class IOEventEndAspect {
 	public Message<Object> buildEventMessage(IOEvent ioEvent, Object payload, String targetEvent,
 			WaveRecordInfo waveRecordInfo, Long startTime) {
 		String topic = ioEvent.topic();
-		if (topic.isEmpty()) {
+		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
@@ -79,11 +76,11 @@ public class IOEventEndAspect {
 	}
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String workflow, IOEvent ioEvent,
-			JoinPoint joinPoint, StopWatch watch) throws JsonProcessingException {
+			JoinPoint joinPoint, StopWatch watch,WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 
 		watch.stop();
-		eventLogger.loggerSetting(this.waveRecordInfo.getId(), workflow, ioEvent.name(),
-				this.waveRecordInfo.getTargetName(), "__", "End", joinPoint.getArgs()[0]);
+		eventLogger.loggerSetting(waveRecordInfo.getId(), workflow, ioEvent.name(),
+				waveRecordInfo.getTargetName(), "__", "End", joinPoint.getArgs()[0]);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
