@@ -16,6 +16,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
@@ -24,7 +25,6 @@ import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
-
 import io.confluent.ksql.api.client.Client;
 
 /**
@@ -126,8 +126,12 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 							if (waveProperties.getAuto_create_topic()) {
 								log.info("creating topic : " + topicName);
-								client.createTopics(Arrays
-										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 1)));
+
+								System.out.println("hellooooooooooooooooooooooooooooooooo");
+								Thread.sleep(80000);
+								TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
+//								client.createTopics(Arrays
+//										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 1)));
 
 							} else
 								throw new Exception(

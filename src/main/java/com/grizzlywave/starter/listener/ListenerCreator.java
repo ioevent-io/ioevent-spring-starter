@@ -4,8 +4,10 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.scheduling.annotation.Async;
@@ -40,6 +42,11 @@ public class ListenerCreator {
 		props.setProperty("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
 		props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		props.setProperty("security.protocol", "SASL_SSL");
+		props.setProperty("sasl.mechanism", "PLAIN");
+		props.setProperty("sasl.jaas.config","org.apache.kafka.common.security.plain.PlainLoginModule required " +
+				"username=\"IIB2526UB7AOB4HY\" password=\"gTwgqPQeZNsIenMeuyoGmSi4yD4riLWGEQ9biO/pugvzPxuX2U8RIpwM2soyj1f6\";"
+		);
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
