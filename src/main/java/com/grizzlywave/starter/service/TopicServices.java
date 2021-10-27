@@ -49,7 +49,7 @@ public class TopicServices {
 	 **/
 	public void createTopic(String topicName, String prefix) {
 
-		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, (short) 1)));
+		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, (short) 3)));
 		log.info(result.toString());
 	}
 
