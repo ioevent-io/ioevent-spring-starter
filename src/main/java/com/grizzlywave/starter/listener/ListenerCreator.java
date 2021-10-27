@@ -4,9 +4,12 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.scheduling.annotation.Async;
 
@@ -31,7 +34,14 @@ public class ListenerCreator {
 
 	@Autowired
 	private List<Listener> listeners;
-
+	@Value("${spring.kafka.sasl.jaas.config:NONE}")
+	private String SASL_JAAS_CONFIG;
+	@Value("${spring.kafka.sasl.mechanism:NONE}")
+	private String PLAIN;
+	@Value("${spring.kafka.security.protocol:NONE}")
+	private String SASL_SSL;
+	@Value("${spring.kafka.security.status:disable}")
+	private String security;
 	/** create listener on a single thread for the method and the topic given 
 	 * @param ioEvent */
 	@Async
@@ -42,6 +52,13 @@ public class ListenerCreator {
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
+
+		if (security.equals("enable")){
+			props.put("security.protocol", SASL_SSL);
+			props.put("sasl.mechanism", PLAIN);
+			props.put("sasl.jaas.config",SASL_JAAS_CONFIG
+			);
+		}
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method,ioEvent,topicName);
 		listeners.add(consumerApplication);
