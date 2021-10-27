@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.scheduling.annotation.Async;
 
@@ -33,7 +34,14 @@ public class ListenerCreator {
 
 	@Autowired
 	private List<Listener> listeners;
-
+	@Value("${spring.kafka.sasl.jaas.config:NONE}")
+	private String SASL_JAAS_CONFIG;
+	@Value("${spring.kafka.sasl.mechanism:NONE}")
+	private String PLAIN;
+	@Value("${spring.kafka.security.protocol:NONE}")
+	private String SASL_SSL;
+	@Value("${spring.kafka.security.status:disable}")
+	private String security;
 	/** create listener on a single thread for the method and the topic given 
 	 * @param ioEvent */
 	@Async
@@ -42,13 +50,15 @@ public class ListenerCreator {
 		props.setProperty("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
 		props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		props.setProperty("security.protocol", "SASL_SSL");
-		props.setProperty("sasl.mechanism", "PLAIN");
-		props.setProperty("sasl.jaas.config","org.apache.kafka.common.security.plain.PlainLoginModule required " +
-				"username=\"IIB2526UB7AOB4HY\" password=\"gTwgqPQeZNsIenMeuyoGmSi4yD4riLWGEQ9biO/pugvzPxuX2U8RIpwM2soyj1f6\";"
-		);
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
+
+		if (security.equals("enable")){
+			props.put("security.protocol", SASL_SSL);
+			props.put("sasl.mechanism", PLAIN);
+			props.put("sasl.jaas.config",SASL_JAAS_CONFIG
+			);
+		}
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method,ioEvent,topicName);
 		listeners.add(consumerApplication);
