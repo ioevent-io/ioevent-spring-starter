@@ -33,12 +33,7 @@ pipeline {
 
   	   stage('Push grizzly starter dependencies to community maven repository') {
               	   		when { branch "develop" }
-              	   		steps {                       
-    withMaven(
-        maven: 'maven-3', // (1)
-        mavenLocalRepo: '.repository', // (2)
-        mavenSettingsConfig: 'MyGlobalSettings' 
-    ) 
+              	   		steps {                      
               	      		sh "mvn clean deploy"
               	      	}
               	   }
