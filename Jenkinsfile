@@ -34,6 +34,12 @@ pipeline {
   	   stage('Push grizzly starter dependencies to community maven repository') {
               	   		when { branch "develop" }
               	   		steps {
+                        
+    withMaven(
+        // Maven installation declared in the Jenkins "Global Tool Configuration"
+        maven: 'maven-3', // (1)
+        mavenSettingsConfig: 'MyGlobalSettings' 
+    ) 
               	      		sh "mvn clean deploy"
               	      	}
               	   }
