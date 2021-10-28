@@ -34,7 +34,7 @@ pipeline {
   	   stage('Push grizzly starter dependencies to community maven repository') {
               	   		when { branch "develop" }
               	   		steps {
-              	      		sh "mvn -s ~/.m2/settings.xml clean deploy"
+              	      		sh "mvn -s /home/ec2-user/.m2/settings.xml clean deploy"
               	      	}
               	   }
   	  
