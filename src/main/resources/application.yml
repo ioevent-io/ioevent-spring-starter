@@ -8,6 +8,14 @@ grizzly-wave:
 spring:
    kafka:
      bootstrap-servers: 192.168.99.100:9092
+      # used for kafka ssl connect...
+#     sasl:
+#       mechanism: PLAIN
+#       jaas:
+#         config: org.apache.kafka.common.security.plain.PlainLoginModule required username='IIB2526UB7AOB4HY' password='gTwgqPQeZNsIenMeuyoGmSi4yD4riLWGEQ9biO/pugvzPxuX2U8RIpwM2soyj1f6';
+#       security:
+#         status: enable
+#         protocol: SASL_SSL
      consumer:
         group-id: "firstgroup"
         

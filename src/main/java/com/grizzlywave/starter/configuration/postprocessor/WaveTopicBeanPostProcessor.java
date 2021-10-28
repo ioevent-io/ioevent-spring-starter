@@ -26,6 +26,7 @@ import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 import io.confluent.ksql.api.client.Client;
+import org.springframework.scheduling.annotation.Async;
 
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,
@@ -53,7 +54,6 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	
 	@Autowired
 	private Client KsqlClient;
-
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 
 	@Nullable
@@ -114,6 +114,8 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	 * exist if not then create all them in condition that the property
 	 * auto_create_topic is true
 	 **/
+
+
 	@Override
 	public void process(Object bean, String beanName) throws Exception {
 		for (Method method : bean.getClass().getMethods()) {
@@ -127,11 +129,9 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 							if (waveProperties.getAuto_create_topic()) {
 								log.info("creating topic : " + topicName);
 
-								System.out.println("hellooooooooooooooooooooooooooooooooo");
-								Thread.sleep(80000);
-								TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
-//								client.createTopics(Arrays
-//										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 1)));
+								//TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
+								client.createTopics(Arrays
+										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 3)));
 
 							} else
 								throw new Exception(

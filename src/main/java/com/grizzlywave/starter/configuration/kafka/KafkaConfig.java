@@ -14,6 +14,7 @@ import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaBootstrapConfiguration;
@@ -35,23 +36,31 @@ public class KafkaConfig {
 	private String KsqlServer;
 	@Value("${Ksql.port}")
 	private int KsqlPort;
-	
-	@Bean
-	public AdminClient AdminClient() {
-		Properties properties = new Properties() {
-			{
-				put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
-				put("connections.max.idle.ms", 10000);
-				put("request.timeout.ms", 20000);
-				put("retry.backoff.ms", 500);
-				put("security.protocol", "SASL_SSL");
-				put("sasl.mechanism", "PLAIN");
-				put("sasl.jaas.config","org.apache.kafka.common.security.plain.PlainLoginModule required " +
-						"username=\"IIB2526UB7AOB4HY\" password=\"gTwgqPQeZNsIenMeuyoGmSi4yD4riLWGEQ9biO/pugvzPxuX2U8RIpwM2soyj1f6\";"
-				);
-			}
+	@Value("${spring.kafka.sasl.jaas.config:NONE}")
+	private String SASL_JAAS_CONFIG;
+	@Value("${spring.kafka.sasl.mechanism:NONE}")
+	private String PLAIN;
+	@Value("${spring.kafka.security.protocol:NONE}")
+	private String SASL_SSL;
+	@Value("${spring.kafka.security.status:disable}")
+	private String security;
 
-		};
+	@Bean
+	public AdminClient AdminClient() throws InterruptedException {
+		Properties properties = new Properties() ;
+
+		properties.put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
+		properties.put("connections.max.idle.ms", 10000);
+		properties.put("request.timeout.ms", 20000);
+		properties.put("retry.backoff.ms", 500);
+
+		if (security.equals("enable")){
+			properties.put("security.protocol", SASL_SSL);
+			properties.put("sasl.mechanism", PLAIN);
+			properties.put("sasl.jaas.config",SASL_JAAS_CONFIG
+			);
+		}
+
 		AdminClient client = AdminClient.create(properties);
 		return client;
 	}
@@ -70,11 +79,12 @@ public class KafkaConfig {
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-		config.put("security.protocol", "SASL_SSL");
-		config.put("sasl.mechanism", "PLAIN");
-		config.put("sasl.jaas.config","org.apache.kafka.common.security.plain.PlainLoginModule required " +
-				"username=\"IIB2526UB7AOB4HY\" password=\"gTwgqPQeZNsIenMeuyoGmSi4yD4riLWGEQ9biO/pugvzPxuX2U8RIpwM2soyj1f6\";"
-		);
+		if (security.equals("enable")){
+			config.put("security.protocol", SASL_SSL);
+			config.put("sasl.mechanism", PLAIN);
+			config.put("sasl.jaas.config",SASL_JAAS_CONFIG
+			);
+		}
 		return new DefaultKafkaProducerFactory<>(config);
 	}
 
