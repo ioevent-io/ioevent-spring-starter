@@ -30,6 +30,13 @@ pipeline {
 	    		}
 		    }		
   	   }
+
+  	   stage('Push grizzly starter dependencies to community maven repository') {
+              	   		when { branch "develop" }
+              	   		steps {
+              	      		sh "mvn clean deploy"
+              	      	}
+              	   }
   	  
     }
     post {
