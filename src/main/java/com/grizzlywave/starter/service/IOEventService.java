@@ -172,7 +172,7 @@ public class IOEventService {
 			return IOEventType.END;
 		}
 		else {
-			return IOEventType.TRANSITION;
+			return IOEventType.TASK;
 		}
 	}
 
