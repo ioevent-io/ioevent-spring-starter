@@ -1,5 +1,5 @@
 package com.grizzlywave.starter.domain;
 
 public enum IOEventType {
-	 START,TRANSITION,END;
+	 START, TASK, GATEWAY_PARALLEL, GATEWAY_EXCLUSIVE, END;
 }

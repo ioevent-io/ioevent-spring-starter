@@ -157,8 +157,8 @@ public class RecordsHandler {
 	private Boolean checkTable(WaveRecordInfo waveRecordInfo, IOEvent ioEvent)
 			throws InterruptedException, ExecutionException {
 		Boolean canInvoke = false;
-		String selectInstace = "SELECT * FROM QUERYABLE_parallelEvent WHERE id =\'" + waveRecordInfo.getId() + "\';";
-		Row row = KsqlClient.streamQuery(selectInstace).get().poll();
+		String selectInstance = "SELECT * FROM QUERYABLE_parallelEvent WHERE id =\'" + waveRecordInfo.getId() + "\';";
+		Row row = KsqlClient.streamQuery(selectInstance).get().poll();
 		if (row != null) {
 			List<String> arrivedSourceString = parseStringToArray((String) row.getValue("TARGETS"));
 			arrivedSourceString.add(waveRecordInfo.getTargetName());
