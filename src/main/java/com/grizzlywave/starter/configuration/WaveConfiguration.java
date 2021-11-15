@@ -64,7 +64,7 @@ import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
 import com.grizzlywave.starter.listener.WaveParrallelListener;
 import com.grizzlywave.starter.service.IOEventService;
-import com.grizzlywave.starter.service.TopicServices;
+ import com.grizzlywave.starter.service.TopicServices;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;

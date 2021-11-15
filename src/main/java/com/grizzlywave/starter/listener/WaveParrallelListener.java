@@ -49,10 +49,11 @@ public class WaveParrallelListener {
 				WaveParallelEventInformation.class);
 		if ((waveParallelEventInformation!=null) && (sameList(waveParallelEventInformation.getSourceRequired(),
 				waveParallelEventInformation.getTargetsArrived()))) {
-			Object beanmObject = ctx.getApplicationContext()
-					.getBean(Class.forName(waveParallelEventInformation.getClassName()));
-			if (beanmObject != null) {
+			
 				try {
+					Object beanmObject = ctx.getApplicationContext()
+							.getBean(Class.forName(waveParallelEventInformation.getClassName()));
+					if (beanmObject != null) {
 					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(waveParallelEventInformation.getHeaders().get("Correlation_id"),
 							waveParallelEventInformation.getHeaders().get("Process_Name"),
 							waveParallelEventInformation.getTargetsArrived().toString());
@@ -61,12 +62,12 @@ public class WaveParrallelListener {
 					InvokeWithOneParameter(waveParallelEventInformation.getMethod(), beanmObject,
 							waveParallelEventInformation.getValue());
 
-				} catch (Throwable e) {
-					e.printStackTrace();
+					}} catch (Throwable e) {
+					//e.printStackTrace();
 				}
 
 			}
-		} else {
+	 else {
 			log.info("Parallel Event Source Not Completed, target arrived : "+waveParallelEventInformation.getTargetsArrived() );
 		}
 
