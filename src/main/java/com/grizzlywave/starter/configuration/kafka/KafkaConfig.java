@@ -40,10 +40,7 @@ public class KafkaConfig {
 	@Autowired
 	private KafkaProperties kafkaProperties;
 	
-	@Value("${Ksql.server}")
-	private String KsqlServer;
-	@Value("${Ksql.port}")
-	private int KsqlPort;
+	
 	@Value("${spring.kafka.sasl.jaas.config:NONE}")
 	private String SASL_JAAS_CONFIG;
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
