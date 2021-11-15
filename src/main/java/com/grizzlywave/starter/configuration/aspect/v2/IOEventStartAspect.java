@@ -77,7 +77,7 @@ public class IOEventStartAspect {
 		}
 		return MessageBuilder.withPayload(payload)
 				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(KafkaHeaders.PARTITION_ID, 0)
+				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid)
 				.setHeader("Correlation_id",uuid).setHeader("StepName", ioEvent.name())
 				.setHeader("EventType", IOEventType.START.toString())
 				.setHeader("source",new ArrayList<String>(Arrays.asList("Start")))

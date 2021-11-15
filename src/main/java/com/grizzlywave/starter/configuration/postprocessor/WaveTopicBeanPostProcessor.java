@@ -23,9 +23,9 @@ import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
+import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
-import io.confluent.ksql.api.client.Client;
 import org.springframework.scheduling.annotation.Async;
 
 /**
@@ -52,8 +52,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	@Autowired
 	private IOEventService ioEventService;
 	
-	@Autowired
-	private Client KsqlClient;
+	
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 
 	@Nullable
@@ -77,36 +76,19 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("parallelEvent","");
-			try {
-				createKtable();
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
-			}
+			((TopicServices) bean).createTopic("ParallelEventTopic","");
+
 			if (waveProperties.getTopic_names()!=null) {
 				waveProperties.getTopic_names().stream()
 				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
 		log.info("topics created");
 			}
-			ioEventService.sendParallelEventInfo(new ParallelEventInfo("first event",Arrays.asList("first target")));
+			ioEventService.sendParallelEventInfo(new WaveParallelEventInformation());
 
 		}
 		return bean;
 	}
 
-	private void createKtable() throws InterruptedException, ExecutionException {
-		String createAccountTable = "CREATE TABLE IF NOT EXISTS parallelEvent (\n"
-                + "  id string PRIMARY KEY,\n"
-                + "  targets STRING\n"
-                + ") WITH (\n"
-                + "  KAFKA_TOPIC = 'parallelEvent',\n"
-                + "  VALUE_FORMAT='JSON'\n"
-                + ");";	
-		final Map<String, Object> properties = Map.of("auto.offset.reset", "earliest");
-		log.info(KsqlClient.executeStatement(createAccountTable, properties).get().toString());	
-		String createQueryableTable = "CREATE TABLE IF NOT EXISTS QUERYABLE_parallelEvent AS SELECT * FROM parallelEvent;";
-		log.info(KsqlClient.executeStatement(createQueryableTable, properties).get().toString());	
-	}
 
 	/**
 	 * Process Method take the Bean as a parameter collect all Grizzly_Wave custom
@@ -131,7 +113,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 								//TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
 								client.createTopics(Arrays
-										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1, (short) 3)));
+										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 12, (short) 3)));
 
 							} else
 								throw new Exception(

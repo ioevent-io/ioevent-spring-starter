@@ -15,6 +15,7 @@ import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
+import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,11 +27,9 @@ public class IOEventService {
 
 	
  
-	public void sendParallelEventInfo(ParallelEventInfo parallelEventInfo) {
-		Message<ParallelEventInfo> message = MessageBuilder.withPayload(parallelEventInfo).setHeader(KafkaHeaders.TOPIC, "parallelEvent")
-				.setHeader(KafkaHeaders.MESSAGE_KEY, parallelEventInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0)
-				.setHeader("source", "customerMS")
-				.setHeader("destination", "orderMS").build();
+	public void sendParallelEventInfo(WaveParallelEventInformation parallelEventInfo) {
+		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo).setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+				.setHeader(KafkaHeaders.MESSAGE_KEY, parallelEventInfo.getHeaders().get("Correlation_id")).build();
 
 		kafkaTemplate.send(message);		
 	}
