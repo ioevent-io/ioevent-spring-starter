@@ -80,6 +80,13 @@ public class KafkaConfig {
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
+		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, "3");
+		if (security.equals("enable")) {
+			props.put("security.protocol", SASL_SSL);
+			props.put("sasl.mechanism", PLAIN);
+			props.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		}
+
 		return new KafkaStreamsConfiguration(props);
 		}
 	

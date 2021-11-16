@@ -77,6 +77,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		
 		if (bean instanceof TopicServices) {
 			((TopicServices) bean).createTopic("ParallelEventTopic","");
+			((TopicServices) bean).createTopic("resultTopic","");
 
 			if (waveProperties.getTopic_names()!=null) {
 				waveProperties.getTopic_names().stream()
