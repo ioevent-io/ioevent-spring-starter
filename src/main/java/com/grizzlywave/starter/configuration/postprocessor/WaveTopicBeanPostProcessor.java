@@ -76,12 +76,12 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic","");
-			((TopicServices) bean).createTopic("resultTopic","");
+			((TopicServices) bean).createTopic("ParallelEventTopic","",waveProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("resultTopic","",waveProperties.getTopicReplication());
 
 			if (waveProperties.getTopic_names()!=null) {
 				waveProperties.getTopic_names().stream()
-				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix()));
+				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix(),waveProperties.getTopicReplication()));
 		log.info("topics created");
 			}
 			ioEventService.sendParallelEventInfo(new WaveParallelEventInformation());
@@ -114,7 +114,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 								//TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
 								client.createTopics(Arrays
-										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 12, (short) 3)));
+										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 12,Short.valueOf(waveProperties.getTopicReplication()))));
 
 							} else
 								throw new Exception(

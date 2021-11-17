@@ -25,14 +25,14 @@ public class IOEventService {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	
- 
 	public void sendParallelEventInfo(WaveParallelEventInformation parallelEventInfo) {
-		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo).setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
+				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, parallelEventInfo.getHeaders().get("Correlation_id")).build();
 
-		kafkaTemplate.send(message);		
+		kafkaTemplate.send(message);
 	}
+
 	public List<String> getSourceNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 
@@ -49,6 +49,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	public List<String> getParalleListSource(IOEvent ioEvent) {
 		List<String> result = new ArrayList<String>();
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
@@ -80,7 +81,7 @@ public class IOEventService {
 		List<TargetEvent> result = new ArrayList<TargetEvent>();
 
 		for (TargetEvent targetEvent : ioEvent.target()) {
-			if ((!targetEvent.name().equals(""))||(!targetEvent.suffix().equals(""))) {
+			if ((!targetEvent.name().equals("")) || (!targetEvent.suffix().equals(""))) {
 				result.add(targetEvent);
 			}
 		}
@@ -166,11 +167,9 @@ public class IOEventService {
 	public IOEventType getIOEventType(IOEvent ioEvent) {
 		if (!ioEvent.startEvent().key().equals("")) {
 			return IOEventType.START;
-		}
-		else if (!ioEvent.endEvent().key().equals("")) {
+		} else if (!ioEvent.endEvent().key().equals("")) {
 			return IOEventType.END;
-		}
-		else {
+		} else {
 			return IOEventType.TASK;
 		}
 	}
@@ -182,5 +181,21 @@ public class IOEventService {
 			}
 		}
 		return null;
+	}
+
+	public IOEventType checkTaskType(IOEvent ioEvent) {
+		IOEventType type=IOEventType.TASK;
+		
+		if ((ioEvent.gatewayTarget().target().length != 0)||(ioEvent.gatewaySource().source().length!=0) ) {
+
+			if (ioEvent.gatewayTarget().parallel()||ioEvent.gatewaySource().parallel()) {
+			type=IOEventType.GATEWAY_PARALLEL;
+			}
+			else if (ioEvent.gatewayTarget().exclusive()||ioEvent.gatewaySource().exclusive()){
+				type=IOEventType.GATEWAY_EXCLUSIVE;
+				}
+			}
+		
+		return type;
 	}
 }

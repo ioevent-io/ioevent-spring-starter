@@ -58,7 +58,7 @@ public class IOEventTransitionAspect {
 			StopWatch watch = new StopWatch();
 			watch.start("IOEvent annotation Transition Aspect");
 			String targets = "";
-			IOEventType ioEventType = IOEventType.TASK;
+			IOEventType ioEventType =ioEventService.checkTaskType(ioEvent);
 			if (ioEvent.gatewayTarget().target().length != 0) {
 
 				if (ioEvent.gatewayTarget().parallel()) {
@@ -70,9 +70,10 @@ public class IOEventTransitionAspect {
 					targets = exclusiveEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
 					
 				}
-			} else {
+			} else { 
+				
 		
-					targets = simpleEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
+					targets = simpleEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger,ioEventType);
 			}
 			
 			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,joinPoint,watch,returnObject,ioEventType);
@@ -81,7 +82,7 @@ public class IOEventTransitionAspect {
 
 	
 	private String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
-			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
+			WaveRecordInfo waveRecordInfo, EventLogger eventLogger, IOEventType ioEventType) throws ParseException {
 		
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			
@@ -89,12 +90,12 @@ public class IOEventTransitionAspect {
 			
 			if (!StringUtils.isBlank(targetEvent.suffix())) {
 				
-				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
 				 kafkaTemplate.send(message);
 					targets += waveRecordInfo.getTargetName()+targetEvent.suffix();
 			}
 			else {
-				 message = this.buildTransitionTaskMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				 message = this.buildTransitionTaskMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
 				 kafkaTemplate.send(message);
 					targets += targetEvent.name() + ",";
 			}
@@ -143,7 +144,7 @@ public class IOEventTransitionAspect {
 		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key()));
 	}
 
-	private Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime) {
+	private Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
@@ -152,7 +153,7 @@ public class IOEventTransitionAspect {
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
 				.setHeader("Correlation_id",waveRecordInfo.getId())
-				.setHeader("EventType", IOEventType.TASK.toString())
+				.setHeader("EventType",ioEventType.toString())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
@@ -185,7 +186,7 @@ public class IOEventTransitionAspect {
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
 	
-	private Message<Object> buildSuffixMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
+	private Message<Object> buildSuffixMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime, IOEventType ioEventType) {
 		String topic = ioEventService.getSourceEventByName(ioEvent, waveRecordInfo.getTargetName()).topic();
 		if (!StringUtils.isBlank(ioEvent.topic())) {
 			topic = ioEvent.topic();
@@ -194,7 +195,7 @@ public class IOEventTransitionAspect {
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
 				.setHeader("Correlation_id",waveRecordInfo.getId())
-				.setHeader("EventType", IOEventType.TASK.toString())
+				.setHeader("EventType", ioEventType.toString())
 				.setHeader("source", waveRecordInfo.getTargetName())
 				.setHeader("targetEvent", waveRecordInfo.getTargetName()+targetEvent.suffix()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}

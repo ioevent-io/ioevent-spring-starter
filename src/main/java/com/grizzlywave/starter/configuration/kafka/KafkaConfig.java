@@ -51,7 +51,8 @@ public class KafkaConfig {
 	private String security;
 	@Value("${grizzly-wave.group_id}")
 	private String kafkaGroup_id;
-	
+	@Value("${grizzly-wave.topicReplication:1}")
+	private String topicReplication;
 
 	@Bean
 	public AdminClient AdminClient() throws InterruptedException {
@@ -80,7 +81,7 @@ public class KafkaConfig {
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
-		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, "3");
+		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG,topicReplication);
 		if (security.equals("enable")) {
 			props.put("security.protocol", SASL_SSL);
 			props.put("sasl.mechanism", PLAIN);
