@@ -25,7 +25,8 @@ public class WaveProperties {
 	
 	private String group_id= "wave";
 	private Boolean auto_create_topic = true;
-
+	private String topicReplication="1" ;
+	
 	public String getPrefix() {
 		return prefix;
 	}
@@ -40,6 +41,15 @@ public class WaveProperties {
 
 	public void setTopic_names(List<String> topic_names) {
 		this.topic_names = topic_names;
+	}
+
+	
+	public String getTopicReplication() {
+		return topicReplication;
+	}
+
+	public void setTopicReplication(String topicReplication) {
+		this.topicReplication = topicReplication;
 	}
 
 	public String getGroup_id() {
