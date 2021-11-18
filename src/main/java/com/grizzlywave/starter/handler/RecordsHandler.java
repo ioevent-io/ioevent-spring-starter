@@ -51,7 +51,9 @@ public class RecordsHandler {
 	private AppContext ctx;
 	@Autowired
 	private IOEventService ioEventService;
-
+	
+	@Value("${spring.application.name}")
+	private String appName;
 	
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
@@ -156,7 +158,7 @@ public class RecordsHandler {
 		
 		  Message<WaveParallelEventInformation> message =
 		  MessageBuilder.withPayload(parallelEventInfo) .setHeader(KafkaHeaders.TOPIC,
-		  "ParallelEventTopic") .setHeader(KafkaHeaders.MESSAGE_KEY,
+		  "ParallelEventTopic_"+appName) .setHeader(KafkaHeaders.MESSAGE_KEY,
 		  parallelEventInfo.getHeaders().get("Correlation_id")+parallelEventInfo.getSourceRequired()).build(); 
 		  kafkaTemplate.send(message); 
 		  kafkaTemplate.flush();

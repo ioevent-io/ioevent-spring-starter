@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
@@ -69,14 +70,15 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		}
 		return bean;
 	}
-
+	@Value("${spring.application.name}")
+	private String appName;
 	/** BeanPostProcessor method to execute After Bean Initialization */
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic","",waveProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("ParallelEventTopic_"+appName,"",waveProperties.getTopicReplication());
 			((TopicServices) bean).createTopic("resultTopic","",waveProperties.getTopicReplication());
 
 			if (waveProperties.getTopic_names()!=null) {
