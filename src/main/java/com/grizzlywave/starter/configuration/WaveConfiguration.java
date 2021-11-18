@@ -88,6 +88,9 @@ public class WaveConfiguration {
 
 	ObjectMapper mapper = new ObjectMapper();
 
+	@Value("${spring.application.name}")
+	private String appName;
+	
 	@Autowired
 	public void process(final StreamsBuilder builder) {
 
@@ -95,7 +98,7 @@ public class WaveConfiguration {
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
-				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
+				.stream("ParallelEventTopic_"+appName, Consumed.with(Serdes.String(), Serdes.String()))
 				.map((k, v) -> new KeyValue<>(k, v));
 		kstream.groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
 				.aggregate(() -> new String(""), (key, value, aggregateValue) -> {
