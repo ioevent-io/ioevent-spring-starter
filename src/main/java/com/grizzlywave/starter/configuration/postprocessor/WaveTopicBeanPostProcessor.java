@@ -70,15 +70,14 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		}
 		return bean;
 	}
-	@Value("${spring.application.name}")
-	private String appName;
+	
 	/** BeanPostProcessor method to execute After Bean Initialization */
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic_"+appName,"",waveProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("ParallelEventTopic","",waveProperties.getTopicReplication());
 			((TopicServices) bean).createTopic("resultTopic","",waveProperties.getTopicReplication());
 
 			if (waveProperties.getTopic_names()!=null) {

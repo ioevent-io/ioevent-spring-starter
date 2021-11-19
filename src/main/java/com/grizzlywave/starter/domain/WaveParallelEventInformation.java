@@ -37,7 +37,7 @@ public class WaveParallelEventInformation {
 	}
 
 	public WaveParallelEventInformation(ConsumerRecord<String, String> consumerRecord, WaveRecordInfo waveRecordInfo,
-			BeanMethodPair pair, List<String> sourceRequired) {
+			BeanMethodPair pair, List<String> sourceRequired,String appName) {
 		super();
 		this.value = consumerRecord.value();
 		this.targetsArrived.add(waveRecordInfo.getTargetName());
@@ -45,6 +45,7 @@ public class WaveParallelEventInformation {
 		this.method = pair.getMethod().getName();
 		this.className = pair.getBean().getClass().getName();
 		this.sourceRequired = sourceRequired;
+		headers.put("AppName", appName);
 		consumerRecord.headers().forEach(header -> this.headers.put(header.key(), new String(header.value())));
 	}
 

@@ -23,14 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOEventService {
-	@Value("${spring.application.name}")
-	private String appName;
+	
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	public void sendParallelEventInfo(WaveParallelEventInformation parallelEventInfo) {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic_"+appName)
+				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, parallelEventInfo.getHeaders().get("Correlation_id")).build();
 
 		kafkaTemplate.send(message);
