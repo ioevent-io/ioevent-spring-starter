@@ -98,8 +98,12 @@ public class WaveConfiguration {
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
-				.stream("ParallelEventTopic_"+appName, Consumed.with(Serdes.String(), Serdes.String()))
-				.map((k, v) -> new KeyValue<>(k, v));
+				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
+				.map((k, v) -> new KeyValue<>(k, v)).filter((k,v) -> { 
+					WaveParallelEventInformation value = gson.fromJson(v,
+						WaveParallelEventInformation.class);
+					return appName.equals(value.getHeaders().get("AppName"));} );
+		
 		kstream.groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
 				.aggregate(() -> new String(""), (key, value, aggregateValue) -> {
 					WaveParallelEventInformation currentValue = gson.fromJson(value,

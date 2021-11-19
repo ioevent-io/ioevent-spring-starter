@@ -146,7 +146,7 @@ public class RecordsHandler {
 	private void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			WaveRecordInfo waveRecordInfo) throws Throwable {
 		WaveParallelEventInformation parallelEventInfo = new WaveParallelEventInformation(consumerRecord,
-				waveRecordInfo, pair,ioEventService.getSourceNames(pair.getIoEvent()));
+				waveRecordInfo, pair,ioEventService.getSourceNames(pair.getIoEvent()),appName);
 		sendParallelInfo(parallelEventInfo);
 		log.info("IOEventINFO : " + parallelEventInfo);
 		log.info("parallel event arrived : " + waveRecordInfo.getTargetName());
@@ -158,7 +158,7 @@ public class RecordsHandler {
 		
 		  Message<WaveParallelEventInformation> message =
 		  MessageBuilder.withPayload(parallelEventInfo) .setHeader(KafkaHeaders.TOPIC,
-		  "ParallelEventTopic_"+appName) .setHeader(KafkaHeaders.MESSAGE_KEY,
+		  "ParallelEventTopic") .setHeader(KafkaHeaders.MESSAGE_KEY,
 		  parallelEventInfo.getHeaders().get("Correlation_id")+parallelEventInfo.getSourceRequired()).build(); 
 		  kafkaTemplate.send(message); 
 		  kafkaTemplate.flush();
