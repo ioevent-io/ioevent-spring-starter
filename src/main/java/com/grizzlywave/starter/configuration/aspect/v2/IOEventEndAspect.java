@@ -46,16 +46,14 @@ public class IOEventEndAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object object) throws Throwable {
 		if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			WaveRecordInfo waveRecordInfo= WaveContextHolder.getContext();
-			StopWatch watch = new StopWatch();
+			StopWatch watch = waveRecordInfo.getWatch();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
-			watch.start("IOEvent End annotation Aspect");
 			String workflow = ioEvent.endEvent().key();
 			String target = "END";
 			Message<Object> message = this.buildEventMessage(ioEvent, joinPoint.getArgs()[0], target,
 					waveRecordInfo, eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
-
 			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, joinPoint, watch,waveRecordInfo);
 		}
 	}

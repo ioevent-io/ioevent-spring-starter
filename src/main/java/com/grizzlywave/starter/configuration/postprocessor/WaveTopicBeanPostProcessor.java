@@ -20,13 +20,15 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.lang.Nullable;
 
-import com.grizzlywave.starter.GrizzlyWaveStarterApplication;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Async;
 
 /**
@@ -35,11 +37,11 @@ import org.springframework.scheduling.annotation.Async;
  * creation property is enable : this configuration will create topics mentioned
  * in all annotations if not it will generate an exception
  **/
+@Slf4j
 @Primary
 @Configuration
 public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor, WavePostProcessors {
 
-	private static final Logger log = LoggerFactory.getLogger(GrizzlyWaveStarterApplication.class);
 
 	@Autowired
 	private WaveProperties waveProperties;

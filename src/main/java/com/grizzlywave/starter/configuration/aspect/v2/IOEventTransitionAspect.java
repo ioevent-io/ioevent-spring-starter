@@ -55,8 +55,7 @@ public class IOEventTransitionAspect {
 			WaveRecordInfo waveRecordInfo= WaveContextHolder.getContext();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
-			StopWatch watch = new StopWatch();
-			watch.start("IOEvent annotation Transition Aspect");
+			StopWatch watch = waveRecordInfo.getWatch();
 			String targets = "";
 			IOEventType ioEventType =ioEventService.checkTaskType(ioEvent);
 			if (ioEvent.gatewayTarget().target().length != 0) {
@@ -92,11 +91,13 @@ public class IOEventTransitionAspect {
 				
 				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
 				 kafkaTemplate.send(message);
+
 					targets += waveRecordInfo.getTargetName()+targetEvent.suffix();
 			}
 			else {
 				 message = this.buildTransitionTaskMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
 				 kafkaTemplate.send(message);
+
 					targets += targetEvent.name() + ",";
 			}
 			
@@ -112,6 +113,7 @@ public class IOEventTransitionAspect {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioEventResponse.getBody(),
 						targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
+
 				targets += targetEvent.name() + ",";
 				log.info("sent to : {}", targetEvent.name());
 			}
@@ -125,6 +127,7 @@ public class IOEventTransitionAspect {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
+
 			targets += targetEvent.name() + ",";
 		}
 		return targets;

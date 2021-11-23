@@ -24,6 +24,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.retry.backoff.Sleeper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -197,16 +198,19 @@ public class RecordsHandler {
 	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
 		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()));
+		StopWatch watch=new StopWatch();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals("targetEvent")) {
 				waveRecordInfo.setTargetName(new String(header.value()));
 			}else if (header.key().equals("Correlation_id")) {
 				waveRecordInfo.setId(new String(header.value()));
+				watch.start(new String(header.value()));
 			}else if (header.key().equals("Process_Name")) {
 				waveRecordInfo.setWorkFlowName(new String(header.value()));
 			}
 			
 		});
+		waveRecordInfo.setWatch(watch);
 		return waveRecordInfo;
 	}
 
