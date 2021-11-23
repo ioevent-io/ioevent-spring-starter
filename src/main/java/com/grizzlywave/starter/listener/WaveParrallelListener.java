@@ -9,6 +9,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,9 +55,11 @@ public class WaveParrallelListener {
 					Object beanmObject = ctx.getApplicationContext()
 							.getBean(Class.forName(waveParallelEventInformation.getClassName()));
 					if (beanmObject != null) {
+					StopWatch watch=new StopWatch();
+					watch.start(waveParallelEventInformation.getHeaders().get("Correlation_id"));
 					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(waveParallelEventInformation.getHeaders().get("Correlation_id"),
 							waveParallelEventInformation.getHeaders().get("Process_Name"),
-							waveParallelEventInformation.getTargetsArrived().toString());
+							waveParallelEventInformation.getTargetsArrived().toString(),watch);
 					WaveContextHolder.setContext(waveRecordInfo);
 
 					InvokeWithOneParameter(waveParallelEventInformation.getMethod(), beanmObject,

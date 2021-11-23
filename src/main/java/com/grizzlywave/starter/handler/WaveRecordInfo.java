@@ -3,6 +3,7 @@ package com.grizzlywave.starter.handler;
 import java.util.List;
 
 import org.apache.kafka.common.header.Header;
+import org.springframework.util.StopWatch;
 
 public class WaveRecordInfo {
 	private String id;
@@ -11,14 +12,17 @@ public class WaveRecordInfo {
 	
 	private String targetName;
 	private List<Header> headerList;
+	
+	private StopWatch watch;
 
 	public WaveRecordInfo() {
 	}
 
-	public WaveRecordInfo(String id, String workFlowName, String targetName) {
+	public WaveRecordInfo(String id, String workFlowName, String targetName,StopWatch watch) {
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.targetName = targetName;
+		this.watch = watch;
 	}
 
 	public WaveRecordInfo(String id, String workFlowName, String targetName, List<Header> headerList) {
@@ -60,5 +64,14 @@ public class WaveRecordInfo {
 	public void setHeaderList(List<Header> headerList) {
 		this.headerList = headerList;
 	}
+
+	public StopWatch getWatch() {
+		return watch;
+	}
+
+	public void setWatch(StopWatch watch) {
+		this.watch = watch;
+	}
+	
 
 }
