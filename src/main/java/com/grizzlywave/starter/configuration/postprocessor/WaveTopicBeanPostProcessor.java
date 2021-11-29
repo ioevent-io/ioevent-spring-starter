@@ -2,34 +2,26 @@ package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
-import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.scheduling.annotation.Async;
 
 /**
  * Class Configuration for Wave Topic creation using Bean Post Processor ,
@@ -132,7 +124,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 	}
 
-	private boolean topicExist(String topic) throws InterruptedException, ExecutionException {
+	public boolean topicExist(String topic) throws InterruptedException, ExecutionException {
 		if ((client.listTopics().names().get().stream()
 				.anyMatch(topicName -> topicName.equalsIgnoreCase(waveProperties.getPrefix() + topic)))) {
 			log.info("topic : "+waveProperties.getPrefix()+topic +"alreay exist");

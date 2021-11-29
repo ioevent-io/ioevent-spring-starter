@@ -3,42 +3,28 @@ package com.grizzlywave.starter.handler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StoreQueryParameters;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.retry.backoff.Sleeper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.configuration.context.AppContext;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
-import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.WaveContextHolder;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** Records handler to invoke method when consuming records from topic */
@@ -52,20 +38,13 @@ public class RecordsHandler {
 	private AppContext ctx;
 	@Autowired
 	private IOEventService ioEventService;
-	
+
 	@Value("${spring.application.name}")
 	private String appName;
-	
+
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	/** method which call doInvoke Method **/
-	public void process(ConsumerRecords<String, String> consumerRecords, Object bean, Method method) throws Throwable {
-		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
-			this.InvokeWithOneParameter(method, bean, consumerRecord.value());
-		}
-
-	}
 
 	public Object parseConsumedValue(Object consumedValue, Class<?> type)
 			throws JsonMappingException, JsonProcessingException {
@@ -144,26 +123,26 @@ public class RecordsHandler {
 		}
 	}
 
-	private void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
-			WaveRecordInfo waveRecordInfo) throws Throwable {
+	public void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
+			WaveRecordInfo waveRecordInfo)  {
 		WaveParallelEventInformation parallelEventInfo = new WaveParallelEventInformation(consumerRecord,
-				waveRecordInfo, pair,ioEventService.getSourceNames(pair.getIoEvent()),appName);
+				waveRecordInfo, pair, ioEventService.getSourceNames(pair.getIoEvent()), appName);
 		sendParallelInfo(parallelEventInfo);
 		log.info("IOEventINFO : " + parallelEventInfo);
 		log.info("parallel event arrived : " + waveRecordInfo.getTargetName());
-		
 
 	}
 
-	private void sendParallelInfo(WaveParallelEventInformation parallelEventInfo) throws InterruptedException {
-		
-		  Message<WaveParallelEventInformation> message =
-		  MessageBuilder.withPayload(parallelEventInfo) .setHeader(KafkaHeaders.TOPIC,
-		  "ParallelEventTopic") .setHeader(KafkaHeaders.MESSAGE_KEY,
-		  parallelEventInfo.getHeaders().get("Correlation_id")+parallelEventInfo.getSourceRequired()).build(); 
-		  kafkaTemplate.send(message); 
-		  kafkaTemplate.flush();
-		 
+	public Message<WaveParallelEventInformation> sendParallelInfo(WaveParallelEventInformation parallelEventInfo) {
+
+		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
+				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+				.setHeader(KafkaHeaders.MESSAGE_KEY,
+						parallelEventInfo.getHeaders().get("Correlation_id") + parallelEventInfo.getSourceRequired())
+				.build();
+		kafkaTemplate.send(message);
+		kafkaTemplate.flush();
+		return message;
 	}
 
 	private void simpleInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
@@ -184,7 +163,6 @@ public class RecordsHandler {
 		}
 	}
 
-	
 	public List<String> parseStringToArray(String s) {
 		List<String> output = new ArrayList<String>();
 		String listString = s.substring(1, s.length() - 1);
@@ -198,17 +176,17 @@ public class RecordsHandler {
 	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
 		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()));
-		StopWatch watch=new StopWatch();
+		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals("targetEvent")) {
 				waveRecordInfo.setTargetName(new String(header.value()));
-			}else if (header.key().equals("Correlation_id")) {
+			} else if (header.key().equals("Correlation_id")) {
 				waveRecordInfo.setId(new String(header.value()));
 				watch.start(new String(header.value()));
-			}else if (header.key().equals("Process_Name")) {
+			} else if (header.key().equals("Process_Name")) {
 				waveRecordInfo.setWorkFlowName(new String(header.value()));
 			}
-			
+
 		});
 		waveRecordInfo.setWatch(watch);
 		return waveRecordInfo;

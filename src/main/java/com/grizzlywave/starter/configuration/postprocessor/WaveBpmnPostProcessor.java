@@ -89,7 +89,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	}
 
 	/** check if the listener already exist */
-	private boolean ListenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
+	public boolean ListenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
 			throws InterruptedException {
 		for (Listener listener : listeners) {
 			if (listener != null) {
@@ -108,7 +108,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	
 
 	/** methods to create IOEvent BPMN Parts from annotations **/
-	private IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
+	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
 		String processName = "";
 		if (!ioEvent.startEvent().key().isEmpty()) {
 			processName = ioEvent.startEvent().key();
