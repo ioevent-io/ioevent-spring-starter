@@ -39,10 +39,10 @@ class WaveParrallelListenerTest {
 		List<String> l2 = Arrays.asList("1","2","5");
 		List<String> l3 = Arrays.asList("1","2");
 		List<String> l4 = Arrays.asList("1","5");
-		Assert.assertEquals(waveParrallelListener.sameList(l1, l2), true);
-		Assert.assertEquals(waveParrallelListener.sameList(l3, l1), false);
-		Assert.assertEquals(waveParrallelListener.sameList(l3, l4), false);
-		Assert.assertEquals(waveParrallelListener.sameList(l4, l3), false);
+		Assert.assertTrue(waveParrallelListener.sameList(l1, l2));
+		Assert.assertFalse(waveParrallelListener.sameList(l3, l1));
+		Assert.assertFalse(waveParrallelListener.sameList(l3, l4));
+		Assert.assertFalse(waveParrallelListener.sameList(l4, l3));
 
 
 	}

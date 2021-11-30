@@ -1,6 +1,5 @@
 package com.grizzlywave.starter.service;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -9,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.tomcat.util.digester.ArrayStack;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -219,7 +217,7 @@ class IOEventServiceTest {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 			List<SourceEvent> Sourcelist = ioEventService.getSources(ioEvent);
-			Assert.assertTrue(Sourcelist.size() == 3);
+			Assert.assertEquals(3,Sourcelist.size());
 
 
 		
@@ -231,7 +229,7 @@ class IOEventServiceTest {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 			List<TargetEvent> targetlist = ioEventService.getTargets(ioEvent);
-			Assert.assertTrue(targetlist.size() == 3);
+			Assert.assertEquals(3,targetlist.size());
 
 		
 	}
@@ -241,11 +239,9 @@ class IOEventServiceTest {
 		Method method1 = this.getClass().getMethod("parallelGatewayAnnotationMethod", null);
 		Method method2 = this.getClass().getMethod("exclusiveGatewayAnnotationMethod", null);
 		Method method3 = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
-		Assert.assertTrue(ioEventService.checkTaskType(method1.getAnnotation(IOEvent.class))
-				.equals(IOEventType.GATEWAY_PARALLEL));
-		Assert.assertTrue(ioEventService.checkTaskType(method2.getAnnotation(IOEvent.class))
-				.equals(IOEventType.GATEWAY_EXCLUSIVE));
-		Assert.assertTrue(ioEventService.checkTaskType(method3.getAnnotation(IOEvent.class)).equals(IOEventType.TASK));
+		Assert.assertEquals(IOEventType.GATEWAY_PARALLEL,ioEventService.checkTaskType(method1.getAnnotation(IOEvent.class)));
+		Assert.assertEquals(IOEventType.GATEWAY_EXCLUSIVE,ioEventService.checkTaskType(method2.getAnnotation(IOEvent.class)));
+		Assert.assertEquals(IOEventType.TASK,ioEventService.checkTaskType(method3.getAnnotation(IOEvent.class)));
 
 	}
 	@Test
@@ -253,11 +249,11 @@ class IOEventServiceTest {
 		Method method1 = this.getClass().getMethod("startAnnotationMethod", null);
 		Method method2 = this.getClass().getMethod("endAnnotationMethod", null);
 		Method method3 = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
-		Assert.assertTrue(ioEventService.getIOEventType(method1.getAnnotation(IOEvent.class))
-				.equals(IOEventType.START));
-		Assert.assertTrue(ioEventService.getIOEventType(method2.getAnnotation(IOEvent.class))
-				.equals(IOEventType.END));
-		Assert.assertTrue(ioEventService.getIOEventType(method3.getAnnotation(IOEvent.class)).equals(IOEventType.TASK));
+		Assert.assertEquals(IOEventType.START,ioEventService.getIOEventType(method1.getAnnotation(IOEvent.class))
+				);
+		Assert.assertEquals(IOEventType.END,ioEventService.getIOEventType(method2.getAnnotation(IOEvent.class))
+				);
+		Assert.assertEquals(IOEventType.TASK,ioEventService.getIOEventType(method3.getAnnotation(IOEvent.class)));
 
 	}
 	@Test
@@ -266,10 +262,10 @@ class IOEventServiceTest {
 		List<String> l2 = Arrays.asList("1","2","5");
 		List<String> l3 = Arrays.asList("1","2");
 		List<String> l4 = Arrays.asList("1","5");
-		Assert.assertEquals(ioEventService.sameList(l1, l2), true);
-		Assert.assertEquals(ioEventService.sameList(l3, l1), false);
-		Assert.assertEquals(ioEventService.sameList(l3, l4), false);
-		Assert.assertEquals(ioEventService.sameList(l4, l3), false);
+		Assert.assertTrue(ioEventService.sameList(l1, l2));
+		Assert.assertFalse(ioEventService.sameList(l3, l1));
+		Assert.assertFalse(ioEventService.sameList(l3, l4));
+		Assert.assertFalse(ioEventService.sameList(l4, l3));
 
 
 	}

@@ -4,43 +4,39 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.annotation.KafkaBootstrapConfiguration;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
-import org.springframework.kafka.core.*;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.DefaultKafkaHeaderMapper;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * class that contain the Configuration of the Broker Kafka
  **/
- @Slf4j
+@Slf4j
 public class KafkaConfig {
 
 	@Autowired
 	private KafkaProperties kafkaProperties;
-	
-	
+
 	@Value("${spring.kafka.sasl.jaas.config:NONE}")
 	private String SASL_JAAS_CONFIG;
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
@@ -55,7 +51,7 @@ public class KafkaConfig {
 	private String topicReplication;
 
 	@Bean
-	public AdminClient AdminClient() throws InterruptedException {
+	public AdminClient AdminClient()  {
 		Properties properties = new Properties();
 
 		properties.put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
@@ -76,13 +72,13 @@ public class KafkaConfig {
 	@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
 	public KafkaStreamsConfiguration kStreamsConfigs() {
 		Map<String, Object> props = new HashMap<>();
-		props.put(StreamsConfig.APPLICATION_ID_CONFIG, kafkaGroup_id+"_Stream");
+		props.put(StreamsConfig.APPLICATION_ID_CONFIG, kafkaGroup_id + "_Stream");
 		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
-		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG,topicReplication);
-		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,"latest");
+		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
+		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 		if (security.equals("enable")) {
 			props.put("security.protocol", SASL_SSL);
 			props.put("sasl.mechanism", PLAIN);
@@ -90,8 +86,8 @@ public class KafkaConfig {
 		}
 
 		return new KafkaStreamsConfiguration(props);
-		}
-	
+	}
+
 	@Bean
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
@@ -112,7 +108,7 @@ public class KafkaConfig {
 		return new KafkaTemplate<>(producerFactory());
 	}
 
-@Bean
+	@Bean
 	public ConsumerFactory<String, String> userConsumerFactory() {
 		Map<String, Object> config = new HashMap<>();
 

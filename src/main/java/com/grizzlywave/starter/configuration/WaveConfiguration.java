@@ -1,56 +1,39 @@
 package com.grizzlywave.starter.configuration;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.grizzlywave.starter.configuration.eureka.EurekaConfig;
-import com.netflix.discovery.EurekaClient;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.netflix.eureka.http.EurekaClientHttpRequestFactorySupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
-import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
-import org.springframework.kafka.config.KafkaStreamsConfiguration;
-import org.springframework.kafka.config.StreamsBuilderFactoryBean;
-import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventTransitionAspect;
+import com.grizzlywave.starter.configuration.eureka.EurekaConfig;
 import com.grizzlywave.starter.configuration.kafka.KafkaConfig;
 import com.grizzlywave.starter.configuration.postprocessor.WaveBpmnPostProcessor;
 import com.grizzlywave.starter.configuration.postprocessor.WaveTopicBeanPostProcessor;
@@ -64,10 +47,10 @@ import com.grizzlywave.starter.listener.Listener;
 import com.grizzlywave.starter.listener.ListenerCreator;
 import com.grizzlywave.starter.listener.WaveParrallelListener;
 import com.grizzlywave.starter.service.IOEventService;
- import com.grizzlywave.starter.service.TopicServices;
-import org.springframework.stereotype.Service;
+import com.grizzlywave.starter.service.TopicServices;
 
-import javax.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * class for wave configuration which contains all configurations needed by a
@@ -84,28 +67,25 @@ import javax.annotation.PostConstruct;
 @RequiredArgsConstructor
 public class WaveConfiguration {
 
-	private final StreamsBuilderFactoryBean streamsBuilderFactoryBean;
 
 	ObjectMapper mapper = new ObjectMapper();
 
 	@Value("${spring.application.name}")
 	private String appName;
-	
+
 	@Autowired
 	public void process(final StreamsBuilder builder) {
 
-		final Serde<String> stringSerde = Serdes.String();
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
 				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
-				.map((k, v) -> new KeyValue<>(k, v)).filter((k,v) -> { 
-					WaveParallelEventInformation value = gson.fromJson(v,
-						WaveParallelEventInformation.class);
-					return appName.equals(value.getHeaders().get("AppName"));} );
-		
+				.map((k, v) -> new KeyValue<>(k, v)).filter((k, v) -> {
+					WaveParallelEventInformation value = gson.fromJson(v, WaveParallelEventInformation.class);
+					return appName.equals(value.getHeaders().get("AppName"));
+				});
 		kstream.groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
-				.aggregate(() -> new String(""), (key, value, aggregateValue) -> {
+				.aggregate(() -> "", (key, value, aggregateValue) -> {
 					WaveParallelEventInformation currentValue = gson.fromJson(value,
 							WaveParallelEventInformation.class);
 					WaveParallelEventInformation updatedValue;
@@ -124,7 +104,7 @@ public class WaveConfiguration {
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
-		;
+		
 	}
 
 	@Bean
@@ -203,17 +183,17 @@ public class WaveConfiguration {
 
 	@Bean("bpmnlist")
 	public List<WaveBpmnPart> bpmnlist() {
-		return new ArrayList<WaveBpmnPart>();
+		return new ArrayList<>();
 	}
 
 	@Bean("iobpmnlist")
 	public List<IOEventBpmnPart> iobpmnlist() {
-		return new LinkedList<IOEventBpmnPart>();
+		return new LinkedList<>();
 	}
 
 	@Bean("listeners")
 	public List<Listener> listeners() {
-		return new ArrayList<Listener>();
+		return new ArrayList<>();
 	}
 
 	@Bean
