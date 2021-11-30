@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -8,7 +9,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.apache.kafka.clients.admin.NewTopic;
 import org.aspectj.lang.JoinPoint;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -261,6 +261,8 @@ class IOEventTransitionAspectTest {
 
 		transitionAspect.prepareAndDisplayEventLogger(eventLogger, waveRecordInfo, ioEvent, "target", watch, "payload",
 				IOEventType.TASK);
+
+		assertThatNoException();
 
 	}
 

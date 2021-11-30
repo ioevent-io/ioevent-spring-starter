@@ -1,15 +1,14 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.UUID;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.grizzlywave.starter.annotations.v2.EndEvent;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
-import com.grizzlywave.starter.annotations.v2.StartEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventType;
@@ -127,6 +125,7 @@ class IOEventEndAspectTest {
 		watch.start("IOEvent annotation End Aspect");
 		endAspect.prepareAndDisplayEventLogger(eventLogger, ioEvent.endEvent().key(), ioEvent, joinPoint, watch,
 				waveRecordInfo);
+		assertThatNoException();
 
 	}
 
@@ -148,6 +147,8 @@ class IOEventEndAspectTest {
 
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent, "payload");
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent2, "payload");
+		assertThatNoException();
+
 
 	}
 

@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -26,7 +27,6 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.grizzlywave.starter.annotations.v2.EndEvent;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.StartEvent;
@@ -116,6 +116,8 @@ class IOEventStartAspectTest {
 		watch.start("IOEvent annotation Start Aspect");
 		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "target", joinPoint, watch);
 
+		assertThatNoException();
+
 	}
 
 	@Test
@@ -133,6 +135,8 @@ class IOEventStartAspectTest {
 		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent);
 		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent2);
 
+
+		assertThatNoException();
 
 	}
 }
