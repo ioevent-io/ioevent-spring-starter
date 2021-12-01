@@ -75,12 +75,12 @@ public class IOEventTransitionAspect {
 					targets = simpleEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger,ioEventType);
 			}
 			
-			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,joinPoint,watch,returnObject,ioEventType);
+			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,watch,returnObject,ioEventType);
 		}
 	}
 
 	
-	private String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+	public String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger, IOEventType ioEventType) throws ParseException {
 		
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
@@ -104,7 +104,7 @@ public class IOEventTransitionAspect {
 		}		return targets;
 	}
 
-	private String exclusiveEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+	public String exclusiveEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
 		
 		IOEventResponse<Object> ioEventResponse = IOEventResponse.class.cast(returnObject);
@@ -122,7 +122,7 @@ public class IOEventTransitionAspect {
 		return targets;
 	}
 
-	private String parallelEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
+	public String parallelEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
@@ -133,8 +133,8 @@ public class IOEventTransitionAspect {
 		return targets;
 	}
 
-	private void prepareAndDisplayEventLogger(EventLogger eventLogger, WaveRecordInfo waveRecordInfo, IOEvent ioEvent,
-			String target, JoinPoint joinPoint, StopWatch watch,Object returnObject,IOEventType ioEventType) throws JsonProcessingException {
+	public void prepareAndDisplayEventLogger(EventLogger eventLogger, WaveRecordInfo waveRecordInfo, IOEvent ioEvent,
+			String target, StopWatch watch,Object returnObject,IOEventType ioEventType) throws JsonProcessingException {
 		watch.stop();
 		eventLogger.loggerSetting(waveRecordInfo.getId(),waveRecordInfo.getWorkFlowName(), ioEvent.name(), waveRecordInfo.getTargetName(), target, ioEventType.toString(),
 				returnObject);
@@ -143,11 +143,11 @@ public class IOEventTransitionAspect {
 		log.info(jsonObject);		
 	}
 
-	private boolean isTransition(IOEvent ioEvent) {
+	public boolean isTransition(IOEvent ioEvent) {
 		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key()));
 	}
 
-	private Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
+	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
@@ -160,7 +160,7 @@ public class IOEventTransitionAspect {
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
-	private Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
+	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
@@ -175,7 +175,7 @@ public class IOEventTransitionAspect {
 	}
 
 
-	private Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
+	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
@@ -189,7 +189,7 @@ public class IOEventTransitionAspect {
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
 	
-	private Message<Object> buildSuffixMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime, IOEventType ioEventType) {
+	public Message<Object> buildSuffixMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime, IOEventType ioEventType) {
 		String topic = ioEventService.getSourceEventByName(ioEvent, waveRecordInfo.getTargetName()).topic();
 		if (!StringUtils.isBlank(ioEvent.topic())) {
 			topic = ioEvent.topic();
