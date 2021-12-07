@@ -15,6 +15,10 @@ public class WaveRecordInfo {
 	
 	private StopWatch watch;
 
+	private Long startTime=System.currentTimeMillis();
+	
+	
+
 	public WaveRecordInfo() {
 	}
 
@@ -72,6 +76,12 @@ public class WaveRecordInfo {
 	public void setWatch(StopWatch watch) {
 		this.watch = watch;
 	}
-	
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(Long startTime) {
+		this.startTime = startTime;
+	}
 
 }

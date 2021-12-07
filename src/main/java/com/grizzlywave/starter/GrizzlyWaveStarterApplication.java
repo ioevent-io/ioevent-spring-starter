@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
  * Grizzly Wave Starter Main Class
  **/
 @Slf4j
-@SpringBootApplication
 @EnableEurekaClient
 @EnableConfigurationProperties(WaveProperties.class)
+@SpringBootApplication
 public class GrizzlyWaveStarterApplication {
 
 	public static void main(String[] args) {

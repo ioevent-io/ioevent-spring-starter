@@ -79,7 +79,7 @@ class IOEventStartAspectTest {
 		Assert.assertEquals(true, simpleTaskAnnotationMethod());
 
 	}
-
+ 
 	@Test
 	void buildStartMessageTest() throws NoSuchMethodException, SecurityException {
 		when(waveProperties.getPrefix()).thenReturn("test-");
