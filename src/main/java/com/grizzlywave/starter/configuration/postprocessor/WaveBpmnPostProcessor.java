@@ -2,7 +2,6 @@ package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -81,8 +80,8 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 							}
 						}
 					}
-					UUID uuid = UUID.randomUUID();
-					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), uuid, method.getName()));
+					String partID= ioEvent.name()+"_"+method.getName()+"_"+bean.getClass().getName();
+					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), partID, method.getName()));
 				
 			}
 		}
@@ -90,7 +89,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 	/** check if the listener already exist */
 	public boolean ListenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
-			throws InterruptedException {
+			 {
 		for (Listener listener : listeners) {
 			if (listener != null) {
 				String t = listener.getTopic();
@@ -108,14 +107,14 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	
 
 	/** methods to create IOEvent BPMN Parts from annotations **/
-	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID uuid, String methodName) {
+	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, String partID, String methodName) {
 		String processName = "";
 		if (!ioEvent.startEvent().key().isEmpty()) {
 			processName = ioEvent.startEvent().key();
 		} else if (!ioEvent.endEvent().key().isEmpty()) {
 			processName = ioEvent.endEvent().key();
 		}
-		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, uuid, processName,
+		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, partID, processName,
 				ioEventService.getIOEventType(ioEvent), ioEvent.name(), className, methodName);
 		return ioeventBpmnPart;
 	}
