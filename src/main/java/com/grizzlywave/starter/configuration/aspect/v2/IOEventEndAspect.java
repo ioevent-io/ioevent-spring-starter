@@ -52,7 +52,7 @@ public class IOEventEndAspect {
 			String workflow = ioEvent.endEvent().key();
 			String target = "END";
 			Message<Object> message = this.buildEventMessage(ioEvent, joinPoint.getArgs()[0], target,
-					waveRecordInfo, eventLogger.getTimestamp(eventLogger.getStartTime()));
+					waveRecordInfo, waveRecordInfo.getStartTime());
 			kafkaTemplate.send(message);
 			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, joinPoint, watch,waveRecordInfo);
 		}
@@ -66,7 +66,7 @@ public class IOEventEndAspect {
 			topic = ioEvent.topic();
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0)
+				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader("Process_Name", ioEvent.endEvent().key()).setHeader("targetEvent", targetEvent)
 				.setHeader("Correlation_id", waveRecordInfo.getId()).setHeader("EventType", IOEventType.END.toString())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("StepName", ioEvent.name())

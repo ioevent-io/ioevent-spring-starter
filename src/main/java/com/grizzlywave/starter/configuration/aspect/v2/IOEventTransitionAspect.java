@@ -89,13 +89,13 @@ public class IOEventTransitionAspect {
 			
 			if (!StringUtils.isBlank(targetEvent.suffix())) {
 				
-				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
+				 message = this.buildSuffixMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,waveRecordInfo.getStartTime(),ioEventType);
 				 kafkaTemplate.send(message);
 
 					targets += waveRecordInfo.getTargetName()+targetEvent.suffix();
 			}
 			else {
-				 message = this.buildTransitionTaskMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()),ioEventType);
+				 message = this.buildTransitionTaskMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,waveRecordInfo.getStartTime(),ioEventType);
 				 kafkaTemplate.send(message);
 
 					targets += targetEvent.name() + ",";
@@ -111,7 +111,7 @@ public class IOEventTransitionAspect {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			if (ioEventResponse.getString().equals(targetEvent.name())) {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioEventResponse.getBody(),
-						targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+						targetEvent,waveRecordInfo,waveRecordInfo.getStartTime());
 				kafkaTemplate.send(message);
 
 				targets += targetEvent.name() + ",";
@@ -125,7 +125,7 @@ public class IOEventTransitionAspect {
 	public String parallelEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,eventLogger.getTimestamp(eventLogger.getStartTime()));
+			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, returnObject, targetEvent,waveRecordInfo,waveRecordInfo.getStartTime());
 			kafkaTemplate.send(message);
 
 			targets += targetEvent.name() + ",";
@@ -167,7 +167,7 @@ public class IOEventTransitionAspect {
 
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
+				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
 				.setHeader("Correlation_id",waveRecordInfo.getId())
 				.setHeader("EventType", IOEventType.GATEWAY_PARALLEL.toString())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
@@ -182,7 +182,7 @@ public class IOEventTransitionAspect {
 
 		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader(KafkaHeaders.PARTITION_ID, 0).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
+				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId()).setHeader("Process_Name",waveRecordInfo.getWorkFlowName())
 				.setHeader("Correlation_id",waveRecordInfo.getId())
 				.setHeader("EventType", IOEventType.GATEWAY_EXCLUSIVE.toString())
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
