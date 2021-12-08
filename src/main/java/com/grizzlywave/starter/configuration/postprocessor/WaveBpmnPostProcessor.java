@@ -81,8 +81,8 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 							}
 						}
 					}
-					String partID= UUID.randomUUID().toString();
-					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), partID, method.getName()));
+					UUID uuid = UUID.randomUUID();
+					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), uuid, method.getName()));
 				
 			}
 		}
@@ -108,7 +108,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	
 
 	/** methods to create IOEvent BPMN Parts from annotations **/
-	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, String partID, String methodName) {
+	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, UUID partID, String methodName) {
 		String processName = "";
 		if (!ioEvent.startEvent().key().isEmpty()) {
 			processName = ioEvent.startEvent().key();
