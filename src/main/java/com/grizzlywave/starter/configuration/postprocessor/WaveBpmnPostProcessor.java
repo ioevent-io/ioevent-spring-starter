@@ -80,8 +80,8 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 							}
 						}
 					}
-					String partId= (bean.getClass().getName()+"-"+method.getName()).replace(".","");
-					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), partId, method.getName()));
+					String generateID= ioEventService.generateID(ioEvent);
+					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), generateID, method.getName()));
 				
 			}
 		}
