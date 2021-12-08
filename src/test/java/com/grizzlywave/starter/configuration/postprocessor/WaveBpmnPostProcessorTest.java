@@ -79,8 +79,8 @@ class WaveBpmnPostProcessorTest {
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventStart)).thenReturn(IOEventType.START);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventStart, "testClass",
-				bpmnPartId, "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId, "startkey", IOEventType.START,
+				bpmnPartId.toString(), "testMethod");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(), "startkey", IOEventType.START,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -95,8 +95,8 @@ class WaveBpmnPostProcessorTest {
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventEnd)).thenReturn(IOEventType.END);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventEnd, "testClass",
-				bpmnPartId, "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId, "endkey", IOEventType.END,
+				bpmnPartId.toString(), "testMethod");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(), "endkey", IOEventType.END,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -111,8 +111,8 @@ class WaveBpmnPostProcessorTest {
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventTask)).thenReturn(IOEventType.TASK);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventTask, "testClass",
-				bpmnPartId, "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId, "", IOEventType.TASK,
+				bpmnPartId.toString(), "testMethod");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(), "", IOEventType.TASK,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
