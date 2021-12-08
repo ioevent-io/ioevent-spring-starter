@@ -197,4 +197,10 @@ public class IOEventService {
 
 		return type;
 	}
+
+	public String generateID(IOEvent ioEvent) {
+
+		return ioEvent.name().replaceAll("[^a-zA-Z ]", "").toLowerCase().replace(" ", "") + "-"
+				+ getSourceNames(ioEvent).hashCode() + "-" + getTargetNames(ioEvent).hashCode();
+	}
 }
