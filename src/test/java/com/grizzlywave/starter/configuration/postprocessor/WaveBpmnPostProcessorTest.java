@@ -76,7 +76,7 @@ class WaveBpmnPostProcessorTest {
 	void Create_Start_ioEventBpmnPart() throws NoSuchMethodException, SecurityException {
 		Method startMethod = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEventStart = startMethod.getAnnotation(IOEvent.class);
-		String bpmnPartId = UUID.randomUUID().toString();
+		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventStart)).thenReturn(IOEventType.START);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventStart, "testClass",
 				bpmnPartId, "testMethod");
@@ -92,7 +92,7 @@ class WaveBpmnPostProcessorTest {
 	
 		Method endMethod = this.getClass().getMethod("endAnnotationMethod", null);
 		IOEvent ioEventEnd = endMethod.getAnnotation(IOEvent.class);
-		String bpmnPartId = UUID.randomUUID().toString();
+		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventEnd)).thenReturn(IOEventType.END);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventEnd, "testClass",
 				bpmnPartId, "testMethod");
@@ -108,7 +108,7 @@ class WaveBpmnPostProcessorTest {
 		
 		Method taskMethod = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEventTask = taskMethod.getAnnotation(IOEvent.class);
-		String bpmnPartId = UUID.randomUUID().toString();
+		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventTask)).thenReturn(IOEventType.TASK);
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventTask, "testClass",
 				bpmnPartId, "testMethod");

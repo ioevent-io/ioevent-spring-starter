@@ -2,13 +2,14 @@ package com.grizzlywave.starter.domain;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 
 public class IOEventBpmnPart {
-	private String id;
+	private UUID id;
 	private String ClassName;
 	private String MethodName;
 	private String stepName;
@@ -22,7 +23,7 @@ public class IOEventBpmnPart {
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id, String workflow,IOEventType ioEventType, String stepName, String className,
+	public IOEventBpmnPart(IOEvent ioEvent, UUID id, String workflow,IOEventType ioEventType, String stepName, String className,
 			String methodName) {
 		this.id = id;
 		this.workflow = workflow;
@@ -35,11 +36,11 @@ public class IOEventBpmnPart {
 		this.targetEvent = this.addTarget(ioEvent);
 	}
 	
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
