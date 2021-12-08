@@ -2,6 +2,7 @@ package com.grizzlywave.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -80,7 +81,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 							}
 						}
 					}
-					String partID= ioEvent.name()+"_"+method.getName()+"_"+bean.getClass().getName();
+					String partID= UUID.randomUUID().toString();
 					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), partID, method.getName()));
 				
 			}
