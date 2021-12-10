@@ -109,7 +109,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 								//TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
 								client.createTopics(Arrays
-										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 12,Short.valueOf(waveProperties.getTopicReplication()))));
+										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1,Short.valueOf(waveProperties.getTopicReplication()))));
 
 							} else
 								throw new Exception(
