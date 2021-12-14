@@ -1,34 +1,22 @@
 package com.grizzlywave.starter.configuration.eureka;
 
-import com.netflix.discovery.EurekaClient;
-import com.netflix.discovery.EurekaClientConfig;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
+import org.springframework.cloud.netflix.eureka.EurekaDiscoveryClientConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Slf4j
+@ConditionalOnProperty(prefix = "grizzly-wave", name = "eureka.enabled",havingValue = "false",matchIfMissing = true)
 @Configuration
+@EnableAutoConfiguration(exclude = {EurekaDiscoveryClientConfiguration.class, EurekaClientAutoConfiguration.class})
 public class EurekaConfig {
-
-    @Autowired
-    private EurekaClient eurekaClient;
-
-
-
-
-    @ConditionalOnExpression( "'${grizzly-wave.eureka}'!='enable'")
     @Bean
-    public void  reloadProps() throws InterruptedException {
-        log.info("Disabling Eureka Client ...");
-        eurekaClient.shutdown();
+    void showMessage() throws InterruptedException {
+        log.info("**** Eureka is disabled ***");
     }
-
 }
