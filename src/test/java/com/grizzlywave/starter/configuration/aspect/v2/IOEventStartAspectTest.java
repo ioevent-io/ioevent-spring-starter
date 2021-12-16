@@ -119,7 +119,7 @@ class IOEventStartAspectTest {
 		assertThatNoException();
 
 	}
-
+ 
 	@Test
 	void iOEventAnnotationAspectTest() throws Throwable {
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);

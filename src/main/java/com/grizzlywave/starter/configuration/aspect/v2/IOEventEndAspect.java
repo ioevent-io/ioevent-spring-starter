@@ -44,7 +44,7 @@ public class IOEventEndAspect {
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws JsonProcessingException  {
-		if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
+		if (isEnd(ioEvent)) {
 			WaveRecordInfo waveRecordInfo= WaveContextHolder.getContext();
 			StopWatch watch = waveRecordInfo.getWatch();
 			EventLogger eventLogger = new EventLogger();
@@ -57,6 +57,10 @@ public class IOEventEndAspect {
 			kafkaTemplate.send(message);
 			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, payload, watch,waveRecordInfo);
 		}
+	}
+	public boolean isEnd(IOEvent ioEvent) {
+		return ((ioEventService.getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key()))
+				&& (!ioEventService.getSources(ioEvent).isEmpty()));
 	}
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject==null) {
