@@ -5,9 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
@@ -16,9 +13,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.grizzlywave.starter.configuration.context.AppContext;
-import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
-import com.grizzlywave.starter.configuration.properties.WaveProperties;
-import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.service.IOEventService;
