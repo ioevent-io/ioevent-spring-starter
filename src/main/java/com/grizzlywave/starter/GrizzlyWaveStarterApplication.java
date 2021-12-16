@@ -1,26 +1,32 @@
 package com.grizzlywave.starter;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+
+import java.util.Properties;
+
 
 /**
  * Grizzly Wave Starter Main Class
  **/
 @Slf4j
-@EnableEurekaClient
 @EnableConfigurationProperties(WaveProperties.class)
-@SpringBootApplication
+//@Profile("development")
+//@Configuration
+//@EnableDiscoveryClient
 public class GrizzlyWaveStarterApplication {
+//	public static void main(String[] args) {
+//
+//	  SpringApplication.run(GrizzlyWaveStarterApplication.class, args);
+//	}
 
-	public static void main(String[] args) {
-	  SpringApplication.run(GrizzlyWaveStarterApplication.class, args);
-	}
-	
-		
+
 }
