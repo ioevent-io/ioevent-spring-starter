@@ -48,7 +48,7 @@ public class IOEventTransitionAspect {
 	
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws Throwable {
+	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws ParseException, JsonProcessingException  {
 		
 		
 		if (isTransition(ioEvent)) {
@@ -58,28 +58,38 @@ public class IOEventTransitionAspect {
 			StopWatch watch = waveRecordInfo.getWatch();
 			String targets = "";
 			IOEventType ioEventType =ioEventService.checkTaskType(ioEvent);
+			Object payload = getpayload(joinPoint,returnObject); 
+		
 			if (ioEvent.gatewayTarget().target().length != 0) {
 
 				if (ioEvent.gatewayTarget().parallel()) {
 					ioEventType = IOEventType.GATEWAY_PARALLEL;
-					targets = parallelEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
+					targets = parallelEventSendProcess(ioEvent,payload,targets,waveRecordInfo,eventLogger);
 					
 				} else if (ioEvent.gatewayTarget().exclusive()) {
 					ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
-					targets = exclusiveEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger);
+					targets = exclusiveEventSendProcess(ioEvent,payload,targets,waveRecordInfo,eventLogger);
 					
 				}
 			} else { 
 				
 		
-					targets = simpleEventSendProcess(ioEvent,returnObject,targets,waveRecordInfo,eventLogger,ioEventType);
+					targets = simpleEventSendProcess(ioEvent,payload,targets,waveRecordInfo,eventLogger,ioEventType);
 			}
 			
-			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,watch,returnObject,ioEventType);
+			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,watch,payload,ioEventType);
 		}
 	}
 
 	
+	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
+		if (returnObject==null) {
+			return joinPoint.getArgs()[0];
+
+		}		return returnObject;
+	}
+
+
 	public String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger, IOEventType ioEventType) throws ParseException {
 		

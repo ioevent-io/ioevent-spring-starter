@@ -1,12 +1,13 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -42,9 +43,8 @@ public class IOEventStartAspect {
 	@Autowired
 	private IOEventService ioEventService;
 	
-	@Around(value = "@annotation(anno)", argNames = "jp, anno") //
-	public Object iOEventAnnotationAspect(ProceedingJoinPoint joinPoint, IOEvent ioEvent) throws Throwable {
-		Object obj = joinPoint.proceed();
+	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
+	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws ParseException, JsonProcessingException   {
 		
 		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
 			
@@ -56,18 +56,24 @@ public class IOEventStartAspect {
 			
 			UUID uuid = UUID.randomUUID();
 			String target ="";
+			Object payload = getpayload(joinPoint,returnObject); 
 
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, joinPoint.getArgs()[0],uuid.toString(),targetEvent,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				Message<Object> message = this.buildStartMessage(ioEvent, payload,uuid.toString(),targetEvent,eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
 				target+=targetEvent.name()+",";
 			}		
-			prepareAndDisplayEventLogger(eventLogger,uuid,ioEvent,target,joinPoint,watch);
+			prepareAndDisplayEventLogger(eventLogger,uuid,ioEvent,target,payload,watch);
 		} 
-		return obj;
+		
 	}
 
+	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
+		if (returnObject==null) {
+			return joinPoint.getArgs()[0];
 
+		}		return returnObject;
+	}
 
 	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
 		String topic = targetEvent.topic();
@@ -86,10 +92,10 @@ public class IOEventStartAspect {
 	}
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String target,
-			ProceedingJoinPoint joinPoint, StopWatch watch) throws JsonProcessingException {
+			Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
 		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
-				joinPoint.getArgs()[0].toString()); 
+				payload); 
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);		

@@ -43,22 +43,27 @@ public class IOEventEndAspect {
 	
 
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object object) throws Throwable {
+	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws JsonProcessingException  {
 		if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			WaveRecordInfo waveRecordInfo= WaveContextHolder.getContext();
 			StopWatch watch = waveRecordInfo.getWatch();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
 			String workflow = ioEvent.endEvent().key();
+			Object payload = getpayload(joinPoint,returnObject); 
 			String target = "END";
-			Message<Object> message = this.buildEventMessage(ioEvent, joinPoint.getArgs()[0], target,
+			Message<Object> message = this.buildEventMessage(ioEvent, payload, target,
 					waveRecordInfo, waveRecordInfo.getStartTime());
 			kafkaTemplate.send(message);
-			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, joinPoint, watch,waveRecordInfo);
+			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, payload, watch,waveRecordInfo);
 		}
 	}
+	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
+		if (returnObject==null) {
+			return joinPoint.getArgs()[0];
 
-	
+		}		return returnObject;
+	}
 	public Message<Object> buildEventMessage(IOEvent ioEvent, Object payload, String targetEvent,
 			WaveRecordInfo waveRecordInfo, Long startTime) {
 		String topic = ioEvent.topic();
@@ -74,11 +79,11 @@ public class IOEventEndAspect {
 	}
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String workflow, IOEvent ioEvent,
-			JoinPoint joinPoint, StopWatch watch,WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
+			Object payload, StopWatch watch,WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 
 		watch.stop();
 		eventLogger.loggerSetting(waveRecordInfo.getId(), workflow, ioEvent.name(),
-				waveRecordInfo.getTargetName(), "__", "End", joinPoint.getArgs()[0]);
+				waveRecordInfo.getTargetName(), "__", "End", payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);

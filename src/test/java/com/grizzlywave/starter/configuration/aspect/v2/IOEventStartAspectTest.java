@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
-import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.JoinPoint;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class IOEventStartAspectTest {
 	@Mock
 	WaveProperties waveProperties;
 	@Mock
-	ProceedingJoinPoint joinPoint;
+	JoinPoint joinPoint;
 	@Mock
 	KafkaTemplate<String, Object> kafkaTemplate ;
 	@BeforeEach
@@ -132,8 +132,8 @@ class IOEventStartAspectTest {
 		when(waveProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 
-		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent);
-		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent2);
+		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent,null);
+		startAspect.iOEventAnnotationAspect(joinPoint, ioEvent2,null);
 
 
 		assertThatNoException();
