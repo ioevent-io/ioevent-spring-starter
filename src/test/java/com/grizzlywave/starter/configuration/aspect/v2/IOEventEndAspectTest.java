@@ -123,7 +123,7 @@ class IOEventEndAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation End Aspect");
-		endAspect.prepareAndDisplayEventLogger(eventLogger, ioEvent.endEvent().key(), ioEvent, joinPoint, watch,
+		endAspect.prepareAndDisplayEventLogger(eventLogger, ioEvent.endEvent().key(), ioEvent, "payload" , watch,
 				waveRecordInfo);
 		assertThatNoException();
 
