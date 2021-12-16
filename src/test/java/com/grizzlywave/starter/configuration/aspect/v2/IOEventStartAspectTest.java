@@ -114,7 +114,7 @@ class IOEventStartAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "target", joinPoint, watch);
+		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "target", "payload", watch);
 
 		assertThatNoException();
 
