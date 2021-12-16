@@ -74,7 +74,7 @@ public class WaveConfiguration {
 	private String appName;
 
 	@Autowired
-	public void process(final StreamsBuilder builder) {
+	public void processKStream(final StreamsBuilder builder) {
 
 		Gson gson = new Gson();
 
@@ -94,12 +94,12 @@ public class WaveConfiguration {
 					} else {
 						updatedValue = currentValue;
 					}
-					List<String> l = Stream.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
+					List<String> updatedTargetList = Stream.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
 							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
 					Map<String, String> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					updatedValue.setTargetsArrived(l);
+					updatedValue.setTargetsArrived(updatedTargetList);
 					updatedValue.setHeaders(updatedHeaders);
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
