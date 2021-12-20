@@ -42,62 +42,70 @@ public class IOEventStartAspect {
 	private WaveProperties waveProperties;
 	@Autowired
 	private IOEventService ioEventService;
-	
+
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
-	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws ParseException, JsonProcessingException   {
-		
-		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
-			
+	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
+			throws ParseException, JsonProcessingException {
+
+		if (isStart(ioEvent)) {
+
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
-			
+
 			eventLogger.startEventLog();
 			watch.start("IOEvent annotation Start Aspect");
-			
+
 			UUID uuid = UUID.randomUUID();
-			String target ="";
-			Object payload = getpayload(joinPoint,returnObject); 
+			String target = "";
+			Object payload = getpayload(joinPoint, returnObject);
 
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, payload,uuid.toString(),targetEvent,eventLogger.getTimestamp(eventLogger.getStartTime()));
+				Message<Object> message = this.buildStartMessage(ioEvent, payload, uuid.toString(), targetEvent,
+						eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
-				target+=targetEvent.name()+",";
-			}		
-			prepareAndDisplayEventLogger(eventLogger,uuid,ioEvent,target,payload,watch);
-		} 
-		
+				target += targetEvent.name() + ",";
+			}
+			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, target, payload, watch);
+		}
+
+	}
+
+	public boolean isStart(IOEvent ioEvent) {
+		return ((ioEventService.getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
+				&& (!ioEventService.getTargets(ioEvent).isEmpty()));
+
 	}
 
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
-		if (returnObject==null) {
+		if (returnObject == null) {
 			return joinPoint.getArgs()[0];
 
-		}		return returnObject;
+		}
+		return returnObject;
 	}
 
-	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent, Long startTime) {
+	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent,
+			Long startTime) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
 			topic = ioEvent.topic();
 
 		}
-		return MessageBuilder.withPayload(payload)
-				.setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid)
-				.setHeader("Correlation_id",uuid).setHeader("StepName", ioEvent.name())
-				.setHeader("EventType", IOEventType.START.toString())
-				.setHeader("source",new ArrayList<String>(Arrays.asList("Start")))
-				.setHeader("targetEvent", targetEvent.name())
-				.setHeader("Process_Name", ioEvent.startEvent().key()).setHeader("Start Time", startTime).build();
+		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
+				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader("Correlation_id", uuid)
+				.setHeader("StepName", ioEvent.name()).setHeader("EventType", IOEventType.START.toString())
+				.setHeader("source", new ArrayList<String>(Arrays.asList("Start")))
+				.setHeader("targetEvent", targetEvent.name()).setHeader("Process_Name", ioEvent.startEvent().key())
+				.setHeader("Start Time", startTime).build();
 	}
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String target,
 			Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(),null,target, "Init",
-				payload); 
+		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(), null, target, "Init",
+				payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
-		log.info(jsonObject);		
+		log.info(jsonObject);
 	}
 }

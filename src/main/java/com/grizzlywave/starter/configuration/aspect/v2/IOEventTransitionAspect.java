@@ -154,7 +154,7 @@ public class IOEventTransitionAspect {
 	}
 
 	public boolean isTransition(IOEvent ioEvent) {
-		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key()));
+		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())&& !ioEventService.getSources(ioEvent).isEmpty()&&!ioEventService.getTargets(ioEvent).isEmpty());
 	}
 
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
