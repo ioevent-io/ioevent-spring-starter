@@ -20,6 +20,7 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.logger.EventLogger;
@@ -45,31 +46,29 @@ public class IOEvenFullTaskAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException {
 
-		if (isFullTask(ioEvent)) {
+		if (ioEventService.isFullTask(ioEvent)) {
 
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
 
 			eventLogger.startEventLog();
 			watch.start("IOEvent annotation FULL TASK Aspect");
+			
+			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 
 			UUID uuid = UUID.randomUUID();
 			Object payload = getpayload(joinPoint, returnObject);
 
-			Message<Object> message = this.buildStartMessage(ioEvent, payload, uuid.toString(),
+			Message<Object> message = this.buildStartMessage(ioEvent, payload, uuid.toString(),ioFlow,
 					eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
 
-			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, payload, watch);
+			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent,ioFlow, payload, watch);
 		}
 
 	}
 
-	public boolean isFullTask(IOEvent ioEvent) {
-		return ((ioEventService.getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
-				&& (ioEventService.getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key())));
 
-	}
 
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject == null) {
@@ -79,20 +78,23 @@ public class IOEvenFullTaskAspect {
 		return returnObject;
 	}
 
-	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, Long startTime) {
+	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, IOFlow ioFlow, Long startTime) {
 		String topic = ioEvent.topic();
+		if (StringUtils.isBlank(topic)) {
+			topic = ioFlow.topic();
+		}
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader("Correlation_id", uuid)
 				.setHeader("StepName", ioEvent.name()).setHeader("EventType", IOEventType.FULLTASK.toString())
 				.setHeader("source", new ArrayList<String>(Arrays.asList("Start")))
-				.setHeader("targetEvent", new ArrayList<String>(Arrays.asList("END")))
+				.setHeader("targetEvent", new ArrayList<String>(Arrays.asList("END"))).setHeader("Process_Name",ioFlow.name())
 				.setHeader("Start Time", startTime).build();
 	}
 
-	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, Object payload,
+	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, IOFlow ioFlow,Object payload,
 			StopWatch watch) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(), "START", "END",
+		eventLogger.loggerSetting(uuid.toString(), ioFlow.name(), ioEvent.name(), "START", "END",
 				IOEventType.FULLTASK.toString(), payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);

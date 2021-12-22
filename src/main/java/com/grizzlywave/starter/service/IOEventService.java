@@ -3,6 +3,7 @@ package com.grizzlywave.starter.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -11,6 +12,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.domain.IOEventType;
@@ -139,19 +141,22 @@ public class IOEventService {
 		return result;
 	}
 
-	public List<String> getSourceTopic(IOEvent ioEvent) {
+	public List<String> getSourceTopic(IOEvent ioEvent, IOFlow ioFlow) {
 		List<String> result = new ArrayList<>();
-		if (!ioEvent.topic().equals("")) {
+		if (!StringUtils.isBlank(ioFlow.topic())) {
+			result.add(ioFlow.topic());
+		}
+		if (!StringUtils.isBlank(ioEvent.topic())) {
 			result.add(ioEvent.topic());
 		}
 		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!sourceEvent.topic().equals("")) {
+			if (!StringUtils.isBlank(sourceEvent.topic())) {
 				result.add(sourceEvent.topic());
 			}
 		}
 
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.topic().equals("")) {
+			if (!StringUtils.isBlank(sourceEvent.topic())) {
 				result.add(sourceEvent.topic());
 			}
 		}
@@ -165,13 +170,37 @@ public class IOEventService {
 	}
 
 	public IOEventType getIOEventType(IOEvent ioEvent) {
-		if (!ioEvent.startEvent().key().equals("")) {
+		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
 			return IOEventType.START;
-		} else if (!ioEvent.endEvent().key().equals("")) {
+		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			return IOEventType.END;
+		} else if (isFullTask(ioEvent)) {
+			return IOEventType.FULLTASK;
 		} else {
 			return IOEventType.TASK;
 		}
+	}
+
+	public boolean isStart(IOEvent ioEvent) {
+		return ((getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
+				&& (!getTargets(ioEvent).isEmpty()));
+
+	}
+
+	public boolean isEnd(IOEvent ioEvent) {
+		return ((getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key()))
+				&& (!getSources(ioEvent).isEmpty()));
+	}
+
+	public boolean isFullTask(IOEvent ioEvent) {
+		return ((getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
+				&& (getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key())));
+
+	}
+
+	public boolean isTransition(IOEvent ioEvent) {
+		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())
+				&& !getSources(ioEvent).isEmpty() && !getTargets(ioEvent).isEmpty());
 	}
 
 	public SourceEvent getSourceEventByName(IOEvent ioEvent, String sourceName) {
@@ -202,5 +231,32 @@ public class IOEventService {
 
 		return ioEvent.name().replaceAll("[^a-zA-Z ]", "").toLowerCase().replace(" ", "") + "-"
 				+ getSourceNames(ioEvent).hashCode() + "-" + getTargetNames(ioEvent).hashCode();
+	}
+
+	public String getProcessName(IOEvent ioEvent, IOFlow ioFlow, String recordProcessName) {
+		if (!StringUtils.isBlank(recordProcessName)) {
+			return recordProcessName;
+
+		} else if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
+			return ioEvent.startEvent().key();
+		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
+			return ioEvent.endEvent().key();
+
+		}
+		return ioFlow.name();
+	}
+
+	public String getTargetTopicName(IOEvent ioEvent, IOFlow ioFlow, String targetEventTopic) {
+		if (!StringUtils.isBlank(targetEventTopic)) {
+			return targetEventTopic;
+
+		} else if (!StringUtils.isBlank(ioEvent.topic())) {
+			return ioEvent.topic();
+		} else if (!StringUtils.isBlank(ioFlow.topic())) {
+			return ioFlow.topic();
+
+		} else {
+			return "";
+		}
 	}
 }

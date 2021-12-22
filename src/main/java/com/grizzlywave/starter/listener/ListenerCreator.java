@@ -9,7 +9,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.scheduling.annotation.Async;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.handler.RecordsHandler;
@@ -42,7 +41,7 @@ public class ListenerCreator {
 	private String security;
 	/** create listener on a single thread for the method and the topic given 
 	 * @param ioEvent */
-	@Async
+
 	public Listener createListener(Object bean, Method method, IOEvent ioEvent, String topicName, String groupId,Thread t1) throws Throwable {
 		Properties props = new Properties();
 		props.setProperty("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
@@ -63,7 +62,7 @@ public class ListenerCreator {
 
 		synchronized (method) {
 
-			method.notifyAll();
+			method.notify();
 		}
 		log.info("listener lunched for " + method);
 		consumerApplication.runConsume(props);

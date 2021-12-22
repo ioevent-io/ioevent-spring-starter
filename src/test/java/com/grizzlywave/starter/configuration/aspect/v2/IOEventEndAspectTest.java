@@ -95,7 +95,7 @@ class IOEventEndAspectTest {
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "_", new StopWatch());
-		Message messageResult = endAspect.buildEventMessage(ioEvent, "payload", "END", waveRecordInfo, (long) 123546);
+		Message messageResult = endAspect.buildEventMessage(ioEvent,null, "payload", "END", waveRecordInfo, (long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
 				.setHeader("StepName", "terminate the event").setHeader("EventType", IOEventType.END.toString())
@@ -108,7 +108,7 @@ class IOEventEndAspectTest {
 
 		Method method2 = this.getClass().getMethod("endAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = endAspect.buildEventMessage(ioEvent2, "payload", "END", waveRecordInfo, (long) 123546);
+		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, "payload", "END", waveRecordInfo, (long) 123546);
 		assertEquals("test-", messageResult2.getHeaders().get("kafka_topic"));
 
 	}
@@ -123,7 +123,7 @@ class IOEventEndAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation End Aspect");
-		endAspect.prepareAndDisplayEventLogger(eventLogger, ioEvent.endEvent().key(), ioEvent, "payload" , watch,
+		endAspect.prepareAndDisplayEventLogger(eventLogger, ioEvent, "payload" , watch,
 				waveRecordInfo);
 		assertThatNoException();
 

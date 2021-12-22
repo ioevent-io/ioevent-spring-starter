@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -20,6 +19,7 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventType;
@@ -47,34 +47,33 @@ public class IOEventStartAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException {
 
-		if (isStart(ioEvent)) {
+		if (ioEventService.isStart(ioEvent)) {
 
 			StopWatch watch = new StopWatch();
 			EventLogger eventLogger = new EventLogger();
 
 			eventLogger.startEventLog();
 			watch.start("IOEvent annotation Start Aspect");
+			
+			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 
 			UUID uuid = UUID.randomUUID();
 			String target = "";
 			Object payload = getpayload(joinPoint, returnObject);
+			String processName = ioEventService.getProcessName(ioEvent,ioFlow,"");
 
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, payload, uuid.toString(), targetEvent,
+				Message<Object> message = this.buildStartMessage(ioEvent,ioFlow,payload,processName,uuid.toString(), targetEvent,
 						eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
 				target += targetEvent.name() + ",";
 			}
-			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, target, payload, watch);
+			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent,processName, target, payload, watch);
 		}
 
 	}
 
-	public boolean isStart(IOEvent ioEvent) {
-		return ((ioEventService.getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
-				&& (!ioEventService.getTargets(ioEvent).isEmpty()));
-
-	}
+	
 
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject == null) {
@@ -84,25 +83,22 @@ public class IOEventStartAspect {
 		return returnObject;
 	}
 
-	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, TargetEvent targetEvent,
+	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, String processName, String uuid, TargetEvent targetEvent,
 			Long startTime) {
-		String topic = targetEvent.topic();
-		if (StringUtils.isBlank(topic)) {
-			topic = ioEvent.topic();
-
-		}
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
+		String topicName= ioEventService.getTargetTopicName(ioEvent,ioFlow,targetEvent.topic());
+	
+		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader("Correlation_id", uuid)
 				.setHeader("StepName", ioEvent.name()).setHeader("EventType", IOEventType.START.toString())
 				.setHeader("source", new ArrayList<String>(Arrays.asList("Start")))
-				.setHeader("targetEvent", targetEvent.name()).setHeader("Process_Name", ioEvent.startEvent().key())
+				.setHeader("targetEvent", targetEvent.name()).setHeader("Process_Name", processName)
 				.setHeader("Start Time", startTime).build();
 	}
 
-	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String target,
+	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent,String processName, String target,
 			Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(uuid.toString(), ioEvent.startEvent().key(), ioEvent.name(), null, target, "Init",
+		eventLogger.loggerSetting(uuid.toString(),processName, ioEvent.name(), null, target, "Init",
 				payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);

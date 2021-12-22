@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.BeansException;
@@ -16,8 +17,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
-import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.TopicServices;
 
@@ -34,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor, WavePostProcessors {
 
-
 	@Autowired
 	private WaveProperties waveProperties;
 
@@ -46,8 +46,7 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 	@Autowired
 	private IOEventService ioEventService;
-	
-	
+
 	/** BeanPostProcessor method to execute Before Bean Initialization */
 
 	@Nullable
@@ -64,27 +63,25 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 		}
 		return bean;
 	}
-	
+
 	/** BeanPostProcessor method to execute After Bean Initialization */
 	@Nullable
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		
-		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic","",waveProperties.getTopicReplication());
-			((TopicServices) bean).createTopic("resultTopic","",waveProperties.getTopicReplication());
 
-			if (waveProperties.getTopic_names()!=null) {
-				waveProperties.getTopic_names().stream()
-				.forEach(x -> ((TopicServices) bean).createTopic(x, waveProperties.getPrefix(),waveProperties.getTopicReplication()));
-		log.info("topics created");
+		if (bean instanceof TopicServices) {
+			((TopicServices) bean).createTopic("ParallelEventTopic", "", waveProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("resultTopic", "", waveProperties.getTopicReplication());
+
+			if (waveProperties.getTopic_names() != null) {
+				waveProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
+						waveProperties.getPrefix(), waveProperties.getTopicReplication()));
+				log.info("topics created");
 			}
-			ioEventService.sendParallelEventInfo(new WaveParallelEventInformation());
 
 		}
 		return bean;
 	}
-
 
 	/**
 	 * Process Method take the Bean as a parameter collect all Grizzly_Wave custom
@@ -93,12 +90,21 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 	 * auto_create_topic is true
 	 **/
 
-
 	@Override
 	public void process(Object bean, String beanName) throws Exception {
+		Arrays.stream(bean.getClass().getAnnotationsByType(IOFlow.class)).forEach(ioflow->{
+			try {
+				createIOFlowTopic(ioflow);
+			} catch (NumberFormatException | InterruptedException | ExecutionException e) {
+				log.info("failed to create ioflow topic !");
+				
+			}
+		}); 
+			
+	
+
 		for (Method method : bean.getClass().getMethods()) {
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
-		 
 			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
 					for (String topicName : ioEventService.getTopics(ioEvent)) {
@@ -107,9 +113,10 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 							if (waveProperties.getAuto_create_topic()) {
 								log.info("creating topic : " + topicName);
 
-								//TopicBuilder.name(waveProperties.getPrefix()+ topicName).partitions(1).replicas((short) 1).build();
-								client.createTopics(Arrays
-										.asList(new NewTopic(waveProperties.getPrefix() + topicName, 1,Short.valueOf(waveProperties.getTopicReplication()))));
+								// TopicBuilder.name(waveProperties.getPrefix()+
+								// topicName).partitions(1).replicas((short) 1).build();
+								client.createTopics(Arrays.asList(new NewTopic(waveProperties.getPrefix() + topicName,
+										1, Short.valueOf(waveProperties.getTopicReplication()))));
 
 							} else
 								throw new Exception(
@@ -124,17 +131,28 @@ public class WaveTopicBeanPostProcessor implements DestructionAwareBeanPostProce
 
 	}
 
+	private void createIOFlowTopic(IOFlow ioFlow) throws NumberFormatException, InterruptedException, ExecutionException
+			 {
+		if (!StringUtils.isBlank(ioFlow.topic())) {
+			if (!topicExist(ioFlow.topic())) {
+				if (waveProperties.getAuto_create_topic()) {
+					log.info("creating topic : " + ioFlow.topic());
+					client.createTopics(Arrays.asList(new NewTopic(waveProperties.getPrefix() + ioFlow.topic(), 1,
+							Short.valueOf(waveProperties.getTopicReplication()))));
+				}}
+		}
+	}
+
 	public boolean topicExist(String topic) throws InterruptedException, ExecutionException {
 		if ((client.listTopics().names().get().stream()
 				.anyMatch(topicName -> topicName.equalsIgnoreCase(waveProperties.getPrefix() + topic)))) {
-			log.info("topic : "+waveProperties.getPrefix()+topic +"alreay exist");
+			log.info("topic : " + waveProperties.getPrefix() + topic + "alreay exist");
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
 		// TODO Auto-generated method stub

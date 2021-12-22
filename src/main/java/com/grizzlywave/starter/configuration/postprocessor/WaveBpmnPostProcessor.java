@@ -3,11 +3,13 @@ package com.grizzlywave.starter.configuration.postprocessor;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventBpmnPart;
 import com.grizzlywave.starter.listener.Listener;
@@ -30,7 +32,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	@Autowired
 	private List<IOEventBpmnPart> iobpmnlist;
 	@Autowired
-	private ListenerCreator ListenerCreator;
+	private ListenerCreator listenerCreator;
 	@Autowired
 	private List<Listener> listeners;
 
@@ -60,7 +62,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	 **/
 	@Override
 	public void process(Object bean, String beanName) throws Throwable {
-
+	IOFlow ioFlow=	bean.getClass().getAnnotation(IOFlow.class);
 		for (Method method : bean.getClass().getMethods()) {
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
@@ -69,26 +71,34 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 					
 					if (ioEvent.startEvent().key().isEmpty()) {
 					
-						for (String topicName : ioEventService.getSourceTopic(ioEvent)) {
-						
-							if (!ListenerExist(topicName, bean, method, ioEvent)) {
+						for (String topicName : ioEventService.getSourceTopic(ioEvent,ioFlow)) {
+							if (!listenerExist(topicName, bean, method, ioEvent)) {
 								synchronized (method) {
-									ListenerCreator.createListener(bean, method, ioEvent,
-											waveProperties.getPrefix() + topicName, waveProperties.getGroup_id(),Thread.currentThread());
-									method.wait();
+									Thread listenerThread = new Thread() {
+									    @Override
+									    public void run() {	try {
+											listenerCreator.createListener(bean, method, ioEvent,
+												waveProperties.getPrefix() + topicName, waveProperties.getGroup_id(),Thread.currentThread());
+										} catch (Throwable e) {
+											log.error("failed to create Listener !!!");
+										}
+									    }};
+									    listenerThread.start();
+									    
+									    method.wait();
 								}
 							}
 						}
 					}
 					String generateID= ioEventService.generateID(ioEvent);
-					iobpmnlist.add(this.ioEventBpmnPart(ioEvent, bean.getClass().getName(), generateID, method.getName()));
+					iobpmnlist.add(createIOEventBpmnPart(ioEvent,ioFlow, bean.getClass().getName(), generateID, method.getName()));
 				
 			}
 		}
 	}
 
 	/** check if the listener already exist */
-	public boolean ListenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
+	public boolean listenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
 			 {
 		for (Listener listener : listeners) {
 			if (listener != null) {
@@ -106,17 +116,21 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 	
 
-	/** methods to create IOEvent BPMN Parts from annotations **/
-	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, String partID, String methodName) {
+	/** methods to create IOEvent BPMN Parts from annotations 
+	 * @param ioFlow **/
+	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID, String methodName) {
 		String processName = "";
-		if (!ioEvent.startEvent().key().isEmpty()) {
+		if (!StringUtils.isBlank(ioFlow.topic())) {
+			processName=ioFlow.name();
+		}
+		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
 			processName = ioEvent.startEvent().key();
-		} else if (!ioEvent.endEvent().key().isEmpty()) {
+		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			processName = ioEvent.endEvent().key();
 		}
-		IOEventBpmnPart ioeventBpmnPart = new IOEventBpmnPart(ioEvent, partID, processName,
+		return new IOEventBpmnPart(ioEvent, partID, processName,
 				ioEventService.getIOEventType(ioEvent), ioEvent.name(), className, methodName);
-		return ioeventBpmnPart;
+		
 	}
 
 }
