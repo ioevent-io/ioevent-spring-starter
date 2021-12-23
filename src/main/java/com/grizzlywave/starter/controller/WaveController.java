@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.grizzlywave.starter.domain.IOEventBpmnPart;
 import com.grizzlywave.starter.service.TopicServices;
-
+/**
+ * class for the controller of the wave starter,
+ */
 @CrossOrigin(origins = "*")
 @RestController
 public class WaveController {
@@ -21,11 +23,18 @@ public class WaveController {
 	@Autowired
 	private List<IOEventBpmnPart> iobpmnlist;
 
+	/**
+	 * Method that return all bpmn parts of processes,
+	 * @return  list of IOEventBpmnPart Object,
+	 */
 	@GetMapping("/IOeventBPMN")
 	public List<IOEventBpmnPart> getlist() {
 		return iobpmnlist;
 	}
-
+	/**
+	 * Method that return all Topics,
+	 * @return  list of topics names,
+	 */
 	@GetMapping("/WaveTopics")
 	public List<String> getWaveTopics() throws InterruptedException, ExecutionException {
 		return topicServices.getAllTopic();

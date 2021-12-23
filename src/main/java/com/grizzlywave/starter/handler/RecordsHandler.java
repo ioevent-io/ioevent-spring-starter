@@ -45,7 +45,6 @@ public class RecordsHandler {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-
 	public Object parseConsumedValue(Object consumedValue, Class<?> type)
 			throws JsonMappingException, JsonProcessingException {
 		if (type.equals(String.class)) {

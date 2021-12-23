@@ -74,6 +74,10 @@ public class WaveConfiguration {
 	@Value("${spring.application.name}")
 	private String appName;
 
+	/**
+	 * method for processing parallel events from the ParallelEventTopic using kafka stream,
+	 * @param builder type of StreamsBuilder,
+	 */
 	@Autowired
 	public void processKStream(final StreamsBuilder builder) {
 

@@ -2,6 +2,11 @@ package com.grizzlywave.starter.domain;
 
 import java.util.List;
 
+/**
+ * class which define the parallel event model information,
+ * - id for the ID of the task,
+ * - targets for the list of targets of the task,
+ */
 public class ParallelEventInfo {
 private String id;
 private List<String> targets;

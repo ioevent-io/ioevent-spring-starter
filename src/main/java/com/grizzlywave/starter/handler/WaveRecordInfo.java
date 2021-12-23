@@ -5,6 +5,9 @@ import java.util.List;
 import org.apache.kafka.common.header.Header;
 import org.springframework.util.StopWatch;
 
+/**
+ * class to record event duration
+ */
 public class WaveRecordInfo {
 	private String id;
 

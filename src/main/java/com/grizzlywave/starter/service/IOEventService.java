@@ -18,6 +18,9 @@ import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * class service for IOEvent,
+ */
 @Slf4j
 @Service
 public class IOEventService {
@@ -25,6 +28,10 @@ public class IOEventService {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
+	/**
+	 * This is a kafka producer which send parallel events info to ParallelEventTopic topic
+	 * @param parallelEventInfo for the parallel event information,
+	 */
 	public void sendParallelEventInfo(WaveParallelEventInformation parallelEventInfo) {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
@@ -32,7 +39,11 @@ public class IOEventService {
 
 		kafkaTemplate.send(message);
 	}
-
+	/**
+	 * method returns all sources names of @IOEvent definition,
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return  list of sources names,
+	 */
 	public List<String> getSourceNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 
@@ -49,7 +60,11 @@ public class IOEventService {
 		}
 		return result;
 	}
-
+	/**
+	 * method returns all parallel sources names of @IOEvent definition,
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return  list of sources names,
+	 */
 	public List<String> getParalleListSource(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
@@ -59,7 +74,11 @@ public class IOEventService {
 		}
 		return result;
 	}
-
+	/**
+	 * method returns all  targets names of @IOEvent definition,
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return  list of targets names,
+	 */
 	public List<String> getTargetNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 
@@ -76,7 +95,11 @@ public class IOEventService {
 		}
 		return result;
 	}
-
+	/**
+	 * method returns all targets of @IOEvent definition,
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return  list of TargetEvent Object ,
+	 */
 	public List<TargetEvent> getTargets(IOEvent ioEvent) {
 		List<TargetEvent> result = new ArrayList<>();
 
@@ -93,7 +116,11 @@ public class IOEventService {
 		}
 		return result;
 	}
-
+	/**
+	 * method returns all targets of @IOEvent definition,
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return  list of TargetEvent Object ,
+	 */
 	public List<SourceEvent> getSources(IOEvent ioEvent) {
 		List<SourceEvent> result = new ArrayList<>();
 

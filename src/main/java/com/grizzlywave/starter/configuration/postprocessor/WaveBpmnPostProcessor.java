@@ -36,7 +36,12 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 	@Autowired
 	private IOEventService ioEventService;
-
+	/**
+	 * method post processor  before initialization,
+	 * @param bean for the bean,
+	 * @param beanName for the bean name,
+	 * @return A bean Object ,
+	 **/
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) {
 		try {
@@ -49,14 +54,20 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 		return bean;
 	}
-
+	/**
+	 * method post processor  after initialization,
+	 * @param bean for the bean,
+	 * @param beanName for the bean name,
+	 **/
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
 		return bean;
 	}
 
 	/**
-	 * process method to check for annotations in the bean and create the Bpmn parts
+	 * process method to check for annotations in the bean and create the Bpmn parts,
+	 * @param bean for the bean,
+	 * @param beanName for the bean name,
 	 **/
 	@Override
 	public void process(Object bean, String beanName) throws Throwable {
@@ -87,7 +98,13 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 	}
 
-	/** check if the listener already exist */
+	/** check if the listener already exist
+	 * @param bean for the bean,
+	 * @param topicName for the topic name,
+	 * @param method for the method information,
+	 * @param ioEvent for the ioEvent annotation info,
+	 * @return boolean true if  the listener exist else false,
+	 * */
 	public boolean ListenerExist(String topicName, Object bean, Method method, IOEvent ioEvent)
 			 {
 		for (Listener listener : listeners) {
@@ -103,10 +120,12 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		}
 		return false;
 	}
-
-	
-
-	/** methods to create IOEvent BPMN Parts from annotations **/
+	/** methods to create IOEvent BPMN Parts from annotations
+	 * @param ioEvent for the ioEvent annotation info,
+	 * @param className for the class which include the method,
+	 * @param partID for the part ID,
+	 * @param methodName  for the method name,
+	 * **/
 	public IOEventBpmnPart ioEventBpmnPart(IOEvent ioEvent, String className, String partID, String methodName) {
 		String processName = "";
 		if (!ioEvent.startEvent().key().isEmpty()) {

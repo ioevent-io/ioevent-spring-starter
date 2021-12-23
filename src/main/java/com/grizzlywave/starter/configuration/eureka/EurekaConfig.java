@@ -9,7 +9,9 @@ import org.springframework.cloud.netflix.eureka.EurekaDiscoveryClientConfigurati
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
+/**
+ * class for eureka configuration,
+ */
 @Slf4j
 @ConditionalOnProperty(prefix = "grizzly-wave", name = "eureka.enabled",havingValue = "false",matchIfMissing = true)
 @Configuration

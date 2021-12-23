@@ -13,7 +13,6 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StopWatch;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
@@ -27,7 +26,9 @@ import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.WaveContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
-
+/**
+ * Class Aspect which describe event transition task
+ */
 @Slf4j
 @Aspect
 @Configuration
@@ -44,9 +45,13 @@ public class IOEventTransitionAspect {
 	@Autowired
 	private IOEventService ioEventService;
 
-	
-	
 
+	/**
+	 * Method AfterReturning advice runs after a successful completion of a transition task with IOEvent annotation,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws ParseException, JsonProcessingException  {
 		
@@ -80,8 +85,12 @@ public class IOEventTransitionAspect {
 			prepareAndDisplayEventLogger(eventLogger,waveRecordInfo,ioEvent,targets,watch,payload,ioEventType);
 		}
 	}
-
-	
+	/**
+	 * Method that returns event payload,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param returnObject for the returned object,
+	 * @return  An object of type Object,
+	 */
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject==null) {
 			return joinPoint.getArgs()[0];
@@ -89,7 +98,16 @@ public class IOEventTransitionAspect {
 		}		return returnObject;
 	}
 
-
+	/**
+	 * Method that build the start message of simple task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param eventLogger for the log info dto display,
+	 * @param ioEventType for the event type,
+	 * @param targets for the list of targets of the event separated by ",",
+	 * @return  string format list of targets of the event separated by "," ,
+	 */
 	public String simpleEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger, IOEventType ioEventType) throws ParseException {
 		
@@ -113,7 +131,15 @@ public class IOEventTransitionAspect {
 			
 		}		return targets;
 	}
-
+	/**
+	 * Method that build the start message of exclusive task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param eventLogger for the log info dto display,
+	 * @param targets for the list of targets of the event separated by ",",
+	 * @return  string format list of targets of the event separated by "," ,
+	 */
 	public String exclusiveEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
 		
@@ -131,7 +157,15 @@ public class IOEventTransitionAspect {
 		}
 		return targets;
 	}
-
+	/**
+	 * Method that build the start message of parallel task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param eventLogger for the log info dto display,
+	 * @param targets for the list of targets of the event separated by ",",
+	 * @return  string format list of targets of the event separated by "," ,
+	 */
 	public String parallelEventSendProcess(IOEvent ioEvent, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
@@ -142,7 +176,16 @@ public class IOEventTransitionAspect {
 		}
 		return targets;
 	}
-
+	/**
+	 * Method that display logs after task completed ,
+	 * @param eventLogger for the log info dto display,
+	 * @param returnObject for the returned object,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param ioEventType for the event type,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param target for the  target of the event,
+	 * @param watch for capturing time,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, WaveRecordInfo waveRecordInfo, IOEvent ioEvent,
 			String target, StopWatch watch,Object returnObject,IOEventType ioEventType) throws JsonProcessingException {
 		watch.stop();
@@ -152,11 +195,22 @@ public class IOEventTransitionAspect {
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);		
 	}
-
+	/**
+	 * Method check if task is a transition task,
+	 * @param ioEvent for io event annotation which include task information,
+	 */
 	public boolean isTransition(IOEvent ioEvent) {
 		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())&& !ioEventService.getSources(ioEvent).isEmpty()&&!ioEventService.getTargets(ioEvent).isEmpty());
 	}
-
+	/**
+	 * Method that build the start message of Transition task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param startTime for the start time of the event,
+	 * @param ioEventType for the event type,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
@@ -170,6 +224,14 @@ public class IOEventTransitionAspect {
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
+	/**
+	 * Method that build the message of Transition Gateway Parallel task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param startTime for the start time of the event,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
@@ -184,7 +246,14 @@ public class IOEventTransitionAspect {
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
 
-
+	/**
+	 * Method that build the message of Transition Gateway Exclusive task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param startTime for the start time of the event,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime) {
 		String topic = targetEvent.topic();
 		if (StringUtils.isBlank(topic)) {
@@ -198,7 +267,15 @@ public class IOEventTransitionAspect {
 				.setHeader("source", ioEventService.getSourceNames(ioEvent))
 				.setHeader("targetEvent", targetEvent.name()).setHeader("StepName", ioEvent.name()).setHeader("Start Time", startTime).build();
 	}
-	
+	/**
+	 * Method that build the Suffix message,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param startTime for the start time of the event,
+	 * @param ioEventType for the event type,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildSuffixMessage(IOEvent ioEvent, Object payload, TargetEvent targetEvent,WaveRecordInfo waveRecordInfo,Long startTime, IOEventType ioEventType) {
 		String topic = ioEventService.getSourceEventByName(ioEvent, waveRecordInfo.getTargetName()).topic();
 		if (!StringUtils.isBlank(ioEvent.topic())) {

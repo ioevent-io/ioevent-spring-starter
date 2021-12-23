@@ -32,7 +32,8 @@ public class TopicServices {
 	private AdminClient client;
 
 	/**
-	 * get a list of all topics
+	 * get a list of all topics,
+	 * @return list of topics names,
 	 **/
 	public List<String> getAllTopic() throws InterruptedException, ExecutionException {
 
@@ -44,8 +45,9 @@ public class TopicServices {
 
 	/**
 	 * create new topic named topicName
-	 * 
-	 * @param prefix
+	 * @param topicName for the topic name,
+	 * @param replication for the replication value,
+	 * @param prefix for the wave prefix,
 	 **/
 	public void createTopic(String topicName, String prefix,String replication) {
 

@@ -27,6 +27,9 @@ import com.grizzlywave.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Class Aspect which describe event full task
+ */
 @Slf4j
 @Aspect
 @Configuration
@@ -40,7 +43,12 @@ public class IOEvenFullTaskAspect {
 	private WaveProperties waveProperties;
 	@Autowired
 	private IOEventService ioEventService;
-
+	/**
+	 * Method AfterReturning advice runs after a successful completion of a full task with IOEvent annotation,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException {
@@ -64,21 +72,36 @@ public class IOEvenFullTaskAspect {
 		}
 
 	}
-
+	/**
+	 * Method check if task is a full task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @return  boolean
+	 */
 	public boolean isFullTask(IOEvent ioEvent) {
 		return ((ioEventService.getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
 				&& (ioEventService.getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key())));
 
 	}
-
+	/**
+	 * Method that returns event payload,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param returnObject for the returned object,
+	 * @return  An object of type Object,
+	 */
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject == null) {
 			return joinPoint.getArgs()[0];
-
 		}
 		return returnObject;
 	}
-
+	/**
+	 * Method that build the start message of full task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param uuid for the correlation_id,
+	 * @param startTime for the start time of the event,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildStartMessage(IOEvent ioEvent, Object payload, String uuid, Long startTime) {
 		String topic = ioEvent.topic();
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topic)
@@ -88,7 +111,14 @@ public class IOEvenFullTaskAspect {
 				.setHeader("targetEvent", new ArrayList<String>(Arrays.asList("END")))
 				.setHeader("Start Time", startTime).build();
 	}
-
+	/**
+	 * Method that display logs after task completed ,
+	 * @param eventLogger for the log info dto display,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param uuid for the correlation_id,
+	 * @param watch for capturing time,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, Object payload,
 			StopWatch watch) throws JsonProcessingException {
 		watch.stop();

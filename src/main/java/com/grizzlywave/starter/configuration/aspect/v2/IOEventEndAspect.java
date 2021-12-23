@@ -23,7 +23,9 @@ import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.WaveContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
-
+/**
+ * Class Aspect which describe event end task
+ */
 @Slf4j
 @Aspect
 @Configuration
@@ -40,8 +42,13 @@ public class IOEventEndAspect {
 	@Autowired
 	private IOEventService ioEventService;
 
-	
 
+	/**
+	 * Method AfterReturning advice runs after a successful completion of an end task with IOEvent annotation,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param returnObject for the returned object,
+	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject) throws JsonProcessingException  {
 		if (isEnd(ioEvent)) {
@@ -58,16 +65,35 @@ public class IOEventEndAspect {
 			prepareAndDisplayEventLogger(eventLogger, workflow, ioEvent, payload, watch,waveRecordInfo);
 		}
 	}
+	/**
+	 * Method check if task is an end task,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @return  boolean
+	 */
 	public boolean isEnd(IOEvent ioEvent) {
 		return ((ioEventService.getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key()))
 				&& (!ioEventService.getSources(ioEvent).isEmpty()));
 	}
+	/**
+	 * Method that returns event payload,
+	 * @param joinPoint for the point during the execution of the program,
+	 * @param returnObject for the returned object,
+	 * @return  An object of type Object,
+	 */
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject==null) {
 			return joinPoint.getArgs()[0];
 
 		}		return returnObject;
 	}
+	/**
+	 * Method that build the end message,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param startTime for the start time of the event,
+	 * @return  message type of Message,
+	 */
 	public Message<Object> buildEventMessage(IOEvent ioEvent, Object payload, String targetEvent,
 			WaveRecordInfo waveRecordInfo, Long startTime) {
 		String topic = ioEvent.topic();
@@ -81,7 +107,15 @@ public class IOEventEndAspect {
 				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("StepName", ioEvent.name())
 				.setHeader("Start Time", startTime).build();
 	}
-
+	/**
+	 * Method that display logs after task completed ,
+	 * @param eventLogger for the log info dto display,
+	 * @param workflow for the name of the process,
+	 * @param ioEvent for io event annotation which include task information,
+	 * @param payload  for the payload of the event,
+	 * @param waveRecordInfo include information  about the task,
+	 * @param watch for capturing time,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String workflow, IOEvent ioEvent,
 			Object payload, StopWatch watch,WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 

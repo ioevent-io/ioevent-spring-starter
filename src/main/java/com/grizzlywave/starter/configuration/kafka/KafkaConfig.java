@@ -49,7 +49,10 @@ public class KafkaConfig {
 	private String kafkaGroup_id;
 	@Value("${grizzly-wave.topicReplication:1}")
 	private String topicReplication;
-
+	/**
+	 * Bean allow us to define the kafka admin client configuration,
+	 * @return AdminClient Object,
+	 **/
 	@Bean
 	public AdminClient AdminClient()  {
 		Properties properties = new Properties();
@@ -68,7 +71,10 @@ public class KafkaConfig {
 		AdminClient client = AdminClient.create(properties);
 		return client;
 	}
-
+	/**
+	 * Bean allow us to define the kafka stream configuration,
+	 * @return KafkaStreamsConfiguration Object,
+	 **/
 	@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
 	public KafkaStreamsConfiguration kStreamsConfigs() {
 		Map<String, Object> props = new HashMap<>();
@@ -91,7 +97,10 @@ public class KafkaConfig {
 
 		return new KafkaStreamsConfiguration(props);
 	}
-
+	/**
+	 * Bean allow us to define the kafka producer configuration,
+	 * @return ProducerFactory Object,
+	 **/
 	@Bean
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
@@ -106,12 +115,18 @@ public class KafkaConfig {
 		}
 		return new DefaultKafkaProducerFactory<>(config);
 	}
-
+	/**
+	 * Bean allow us to init the kafka Template,
+	 * @return ProducerFactory Object,
+	 **/
 	@Bean
 	public KafkaTemplate<String, Object> kafkaTemplate() {
 		return new KafkaTemplate<>(producerFactory());
 	}
-
+	/**
+	 * Bean allow us to define the kafka Consumer configuration,
+	 * @return ConsumerFactory Object,
+	 **/
 	@Bean
 	public ConsumerFactory<String, String> userConsumerFactory() {
 		Map<String, Object> config = new HashMap<>();
