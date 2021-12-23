@@ -136,7 +136,7 @@ public class IOEventTransitionAspect {
 	}
 
 	public String parallelEventSendProcess(IOEvent ioEvent,IOFlow ioFlow, Object returnObject, String targets,
-			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) throws ParseException {
+			WaveRecordInfo waveRecordInfo, EventLogger eventLogger) {
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent,ioFlow, returnObject, targetEvent,waveRecordInfo,waveRecordInfo.getStartTime());
 			kafkaTemplate.send(message);

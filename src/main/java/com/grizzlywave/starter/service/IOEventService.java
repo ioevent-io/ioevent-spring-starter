@@ -174,27 +174,23 @@ public class IOEventService {
 			return IOEventType.START;
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			return IOEventType.END;
-		} else if (isFullTask(ioEvent)) {
-			return IOEventType.FULLTASK;
 		} else {
 			return IOEventType.TASK;
 		}
 	}
 
 	public boolean isStart(IOEvent ioEvent) {
-		return ((getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
-				&& (!getTargets(ioEvent).isEmpty()));
+		return (!StringUtils.isBlank(ioEvent.startEvent().key()) && (!getTargets(ioEvent).isEmpty()));
 
 	}
 
 	public boolean isEnd(IOEvent ioEvent) {
-		return ((getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key()))
-				&& (!getSources(ioEvent).isEmpty()));
+		return (!StringUtils.isBlank(ioEvent.endEvent().key()) && (!getSources(ioEvent).isEmpty()));
 	}
 
-	public boolean isFullTask(IOEvent ioEvent) {
-		return ((getSources(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.startEvent().key()))
-				&& (getTargets(ioEvent).isEmpty() || !StringUtils.isBlank(ioEvent.endEvent().key())));
+	public boolean isImplicitTask(IOEvent ioEvent) {
+		return ((getSources(ioEvent).isEmpty() || getTargets(ioEvent).isEmpty())
+				&& (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())));
 
 	}
 
