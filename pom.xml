@@ -122,6 +122,15 @@
 	</dependencyManagement>
 
 	<build>
+		<pluginManagement>
+						<plugins>
+							<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-javadoc-plugin</artifactId>
+								<version>3.3.1</version>
+							</plugin>
+					</plugins>
+					</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -130,6 +139,11 @@
 				<configuration>
 					<skip>true</skip>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.3.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
@@ -182,6 +196,15 @@
 			</plugin>
 		</plugins>
 	</build>
+	<reporting>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>3.3.1</version>
+					</plugin>
+				</plugins>
+			</reporting>
 	<distributionManagement>
 				<repository>
 					<id>grizzly-wave-starter-community</id>
