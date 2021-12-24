@@ -143,7 +143,7 @@ public class IOEventService {
 
 	public List<String> getSourceTopic(IOEvent ioEvent, IOFlow ioFlow) {
 		List<String> result = new ArrayList<>();
-		if (!StringUtils.isBlank(ioFlow.topic())) {
+		if ((ioFlow!=null)&&!StringUtils.isBlank(ioFlow.topic())) {
 			result.add(ioFlow.topic());
 		}
 		if (!StringUtils.isBlank(ioEvent.topic())) {

@@ -120,7 +120,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 	 * @param ioFlow **/
 	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID, String methodName) {
 		String processName = "";
-		if (!StringUtils.isBlank(ioFlow.topic())) {
+		if ((ioFlow!=null)&&!StringUtils.isBlank(ioFlow.topic())) {
 			processName=ioFlow.name();
 		}
 		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
