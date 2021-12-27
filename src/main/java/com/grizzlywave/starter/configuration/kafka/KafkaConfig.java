@@ -45,9 +45,9 @@ public class KafkaConfig {
 	private String SASL_SSL;
 	@Value("${spring.kafka.security.status:disable}")
 	private String security;
-	@Value("${grizzly-wave.group_id}")
+	@Value("${ioevent.group_id}")
 	private String kafkaGroup_id;
-	@Value("${grizzly-wave.topicReplication:1}")
+	@Value("${ioevent.topic_replication:1}")
 	private String topicReplication;
 
 	@Bean
