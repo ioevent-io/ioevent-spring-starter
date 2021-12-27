@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * - auto_create_topic : create the topics used in code automatically if true.
  **/
 @Configuration
-@ConfigurationProperties(prefix = "grizzly-wave")
+@ConfigurationProperties(prefix = "ioevent")
 public class WaveProperties {
 
 	
@@ -25,7 +25,7 @@ public class WaveProperties {
 	
 	private String group_id= "wave";
 	private Boolean auto_create_topic = true;
-	private String topicReplication="1" ;
+	private String topic_replication="1" ;
 	
 	public String getPrefix() {
 		return prefix;
@@ -45,11 +45,11 @@ public class WaveProperties {
 
 	
 	public String getTopicReplication() {
-		return topicReplication;
+		return topic_replication;
 	}
 
 	public void setTopicReplication(String topicReplication) {
-		this.topicReplication = topicReplication;
+		this.topic_replication = topicReplication;
 	}
 
 	public String getGroup_id() {

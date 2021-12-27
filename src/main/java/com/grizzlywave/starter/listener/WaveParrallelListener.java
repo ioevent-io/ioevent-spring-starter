@@ -36,7 +36,7 @@ public class WaveParrallelListener {
 	private IOEventService ioEventService;
 	
 
-	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "${grizzly-wave.group_id}")
+	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "${ioevent.group_id}")
 	public void consumeParallelEvent(String s) throws JsonMappingException, JsonProcessingException, ClassNotFoundException,
 			NoSuchMethodException, SecurityException {
 		Gson gson = new Gson();
