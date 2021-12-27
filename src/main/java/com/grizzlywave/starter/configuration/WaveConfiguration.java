@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.grizzlywave.starter.configuration.aspect.v2.IOEvenFullTaskAspect;
+import com.grizzlywave.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.grizzlywave.starter.configuration.aspect.v2.IOEventTransitionAspect;
@@ -176,8 +176,8 @@ public class WaveConfiguration {
 		return new IOEventEndAspect();
 	}
 	@Bean
-	public IOEvenFullTaskAspect IOEvenFullTaskAspect() {
-		return new IOEvenFullTaskAspect();
+	public IOEvenImplicitTaskAspect IOEvenImplicitTaskAspect() {
+		return new IOEvenImplicitTaskAspect();
 	}
 	@ConditionalOnMissingBean
 	@Bean

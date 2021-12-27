@@ -199,7 +199,7 @@ class IOEventServiceTest {
 	 void shouldReturnAllAnnotationSourceTopicName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<String> topiclist = ioEventService.getSourceTopic(ioEvent);
+			List<String> topiclist = ioEventService.getSourceTopic(ioEvent,null);
 			List<String> topicName = new ArrayList<String>();
 			topicName.add("topic1");
 			topicName.add("topic2");

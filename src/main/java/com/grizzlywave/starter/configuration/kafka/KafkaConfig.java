@@ -80,7 +80,7 @@ public class KafkaConfig {
 		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
 		props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/var/lib/kafka-streamsNEW");
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-	    props.put(ProducerConfig.LINGER_MS_CONFIG,0);
+	    props.put(ProducerConfig.LINGER_MS_CONFIG,10);
 
 
 		if (security.equals("enable")) {

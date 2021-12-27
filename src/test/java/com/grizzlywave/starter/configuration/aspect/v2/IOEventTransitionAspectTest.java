@@ -143,7 +143,7 @@ class IOEventTransitionAspectTest {
 		Method method = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "recordTarget", new StopWatch());
-		Message messageResult = transitionAspect.buildTransitionTaskMessage(ioEvent, "payload", ioEvent.target()[0],
+		Message messageResult = transitionAspect.buildTransitionTaskMessage(ioEvent,null, "payload", ioEvent.target()[0],
 				waveRecordInfo, (long) 123546, IOEventType.TASK);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
@@ -171,7 +171,7 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		when(ioEventService.getSourceEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.source()[0]);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "previous targe", new StopWatch());
-		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent, "payload", ioEvent.target()[0],
+		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent,null, "payload", ioEvent.target()[0],
 				waveRecordInfo, (long) 123546, IOEventType.TASK);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
@@ -198,7 +198,7 @@ class IOEventTransitionAspectTest {
 		Method method = this.getClass().getMethod("parralelTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "recordTarget", new StopWatch());
-		Message messageResult = transitionAspect.buildTransitionGatewayParallelMessage(ioEvent, "payload",
+		Message messageResult = transitionAspect.buildTransitionGatewayParallelMessage(ioEvent,null, "payload",
 				ioEvent.gatewayTarget().target()[0], waveRecordInfo, (long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
@@ -226,7 +226,7 @@ class IOEventTransitionAspectTest {
 		Method method = this.getClass().getMethod("exclusiveTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "recordTarget", new StopWatch());
-		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent, "payload",
+		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent,null, "payload",
 				ioEvent.gatewayTarget().target()[0], waveRecordInfo, (long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
@@ -284,9 +284,9 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTasktarget = transitionAspect.simpleEventSendProcess(ioEvent, "payload", "", waveRecordInfo,
+		String simpleTasktarget = transitionAspect.simpleEventSendProcess(ioEvent,null, "payload", "", waveRecordInfo,
 				eventLogger, IOEventType.TASK);
-		String suffixTasktarget = transitionAspect.simpleEventSendProcess(ioEvent2, "payload", "",
+		String suffixTasktarget = transitionAspect.simpleEventSendProcess(ioEvent2,null, "payload", "",
 				waveRecordInfoForSuffix, eventLogger, IOEventType.TASK);
 		assertEquals("target,", simpleTasktarget);
 		assertEquals("previous target_suffixAdded", suffixTasktarget);
@@ -308,7 +308,7 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTasktarget = transitionAspect.parallelEventSendProcess(ioEvent, "payload", "", waveRecordInfo,
+		String simpleTasktarget = transitionAspect.parallelEventSendProcess(ioEvent,null, "payload", "", waveRecordInfo,
 				eventLogger);
 		assertEquals("Target1,Target2,", simpleTasktarget);
 
@@ -328,7 +328,7 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTasktarget = transitionAspect.exclusiveEventSendProcess(ioEvent,
+		String simpleTasktarget = transitionAspect.exclusiveEventSendProcess(ioEvent,null,
 				new IOEventResponse<String>("Target2", "payload"), "", waveRecordInfo, eventLogger);
 		assertEquals("Target2,", simpleTasktarget);
 

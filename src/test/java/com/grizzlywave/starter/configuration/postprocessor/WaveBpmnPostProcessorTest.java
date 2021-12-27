@@ -78,7 +78,7 @@ class WaveBpmnPostProcessorTest {
 		IOEvent ioEventStart = startMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventStart)).thenReturn(IOEventType.START);
-		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventStart, "testClass",
+		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(), "startkey", IOEventType.START,
 				"test annotation", "testClass", "testMethod");
@@ -94,7 +94,7 @@ class WaveBpmnPostProcessorTest {
 		IOEvent ioEventEnd = endMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventEnd)).thenReturn(IOEventType.END);
-		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventEnd, "testClass",
+		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(), "endkey", IOEventType.END,
 				"test annotation", "testClass", "testMethod");
@@ -110,7 +110,7 @@ class WaveBpmnPostProcessorTest {
 		IOEvent ioEventTask = taskMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventTask)).thenReturn(IOEventType.TASK);
-		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.ioEventBpmnPart(ioEventTask, "testClass",
+		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(), "", IOEventType.TASK,
 				"test annotation", "testClass", "testMethod");
@@ -127,11 +127,11 @@ class WaveBpmnPostProcessorTest {
 		Method taskMethod = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		when(waveProperties.getPrefix()).thenReturn("test_");
 		listeners.add(new Listener(null, null, this, taskMethod, null, "test_Topic"));
-		assertTrue(waveBpmnPostProcessor.ListenerExist("Topic", this, taskMethod, null));
+		assertTrue(waveBpmnPostProcessor.listenerExist("Topic", this, taskMethod, null));
 	}
 	@Test
 	void ListenerExist_returnFalse() throws InterruptedException {
 		
-		assertFalse(waveBpmnPostProcessor.ListenerExist("Topic", null, null, null));
+		assertFalse(waveBpmnPostProcessor.listenerExist("Topic", null, null, null));
 	}
 }
