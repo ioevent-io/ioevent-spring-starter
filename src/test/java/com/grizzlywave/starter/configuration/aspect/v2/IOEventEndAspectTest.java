@@ -92,7 +92,9 @@ class IOEventEndAspectTest {
 	@Test
 	void buildEventMessageTest() throws NoSuchMethodException, SecurityException {
 		when(waveProperties.getPrefix()).thenReturn("test-");
+		when(ioEventService.getTargetTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("");
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
+		
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "_", new StopWatch());
 		Message messageResult = endAspect.buildEventMessage(ioEvent,null, "payload", "END", waveRecordInfo, (long) 123546);

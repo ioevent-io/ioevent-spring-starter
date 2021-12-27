@@ -245,10 +245,9 @@ public class IOEventService {
 	public String getTargetTopicName(IOEvent ioEvent, IOFlow ioFlow, String targetEventTopic) {
 		if (!StringUtils.isBlank(targetEventTopic)) {
 			return targetEventTopic;
-
 		} else if (!StringUtils.isBlank(ioEvent.topic())) {
 			return ioEvent.topic();
-		} else if (!StringUtils.isBlank(ioFlow.topic())) {
+		} else if ((ioFlow!=null)&&!StringUtils.isBlank(ioFlow.topic())) {
 			return ioFlow.topic();
 
 		} else {

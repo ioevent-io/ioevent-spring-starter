@@ -83,6 +83,7 @@ class IOEventStartAspectTest {
 	@Test
 	void buildStartMessageTest() throws NoSuchMethodException, SecurityException {
 		when(waveProperties.getPrefix()).thenReturn("test-");
+		when(ioEventService.getTargetTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("topic");
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 
