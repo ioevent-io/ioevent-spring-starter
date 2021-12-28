@@ -11,5 +11,6 @@ public @interface IOFlow {
 
 	String name() default "";
 	String key() default "";
-	String topic() default ""; 
+	String topic() default "";
+	String apiKey() default "";
 }

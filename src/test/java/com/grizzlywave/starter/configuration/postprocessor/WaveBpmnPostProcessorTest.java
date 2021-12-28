@@ -78,9 +78,12 @@ class WaveBpmnPostProcessorTest {
 		IOEvent ioEventStart = startMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventStart)).thenReturn(IOEventType.START);
+		when(ioEventService.getProcessName(ioEventStart,null,"")).thenReturn("startkey");
+		when(waveProperties.getApikey()).thenReturn("");
+		when(ioEventService.getApiKey(waveProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(), "startkey", IOEventType.START,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(),"", "startkey", IOEventType.START,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -94,9 +97,12 @@ class WaveBpmnPostProcessorTest {
 		IOEvent ioEventEnd = endMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventEnd)).thenReturn(IOEventType.END);
+		when(ioEventService.getProcessName(ioEventEnd,null,"")).thenReturn("endkey");
+		when(waveProperties.getApikey()).thenReturn("");
+		when(ioEventService.getApiKey(waveProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(), "endkey", IOEventType.END,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(),"", "endkey", IOEventType.END,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -105,14 +111,16 @@ class WaveBpmnPostProcessorTest {
 
 	@Test
 	void Create_Task_ioEventBpmnPart() throws NoSuchMethodException, SecurityException {
-		
 		Method taskMethod = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEventTask = taskMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
 		when(ioEventService.getIOEventType(ioEventTask)).thenReturn(IOEventType.TASK);
+		when(ioEventService.getProcessName(ioEventTask,null,"")).thenReturn("");
+		when(waveProperties.getApikey()).thenReturn("");
+		when(ioEventService.getApiKey(waveProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = waveBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(), "", IOEventType.TASK,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(),"", "", IOEventType.TASK,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());

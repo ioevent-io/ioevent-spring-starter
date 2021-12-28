@@ -26,7 +26,7 @@ public class WaveProperties {
 	private String group_id= "wave";
 	private Boolean auto_create_topic = true;
 	private String topic_replication="1" ;
-	
+	private String api_key = "";
 	public String getPrefix() {
 		return prefix;
 	}
@@ -66,6 +66,14 @@ public class WaveProperties {
 
 	public void setAuto_create_topic(Boolean auto_create_topic) {
 		this.auto_create_topic = auto_create_topic;
+	}
+
+	public String getApikey() {
+		return api_key;
+	}
+
+	public void setApikey(String api_key) {
+		this.api_key = api_key;
 	}
 
 	public void logProp() {
