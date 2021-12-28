@@ -9,6 +9,7 @@ import com.grizzlywave.starter.annotations.v2.TargetEvent;
 
 public class IOEventBpmnPart {
 	private String id;
+	private String apiKey;
 	private String ClassName;
 	private String MethodName;
 	private String stepName;
@@ -22,9 +23,10 @@ public class IOEventBpmnPart {
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id, String workflow,IOEventType ioEventType, String stepName, String className,
+	public IOEventBpmnPart(IOEvent ioEvent, String id,String apiKey, String workflow,IOEventType ioEventType, String stepName, String className,
 			String methodName) {
 		this.id = id;
+		this.apiKey=apiKey;
 		this.workflow = workflow;
 		this.ioEventType=ioEventType;
 		this.ClassName = className;
@@ -42,7 +44,14 @@ public class IOEventBpmnPart {
 	public void setId(String id) {
 		this.id = id;
 	}
+	public String getApiKey() {
+		return apiKey;
+	}
 
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}
+	
 	public String getClassName() {
 		return ClassName;
 	}
@@ -169,5 +178,6 @@ public class IOEventBpmnPart {
 				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", sourceEvent=" + sourceEvent
 				+ ", targetEvent=" + targetEvent + "]";
 	}
-	
+
+
 }

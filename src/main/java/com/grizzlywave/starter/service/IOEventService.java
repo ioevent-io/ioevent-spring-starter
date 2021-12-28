@@ -2,6 +2,7 @@ package com.grizzlywave.starter.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 
@@ -238,8 +240,10 @@ public class IOEventService {
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
 			return ioEvent.endEvent().key();
 
+		}else if (!Objects.isNull(ioFlow)) {
+			return ioFlow.name();
 		}
-		return ioFlow.name();
+		return "";
 	}
 
 	public String getTargetTopicName(IOEvent ioEvent, IOFlow ioFlow, String targetEventTopic) {
@@ -253,5 +257,14 @@ public class IOEventService {
 		} else {
 			return "";
 		}
+	}
+
+	public String getApiKey(WaveProperties waveProperties, IOFlow ioFlow) {
+		if((!Objects.isNull(ioFlow))&&(StringUtils.isNotBlank(ioFlow.apiKey()))) {
+			return ioFlow.apiKey();
+		} else if (StringUtils.isNotBlank(waveProperties.getApikey())) {
+			return waveProperties.getApikey();
+		}
+		return "";
 	}
 }
