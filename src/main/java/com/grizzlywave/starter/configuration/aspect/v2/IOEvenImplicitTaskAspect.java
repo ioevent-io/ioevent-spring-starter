@@ -20,6 +20,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
@@ -28,6 +29,10 @@ import com.grizzlywave.starter.service.WaveContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Aspect class for advice associated with a @IOEvent calls for Implicit task
+ * event type
+ */
 @Slf4j
 @Aspect
 @Configuration
@@ -42,6 +47,14 @@ public class IOEvenImplicitTaskAspect {
 	@Autowired
 	private IOEventService ioEventService;
 
+	/**
+	 * Method AfterReturning advice runs after a successful completion of a Implicit
+	 * task with IOEvent annotation,
+	 * 
+	 * @param joinPoint    for the join point during the execution of the program,
+	 * @param ioEvent      for ioevent annotation which include task information,
+	 * @param returnObject for the returned object,
+	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException {
@@ -95,6 +108,14 @@ public class IOEvenImplicitTaskAspect {
 
 	}
 
+	/**
+	 * Method that returns event payload according to method parameters and return
+	 * object,
+	 * 
+	 * @param joinPoint    for the point during the execution of the program,
+	 * @param returnObject for the returned object,
+	 * @return An object of type Object,
+	 */
 	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
 		if (returnObject == null) {
 			return joinPoint.getArgs()[0];
@@ -103,18 +124,48 @@ public class IOEvenImplicitTaskAspect {
 		return returnObject;
 	}
 
+	/**
+	 * Method that build the event message of Implicit task to be send in kafka
+	 * topic,
+	 * 
+	 * @param ioEvent         for ioevent annotation which include task information,
+	 * @param ioflow          for ioflow annotation which include general
+	 *                        information,
+	 * @param payload         for the payload of the event,
+	 * @param processName     for the process name
+	 * @param uuid            for the correlation_id,
+	 * @param targetEventName for the target Event where the event will send ,
+	 * @param targetTopic     for the name of the target topic ,
+	 * @param startTime       for the start time of the event,
+	 * @return message type of Message,
+	 */
 	public Message<Object> buildMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, String processName, String uuid,
 			String targetEventName, String targetTopic, Long startTime, IOEventType ioEventType) {
 
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetTopic);
+		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader("Correlation_id", uuid)
-				.setHeader("StepName", ioEvent.name()).setHeader("EventType", ioEventType.toString())
-				.setHeader("source", ioEventService.getSourceNames(ioEvent)).setHeader("targetEvent", targetEventName)
-				.setHeader("Process_Name", processName).setHeader("Start Time", startTime).build();
+				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
+				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEventName)
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
+				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}
 
+	/**
+	 * Method that display logs after task completed ,
+	 * 
+	 * @param eventLogger for the log info dto display,
+	 * @param uuid        for the correlation_id,
+	 * @param ioEvent     for ioevent annotation which include task information,
+	 * @param ioflow      for ioflow annotation which include general information,
+	 * @param payload     for the payload of the event,
+	 * @param watch       for capturing time,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, IOFlow ioFlow,
 			Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
@@ -125,6 +176,15 @@ public class IOEvenImplicitTaskAspect {
 		log.info(jsonObject);
 	}
 
+	/**
+	 * Method that display logs after task completed ,
+	 * 
+	 * @param eventLogger    for the log info dto display,
+	 * @param ioEvent        for ioevent annotation which include task information,
+	 * @param payload        for the payload of the event,
+	 * @param watch          for capturing time,
+	 * @param waveRecordInfo for the record information from the consumed event,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, Object payload, StopWatch watch,
 			WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 
@@ -136,6 +196,18 @@ public class IOEvenImplicitTaskAspect {
 		log.info(jsonObject);
 	}
 
+	/**
+	 * Method that display logs after task completed ,
+	 * 
+	 * @param eventLogger for the log info dto display,
+	 * @param uuid        for the correlation_id,
+	 * @param ioEvent     for ioevent annotation which include task information,
+	 * @param processName for the process name
+	 * @param target      for the target where the event will send ,
+	 * @param startTime   for the start time of the even
+	 * @param payload     for the payload of the event,
+	 * @param watch       for capturing time,
+	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String processName,
 			String target, Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();

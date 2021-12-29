@@ -32,6 +32,7 @@ import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.StartEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.logger.EventLogger;
 import com.grizzlywave.starter.service.IOEventService;
@@ -90,10 +91,10 @@ class IOEventStartAspectTest {
 		Message messageResult = startAspect.buildStartMessage(ioEvent, null,"payload","process", "1155", ioEvent.target()[0],
 				(long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
-				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
-				.setHeader("StepName", "stepname").setHeader("EventType", IOEventType.START.toString())
-				.setHeader("source", new ArrayList<String>(Arrays.asList("Start"))).setHeader("targetEvent", "target")
-				.setHeader("Process_Name", "process name").setHeader("Start Time", (long) 123546).build();
+				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
+				.setHeader("IOEventHeaders.STEP_NAME.toString()", "stepname").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
+				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("Start"))).setHeader(IOEventHeaders.TARGET_EVENT.toString(), "target")
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name").setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		Method method2 = this.getClass().getMethod("startAnnotationMethod2", null);

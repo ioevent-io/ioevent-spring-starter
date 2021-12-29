@@ -33,6 +33,8 @@ public class TopicServices {
 
 	/**
 	 * get a list of all topics
+	 * 
+	 * @return list of topics names,
 	 **/
 	public List<String> getAllTopic() throws InterruptedException, ExecutionException {
 
@@ -45,16 +47,21 @@ public class TopicServices {
 	/**
 	 * create new topic named topicName
 	 * 
-	 * @param prefix
+	 * @param topicName   for the topic name,
+	 * @param replication for the replication value,
+	 * @param prefix      for the wave prefix,
 	 **/
-	public void createTopic(String topicName, String prefix,String replication) {
+	public void createTopic(String topicName, String prefix, String replication) {
 
-		CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, Short.valueOf(replication))));
+		CreateTopicsResult result = client
+				.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, Short.valueOf(replication))));
 		log.info(result.toString());
 	}
 
 	/**
 	 * Delete the topic "topicName"
+	 * 
+	 * @param topicName for the topic name,
 	 **/
 	public void deleteTopic(String topicName) {
 		client.deleteTopics(Arrays.asList(topicName));

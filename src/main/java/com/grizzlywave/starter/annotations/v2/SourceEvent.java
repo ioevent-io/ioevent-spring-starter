@@ -5,10 +5,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD}) 
+/**
+ * SourceEvent annotation allows us to specify/define a source event ,
+ **/
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SourceEvent {
-	
+
 	String name() default "";
 
 	String topic() default "";

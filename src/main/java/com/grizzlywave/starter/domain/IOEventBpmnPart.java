@@ -6,7 +6,17 @@ import java.util.Map;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
-
+/**
+ * class IOEventBpmnPart include all event information ,
+ * - id for the ID of the event,
+ * - ClassName for the class name with include the task (IOEvent),
+ * - MethodName for method name which annotated by IOEvent,
+ * - stepName for the task name,
+ * - workflow for the process name,
+ * - ioEventType for the event type,
+ * - sourceEvent for the source events of the task/part,
+ * - targetEvent for the target event of the task/part,
+ */
 public class IOEventBpmnPart {
 	private String id;
 	private String apiKey;

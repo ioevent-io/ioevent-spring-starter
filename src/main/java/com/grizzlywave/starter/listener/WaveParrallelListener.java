@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.grizzlywave.starter.configuration.context.AppContext;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.service.IOEventService;
@@ -50,9 +51,9 @@ public class WaveParrallelListener {
 							.getBean(Class.forName(waveParallelEventInformation.getClassName()));
 					if (beanmObject != null) {
 					StopWatch watch=new StopWatch();
-					watch.start(waveParallelEventInformation.getHeaders().get("Correlation_id"));
-					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(waveParallelEventInformation.getHeaders().get("Correlation_id"),
-							waveParallelEventInformation.getHeaders().get("Process_Name"),
+					watch.start(waveParallelEventInformation.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()));
+					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(waveParallelEventInformation.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()),
+							waveParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString()),
 							waveParallelEventInformation.getTargetsArrived().toString(),watch);
 					WaveContextHolder.setContext(waveRecordInfo);
 

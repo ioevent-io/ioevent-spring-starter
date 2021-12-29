@@ -4,7 +4,7 @@ package com.grizzlywave.starter.domain;
  * Class WaveResponse Contains an object and a hash map to give more information
  * about events after sending or receiving using GrizzlyWave annotations
  * 
- * @author Ahmed
+ * 
  **/
 public class WaveResponse<T> {
 
@@ -21,16 +21,14 @@ public class WaveResponse<T> {
 	 * Constructor from super class
 	 **/
 	public WaveResponse() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
 	 * constructor using parameters
 	 **/
-	public WaveResponse(T object, WaveResponseHeader Headers) {
-		// TODO Auto-generated constructor stub
+	public WaveResponse(T object, WaveResponseHeader headers) {
 		this.object = object;
-		this.Headers = Headers;
+		this.Headers = headers;
 	}
 
 	/**

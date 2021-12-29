@@ -68,12 +68,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WaveConfiguration {
 
-
 	ObjectMapper mapper = new ObjectMapper();
 
 	@Value("${spring.application.name}")
 	private String appName;
 
+	/**
+	 * method for processing parallel events from the ParallelEventTopic using kafka stream,
+	 * 
+	 * @param builder type of StreamsBuilder,
+	 */
 	@Autowired
 	public void processKStream(final StreamsBuilder builder) {
 
@@ -95,7 +99,8 @@ public class WaveConfiguration {
 					} else {
 						updatedValue = currentValue;
 					}
-					List<String> updatedTargetList = Stream.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
+					List<String> updatedTargetList = Stream
+							.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
 							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
 					Map<String, String> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
@@ -105,7 +110,7 @@ public class WaveConfiguration {
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
-		
+
 	}
 
 	@Bean
@@ -175,10 +180,12 @@ public class WaveConfiguration {
 	public IOEventEndAspect IOEventEndAspect() {
 		return new IOEventEndAspect();
 	}
+
 	@Bean
 	public IOEvenImplicitTaskAspect IOEvenImplicitTaskAspect() {
 		return new IOEvenImplicitTaskAspect();
 	}
+
 	@ConditionalOnMissingBean
 	@Bean
 	public WaveController WaveController() {

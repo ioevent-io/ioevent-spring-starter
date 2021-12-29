@@ -9,8 +9,8 @@ import com.grizzlywave.starter.annotations.v2.TargetEvent;
 
 /**
  * class for @IOEvent annotation gateway information that will be send within
- * the BPMN Parts to the Admin, it contains information of the type of the gate
- * way also the source events and target events of the gateway. 
+ * the BPMN Parts to the Admin, it contains information of the type of the 
+ * gateway also the source events and target events of the gateway.
  **/
 public class IOEventGatwayInformation {
 

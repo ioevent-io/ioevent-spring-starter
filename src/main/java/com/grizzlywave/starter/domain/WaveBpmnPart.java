@@ -1,7 +1,16 @@
 package com.grizzlywave.starter.domain;
 
 import java.util.UUID;
-/** this class have information to be used in the construction of the bpmn*/
+/** this class have information to be used in the construction of the bpmn : 
+ * - id for the ID of the part,
+ * - eventType for the event type,
+ * - ClassName for the class name which include the @IOEvent annotation,
+ * - MethodName for the method name which annotated by  the @IOEvent annotation,
+ * - sourceEvent for the source event of the part,
+ * - targetEvent for the target event of the part,
+ * - source_topic for topic name which received the source event,
+ * - target_topic for topic name which sent the target event,
+ **/
 public class WaveBpmnPart {
 
 	private UUID id;

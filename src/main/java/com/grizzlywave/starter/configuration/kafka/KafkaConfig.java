@@ -50,8 +50,13 @@ public class KafkaConfig {
 	@Value("${ioevent.topic_replication:1}")
 	private String topicReplication;
 
+	/**
+	 * Bean to create the kafka admin client configuration,
+	 * 
+	 * @return AdminClient Object,
+	 **/
 	@Bean
-	public AdminClient AdminClient()  {
+	public AdminClient AdminClient() {
 		Properties properties = new Properties();
 
 		properties.put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
@@ -69,6 +74,11 @@ public class KafkaConfig {
 		return client;
 	}
 
+	/**
+	 * Bean to define the kafka stream configuration,
+	 * 
+	 * @return KafkaStreamsConfiguration Object,
+	 **/
 	@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
 	public KafkaStreamsConfiguration kStreamsConfigs() {
 		Map<String, Object> props = new HashMap<>();
@@ -80,8 +90,7 @@ public class KafkaConfig {
 		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
 		props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/var/lib/kafka-streamsNEW");
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-	    props.put(ProducerConfig.LINGER_MS_CONFIG,10);
-
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 10);
 
 		if (security.equals("enable")) {
 			props.put("security.protocol", SASL_SSL);
@@ -92,6 +101,11 @@ public class KafkaConfig {
 		return new KafkaStreamsConfiguration(props);
 	}
 
+	/**
+	 * Bean to define the kafka producer configuration,
+	 * 
+	 * @return ProducerFactory Object,
+	 **/
 	@Bean
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
@@ -107,11 +121,21 @@ public class KafkaConfig {
 		return new DefaultKafkaProducerFactory<>(config);
 	}
 
+	/**
+	 * Bean to init the kafka Template,
+	 * 
+	 * @return ProducerFactory Object,
+	 **/
 	@Bean
 	public KafkaTemplate<String, Object> kafkaTemplate() {
 		return new KafkaTemplate<>(producerFactory());
 	}
 
+	/**
+	 * Bean to define the kafka Consumer configuration,
+	 * 
+	 * @return ConsumerFactory Object,
+	 **/
 	@Bean
 	public ConsumerFactory<String, String> userConsumerFactory() {
 		Map<String, Object> config = new HashMap<>();
@@ -121,8 +145,8 @@ public class KafkaConfig {
 		config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG,10);
-		
+		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 10);
+
 		if (security.equals("enable")) {
 			config.put("security.protocol", SASL_SSL);
 			config.put("sasl.mechanism", PLAIN);
@@ -136,6 +160,11 @@ public class KafkaConfig {
 		return new DefaultKafkaHeaderMapper();
 	}
 
+	/**
+	 * Bean to define the KafkaListenerContainerFactory,
+	 * 
+	 * @return ConcurrentKafkaListenerContainerFactory Object,
+	 **/
 	@Bean
 	public ConcurrentKafkaListenerContainerFactory<String, String> userKafkaListenerFactory() {
 		ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
