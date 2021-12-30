@@ -5,7 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
+/**
+ * IOEvent annotation allows us to define an io event/task ,
+ **/
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD}) 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOEvent {

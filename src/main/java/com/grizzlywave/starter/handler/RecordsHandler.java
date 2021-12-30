@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.configuration.context.AppContext;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.WaveContextHolder;
@@ -138,7 +139,7 @@ public class RecordsHandler {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
-						parallelEventInfo.getHeaders().get("Correlation_id") + parallelEventInfo.getSourceRequired())
+						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()) + parallelEventInfo.getSourceRequired())
 				.build();
 		kafkaTemplate.send(message);
 		kafkaTemplate.flush();
@@ -178,12 +179,12 @@ public class RecordsHandler {
 		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
-			if (header.key().equals("targetEvent")) {
+			if (header.key().equals(IOEventHeaders.TARGET_EVENT.toString())) {
 				waveRecordInfo.setTargetName(new String(header.value()));
-			} else if (header.key().equals("Correlation_id")) {
+			} else if (header.key().equals(IOEventHeaders.CORRELATION_ID.toString())) {
 				waveRecordInfo.setId(new String(header.value()));
 				watch.start(new String(header.value()));
-			} else if (header.key().equals("Process_Name")) {
+			} else if (header.key().equals(IOEventHeaders.PROCESS_NAME.toString())) {
 				waveRecordInfo.setWorkFlowName(new String(header.value()));
 			}
 

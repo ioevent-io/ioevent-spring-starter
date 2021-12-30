@@ -1,7 +1,12 @@
 package com.grizzlywave.starter.domain;
 
 
-
+/** this class has information to be used in the header of the event :
+ * - eventType for the event type,
+ * - workflow for the process name,
+ * - sourceEvent for the source event of the part,
+ * - targetEvent for the target event of the part,
+ **/
 public class WaveResponseHeader {
 	private String workflow;
 	private String sourceEvent;

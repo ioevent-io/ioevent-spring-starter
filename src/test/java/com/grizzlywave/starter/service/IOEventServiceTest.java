@@ -28,6 +28,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.StartEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 
@@ -119,7 +120,7 @@ class IOEventServiceTest {
 	    ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 	    when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 	    ioEventService.sendParallelEventInfo(new WaveParallelEventInformation("aaa", Arrays.asList("5"), "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, String>() {{
-	        put("Correlation_id", "value1");
+	        put(IOEventHeaders.CORRELATION_ID.toString(), "value1");
 	    }}));
 	    Assert.assertTrue(true);
 	}

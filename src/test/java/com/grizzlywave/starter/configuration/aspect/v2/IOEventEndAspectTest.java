@@ -31,6 +31,7 @@ import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.IOEventType;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.logger.EventLogger;
@@ -99,13 +100,13 @@ class IOEventEndAspectTest {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "_", new StopWatch());
 		Message messageResult = endAspect.buildEventMessage(ioEvent,null, "payload", "END", waveRecordInfo, (long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
-				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader("Correlation_id", "1155")
-				.setHeader("StepName", "terminate the event").setHeader("EventType", IOEventType.END.toString())
-				.setHeader("source", new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader("targetEvent", "END").setHeader("Process_Name", "process name")
-				.setHeader("Start Time", (long) 123546).build();
+				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), "terminate the event").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
+				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "END").setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
+				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 
-		assertEquals(message.getHeaders().get("StepName"), messageResult.getHeaders().get("StepName"));
+		assertEquals(message.getHeaders().get(IOEventHeaders.STEP_NAME.toString()), messageResult.getHeaders().get(IOEventHeaders.STEP_NAME.toString()));
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		Method method2 = this.getClass().getMethod("endAnnotationMethod2", null);

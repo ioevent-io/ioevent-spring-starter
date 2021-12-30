@@ -10,6 +10,16 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 
+
+
+/** this class has information about parallel event :
+ * - ClassName for the class name which include the @IOEvent annotation,
+ * - MethodName for the method name which annotated by  the @IOEvent annotation,
+ * - sourceRequired for the source event required to validate the parallel event ,
+ * - targetsArrived for the target event arrived,
+ * - listenerTopic for topic name which the listener is subscribed,
+ * - headers for the header's info sent by events
+ * */
 public class WaveParallelEventInformation {
 
 	private String value;

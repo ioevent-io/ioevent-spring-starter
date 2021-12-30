@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
+import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.ParallelEventInfo;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
 import com.grizzlywave.starter.service.IOEventService;
@@ -83,9 +84,9 @@ class RecordsHandlerTest {
 	void getWaveHeadersTest() {
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
-		consumerRecord.headers().add("targetEvent", "target name".getBytes());
-		consumerRecord.headers().add("Correlation_id", "id".getBytes());
-		consumerRecord.headers().add("Process_Name", "workflow name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.TARGET_EVENT.toString(), "target name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.CORRELATION_ID.toString(), "id".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.PROCESS_NAME.toString(), "workflow name".getBytes());
 		consumerRecord.headers().add("another header", "value".getBytes());
 
 		WaveRecordInfo waveRecordInfoCreated = recordsHandler.getWaveHeaders(consumerRecord);
@@ -104,9 +105,9 @@ class RecordsHandlerTest {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "Target 1", new StopWatch());
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
-		consumerRecord.headers().add("targetEvent", "target name".getBytes());
-		consumerRecord.headers().add("Correlation_id", "id".getBytes());
-		consumerRecord.headers().add("Process_Name", "workflow name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.TARGET_EVENT.toString(), "target name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.CORRELATION_ID.toString(), "id".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.PROCESS_NAME.toString(), "workflow name".getBytes());
 		consumerRecord.headers().add("another header", "value".getBytes());
 
 		WaveParallelEventInformation parallelEventInfo = new WaveParallelEventInformation(consumerRecord,
@@ -118,7 +119,7 @@ class RecordsHandlerTest {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
-						parallelEventInfo.getHeaders().get("Correlation_id") + parallelEventInfo.getSourceRequired())
+						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()) + parallelEventInfo.getSourceRequired())
 				.build();
 
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
@@ -133,9 +134,9 @@ class RecordsHandlerTest {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "Target 1", new StopWatch());
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
-		consumerRecord.headers().add("targetEvent", "target name".getBytes());
-		consumerRecord.headers().add("Correlation_id", "id".getBytes());
-		consumerRecord.headers().add("Process_Name", "workflow name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.TARGET_EVENT.toString(), "target name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.CORRELATION_ID.toString(), "id".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.PROCESS_NAME.toString(), "workflow name".getBytes());
 		consumerRecord.headers().add("another header", "value".getBytes());
 
 		recordsHandler.parallelInvoke(new BeanMethodPair(this, method, null), consumerRecord, waveRecordInfo);
