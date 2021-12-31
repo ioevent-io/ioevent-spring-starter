@@ -44,21 +44,21 @@ class WaveBpmnPostProcessorTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
-			source = @SourceEvent(name = "source", topic = "T"), target = @TargetEvent(name = "target", topic = "T"))
+	@IOEvent(key = "test annotation", topic = "topic1", //
+			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1"//
+	@IOEvent(key = "test annotation", topic = "topic1"//
 			, startEvent = @StartEvent(key = "startkey")) // //
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", endEvent = @EndEvent(key = "endkey"))
+	@IOEvent(key = "test annotation", topic = "topic1", endEvent = @EndEvent(key = "endkey"))
 	public boolean endAnnotationMethod() {
 		return true;
 	}

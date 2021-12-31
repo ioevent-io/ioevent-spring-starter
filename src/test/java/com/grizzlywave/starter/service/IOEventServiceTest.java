@@ -41,53 +41,53 @@ class IOEventServiceTest {
 	IOEventService ioEventService = new IOEventService();
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
-			source = { @SourceEvent(name = "SOURCE1"), //
-					@SourceEvent(name = "SOURCE2", topic = "topic2") }, gatewaySource = @GatewaySourceEvent(parallel = true, source = {
-							@SourceEvent(name = "SOURCE3", topic = "topic3") }), //
-			target = { @TargetEvent(name = "TARGET1", topic = "topic4"), //
-					@TargetEvent(name = "TARGET2") }, //
+	@IOEvent(key = "test annotation", topic = "topic1", //
+			source = { @SourceEvent(key = "SOURCE1"), //
+					@SourceEvent(key = "SOURCE2", topic = "topic2") }, gatewaySource = @GatewaySourceEvent(parallel = true, source = {
+							@SourceEvent(key = "SOURCE3", topic = "topic3") }), //
+			target = { @TargetEvent(key = "TARGET1", topic = "topic4"), //
+					@TargetEvent(key = "TARGET2") }, //
 			gatewayTarget = @GatewayTargetEvent(exclusive = true, target = {
-					@TargetEvent(name = "TARGET3", topic = "topic5") }//
+					@TargetEvent(key = "TARGET3", topic = "topic5") }//
 			))
 	public boolean tryAnnotation() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
+	@IOEvent(key = "test annotation", topic = "topic1", //
 			gatewaySource = @GatewaySourceEvent(parallel = true, source = {
-					@SourceEvent(name = "SOURCE3", topic = "topic3") }) // //
+					@SourceEvent(key = "SOURCE3", topic = "topic3") }) // //
 	)
 	public boolean parallelGatewayAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
+	@IOEvent(key = "test annotation", topic = "topic1", //
 			gatewaySource = @GatewaySourceEvent(exclusive = true, source = {
-					@SourceEvent(name = "SOURCE3", topic = "topic3") }) // //
+					@SourceEvent(key = "SOURCE3", topic = "topic3") }) // //
 	)
 	public boolean exclusiveGatewayAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
-			source = @SourceEvent(name = "source", topic = "T"), target = @TargetEvent(name = "target", topic = "T"))
+	@IOEvent(key = "test annotation", topic = "topic1", //
+			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1"//
+	@IOEvent(key = "test annotation", topic = "topic1"//
 			,startEvent =  @StartEvent(key = "startkey")) // //
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1",endEvent = @EndEvent(key = "endkey"))
+	@IOEvent(key = "test annotation", topic = "topic1",endEvent = @EndEvent(key = "endkey"))
 	public boolean endAnnotationMethod() {
 		return true;
 	}

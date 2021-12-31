@@ -141,7 +141,7 @@ public class IOEventTransitionAspect {
 						waveRecordInfo.getStartTime(), ioEventType);
 				kafkaTemplate.send(message);
 
-				targets += targetEvent.name() + ",";
+				targets +=ioEventService.getTargetKey(targetEvent) + ",";
 			}
 
 		}
@@ -164,13 +164,13 @@ public class IOEventTransitionAspect {
 
 		IOEventResponse<Object> ioEventResponse = IOEventResponse.class.cast(returnObject);
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-			if (ioEventResponse.getString().equals(targetEvent.name())) {
+			if (ioEventResponse.getString().equals(ioEventService.getTargetKey(targetEvent))) {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow,
 						ioEventResponse.getBody(), targetEvent, waveRecordInfo, waveRecordInfo.getStartTime());
 				kafkaTemplate.send(message);
 
-				targets += targetEvent.name() + ",";
-				log.info("sent to : {}", targetEvent.name());
+				targets +=ioEventService.getTargetKey(targetEvent) + ",";
+				log.info("sent to : {}",ioEventService.getTargetKey(targetEvent));
 			}
 
 		}
@@ -195,7 +195,7 @@ public class IOEventTransitionAspect {
 					targetEvent, waveRecordInfo, waveRecordInfo.getStartTime());
 			kafkaTemplate.send(message);
 
-			targets += targetEvent.name() + ",";
+			targets += ioEventService.getTargetKey(targetEvent)+ ",";
 		}
 		return targets;
 	}
@@ -214,7 +214,7 @@ public class IOEventTransitionAspect {
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, WaveRecordInfo waveRecordInfo, IOEvent ioEvent,
 			String target, StopWatch watch, Object payload, IOEventType ioEventType) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(waveRecordInfo.getId(), waveRecordInfo.getWorkFlowName(), ioEvent.name(),
+		eventLogger.loggerSetting(waveRecordInfo.getId(), waveRecordInfo.getWorkFlowName(), ioEvent.key(),
 				waveRecordInfo.getTargetName(), target, ioEventType.toString(), payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
@@ -247,8 +247,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent.name())
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),ioEventService.getTargetKey(targetEvent))
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}
@@ -279,8 +279,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent.name())
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),ioEventService.getTargetKey(targetEvent) )
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}
@@ -311,8 +311,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_EXCLUSIVE.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent.name())
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),ioEventService.getTargetKey(targetEvent))
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}
@@ -346,7 +346,7 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.SOURCE.toString(), waveRecordInfo.getTargetName())
 				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),
 						waveRecordInfo.getTargetName() + targetEvent.suffix())
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}

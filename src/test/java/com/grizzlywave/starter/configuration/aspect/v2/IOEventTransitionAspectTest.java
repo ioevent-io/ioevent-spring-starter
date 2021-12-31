@@ -64,48 +64,48 @@ class IOEventTransitionAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "terminate the event", topic = "Topic", startEvent = @StartEvent(key = "process name")//
-			, target = @TargetEvent(name = "target"))
+	@IOEvent(key = "terminate the event", topic = "Topic", startEvent = @StartEvent(key = "process name")//
+			, target = @TargetEvent(key = "target"))
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "stepname", source = @SourceEvent(name = "previous Task"), //
+	@IOEvent(key = "stepname", source = @SourceEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name"))
 	public boolean endAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "GeneralTopic", //
-			source = @SourceEvent(name = "source", topic = "topic"), target = @TargetEvent(name = "target", topic = "topic"))
+	@IOEvent(key = "test annotation", topic = "GeneralTopic", //
+			source = @SourceEvent(key = "source", topic = "topic"), target = @TargetEvent(key = "target", topic = "topic"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
 
-	@IOEvent(name = "parallel gatway task", topic = "topic", //
-			source = @SourceEvent(name = "sourceEvent"), //
+	@IOEvent(key = "parallel gatway task", topic = "topic", //
+			source = @SourceEvent(key = "sourceEvent"), //
 			gatewayTarget = @GatewayTargetEvent(parallel = true, target = { //
-					@TargetEvent(name = "Target1"), //
-					@TargetEvent(name = "Target2")//
+					@TargetEvent(key = "Target1"), //
+					@TargetEvent(key = "Target2")//
 			}))
 	public boolean parralelTaskAnnotationMethod() {
 		return true;
 	}
 
-	@IOEvent(name = "exclusive gatway task", topic = "topic", //
-			source = @SourceEvent(name = "sourceEvent"), //
+	@IOEvent(key  = "exclusive gatway task", topic = "topic", //
+			source = @SourceEvent(key = "sourceEvent"), //
 			gatewayTarget = @GatewayTargetEvent(exclusive = true, target = { //
-					@TargetEvent(name = "Target2"), //
-					@TargetEvent(name = "Target1")//
+					@TargetEvent(key = "Target2"), //
+					@TargetEvent(key = "Target1")//
 			}))
 	public boolean exclusiveTaskAnnotationMethod() {
 		return true;
 	}
 
-	@IOEvent(name = "add suffix task", topic = "topic", //
-			source = { @SourceEvent(name = "previous target"), //
+	@IOEvent(key = "add suffix task", topic = "topic", //
+			source = { @SourceEvent(key = "previous target"), //
 			}, //
 			target = @TargetEvent(suffix = "_suffixAdded"))
 	public boolean suffixTaskAnnotation() {
@@ -202,6 +202,7 @@ class IOEventTransitionAspectTest {
 	@Test
 	void buildTransitionGatewayParallelMessageTest() throws NoSuchMethodException, SecurityException {
 		when(waveProperties.getPrefix()).thenReturn("test-");
+		when(ioEventService.getTargetKey(Mockito.any())).thenReturn("Target1");
 		Method method = this.getClass().getMethod("parralelTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "recordTarget", new StopWatch());
@@ -235,6 +236,7 @@ class IOEventTransitionAspectTest {
 		Method method = this.getClass().getMethod("exclusiveTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "recordTarget", new StopWatch());
+		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target2");		
 		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent, null, "payload",
 				ioEvent.gatewayTarget().target()[0], waveRecordInfo, (long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
@@ -245,7 +247,7 @@ class IOEventTransitionAspectTest {
 				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "Target2")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
-
+		
 		assertEquals(message.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()),
 				messageResult.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()));
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
@@ -287,6 +289,7 @@ class IOEventTransitionAspectTest {
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.target()));
 		when(ioEventService.getTargets(ioEvent2)).thenReturn(Arrays.asList(ioEvent2.target()));
+		when(ioEventService.getTargetKey(ioEvent.target()[0])).thenReturn("target");		
 		when(ioEventService.getSourceEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.source()[0]);
 		when(waveProperties.getPrefix()).thenReturn("test-");
 		WaveRecordInfo waveRecordInfoForSuffix = new WaveRecordInfo("1155", "process name", "previous target",
@@ -313,6 +316,8 @@ class IOEventTransitionAspectTest {
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayTarget().target()));
 		when(waveProperties.getPrefix()).thenReturn("test-");
+		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target1");
+		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[1])).thenReturn("Target2");
 		WaveRecordInfo waveRecordInfoForSuffix = new WaveRecordInfo("1155", "process name", "previous target",
 				new StopWatch());
 		StopWatch watch = new StopWatch();
@@ -333,6 +338,8 @@ class IOEventTransitionAspectTest {
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayTarget().target()));
+		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target1");		
+		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[1])).thenReturn("Target2");
 		WaveRecordInfo waveRecordInfoForSuffix = new WaveRecordInfo("1155", "process name", "previous target",
 				new StopWatch());
 		StopWatch watch = new StopWatch();
