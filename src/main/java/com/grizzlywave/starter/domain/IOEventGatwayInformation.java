@@ -3,13 +3,15 @@ package com.grizzlywave.starter.domain;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 
 /**
  * class for @IOEvent annotation gateway information that will be send within
- * the BPMN Parts to the Admin, it contains information of the type of the 
+ * the BPMN Parts to the Admin, it contains information of the type of the
  * gateway also the source events and target events of the gateway.
  **/
 public class IOEventGatwayInformation {
@@ -95,18 +97,32 @@ public class IOEventGatwayInformation {
 	public Map<String, String> addSource(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.put(sourceEvent.name(), sourceEvent.topic());
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.put(sourceEvent.value(), sourceEvent.topic());
+				} else {
+					result.put(sourceEvent.key(), sourceEvent.topic());
+				}
+
 			}
+
 		}
+
 		return result;
 	}
 
 	public Map<String, String> addTarget(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
 		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!targetEvent.name().equals("")) {
-				result.put(targetEvent.name(), targetEvent.topic());
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+
+				if (!StringUtils.isBlank(targetEvent.value())) {
+					result.put(targetEvent.value(), targetEvent.topic());
+				} else {
+					result.put(targetEvent.key(), targetEvent.topic());
+				}
+
 			}
 		}
 		return result;

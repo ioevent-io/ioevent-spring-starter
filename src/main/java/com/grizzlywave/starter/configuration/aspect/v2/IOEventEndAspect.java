@@ -113,7 +113,7 @@ public class IOEventEndAspect {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
 	}
@@ -131,7 +131,7 @@ public class IOEventEndAspect {
 			WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 
 		watch.stop();
-		eventLogger.loggerSetting(waveRecordInfo.getId(), waveRecordInfo.getWorkFlowName(), ioEvent.name(),
+		eventLogger.loggerSetting(waveRecordInfo.getId(), waveRecordInfo.getWorkFlowName(), ioEvent.key(),
 				waveRecordInfo.getTargetName(), "__", "End", payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);

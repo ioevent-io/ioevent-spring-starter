@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 public @interface IOEvent {
 	
 	
-	String name() default "";
+	String key() default "";
 	
 	boolean async() default false;
 	

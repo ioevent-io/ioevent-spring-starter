@@ -12,7 +12,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SourceEvent {
 
-	String name() default "";
+	String value() default "";
+
+	String key() default "";
 
 	String topic() default "";
 

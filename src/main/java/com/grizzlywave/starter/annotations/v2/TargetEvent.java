@@ -11,8 +11,10 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TargetEvent {
+	
+	String value() default "";
 
-	String name() default "";
+	String key() default "";
 
 	String topic() default "";
 

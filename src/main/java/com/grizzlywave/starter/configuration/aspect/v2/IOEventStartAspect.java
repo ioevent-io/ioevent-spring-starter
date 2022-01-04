@@ -79,7 +79,7 @@ public class IOEventStartAspect {
 				Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, payload, processName, uuid.toString(),
 						targetEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
-				target += targetEvent.name() + ",";
+				target += ioEventService.getTargetKey(targetEvent) + ",";
 			}
 			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, target, payload, watch);
 		}
@@ -120,10 +120,10 @@ public class IOEventStartAspect {
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.name())
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("Start")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent.name())
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),ioEventService.getTargetKey(targetEvent))
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
@@ -143,7 +143,7 @@ public class IOEventStartAspect {
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String processName,
 			String target, Object payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(uuid.toString(), processName, ioEvent.name(), null, target, "Init", payload);
+		eventLogger.loggerSetting(uuid.toString(), processName, ioEvent.key(), null, target, "Init", payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);

@@ -56,19 +56,19 @@ class IOEventStartAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "stepname", startEvent = @StartEvent(key = "process name"), topic = "topic", target = @TargetEvent(name = "target", topic = "topic"))
+	@IOEvent(key = "stepname", startEvent = @StartEvent("process name"), topic = "topic", target = @TargetEvent(key = "target", topic = "topic"))
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "stepname", topic = "topic", startEvent = @StartEvent(key = "process name"), target = @TargetEvent(name = "target"))
+	@IOEvent(key = "stepname", topic = "topic", startEvent = @StartEvent(key = "process name"), target = @TargetEvent(key = "target"))
 	public boolean startAnnotationMethod2() {
 		return true;
 	}
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
-			source = @SourceEvent(name = "source", topic = "T"), target = @TargetEvent(name = "target", topic = "T"))
+	@IOEvent(key = "test annotation", topic = "topic1", //
+			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}

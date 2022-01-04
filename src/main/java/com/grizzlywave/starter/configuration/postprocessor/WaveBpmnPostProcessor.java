@@ -3,6 +3,7 @@ package com.grizzlywave.starter.configuration.postprocessor;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcessors {
-	public static Boolean listenerCreatorStatus = true;
 
 	@Autowired
 	private WaveProperties waveProperties;
@@ -84,7 +84,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 
 			for (IOEvent ioEvent : ioEvents) {
 
-				if (ioEvent.startEvent().key().isEmpty()) {
+				if (StringUtils.isBlank(ioEvent.startEvent().key()+ioEvent.startEvent().value())) {
 
 					for (String topicName : ioEventService.getSourceTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
@@ -154,7 +154,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 		return new IOEventBpmnPart(ioEvent, partID, apiKey, processName, ioEventService.getIOEventType(ioEvent),
-				ioEvent.name(), className, methodName);
+				ioEvent.key(), className, methodName);
 
 	}
 

@@ -3,19 +3,19 @@ package com.grizzlywave.starter.domain;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
+
 /**
- * class IOEventBpmnPart include all event information ,
- * - id for the ID of the event,
- * - ClassName for the class name with include the task (IOEvent),
- * - MethodName for method name which annotated by IOEvent,
- * - stepName for the task name,
- * - workflow for the process name,
- * - ioEventType for the event type,
- * - sourceEvent for the source events of the task/part,
- * - targetEvent for the target event of the task/part,
+ * class IOEventBpmnPart include all event information , - id for the ID of the
+ * event, - ClassName for the class name with include the task (IOEvent), -
+ * MethodName for method name which annotated by IOEvent, - stepName for the
+ * task name, - workflow for the process name, - ioEventType for the event type,
+ * - sourceEvent for the source events of the task/part, - targetEvent for the
+ * target event of the task/part,
  */
 public class IOEventBpmnPart {
 	private String id;
@@ -33,20 +33,20 @@ public class IOEventBpmnPart {
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id,String apiKey, String workflow,IOEventType ioEventType, String stepName, String className,
-			String methodName) {
+	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String workflow, IOEventType ioEventType,
+			String stepName, String className, String methodName) {
 		this.id = id;
-		this.apiKey=apiKey;
+		this.apiKey = apiKey;
 		this.workflow = workflow;
-		this.ioEventType=ioEventType;
+		this.ioEventType = ioEventType;
 		this.ClassName = className;
 		this.MethodName = methodName;
 		this.stepName = stepName;
-		this.ioeventGatway=new IOEventGatwayInformation(ioEvent);
+		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
 		this.sourceEvent = this.addSource(ioEvent);
 		this.targetEvent = this.addTarget(ioEvent);
 	}
-	
+
 	public String getId() {
 		return id;
 	}
@@ -54,6 +54,7 @@ public class IOEventBpmnPart {
 	public void setId(String id) {
 		this.id = id;
 	}
+
 	public String getApiKey() {
 		return apiKey;
 	}
@@ -61,7 +62,7 @@ public class IOEventBpmnPart {
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
 	}
-	
+
 	public String getClassName() {
 		return ClassName;
 	}
@@ -126,8 +127,6 @@ public class IOEventBpmnPart {
 		this.targetEvent = targetEvent;
 	}
 
-
-
 	public int getProcessCount() {
 		return processCount;
 	}
@@ -139,15 +138,22 @@ public class IOEventBpmnPart {
 	public Map<String, String> addSource(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
 		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.put(sourceEvent.name(), sourceEvent.topic());
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.put(sourceEvent.value(), sourceEvent.topic());
+				} else {
+					result.put(sourceEvent.key(), sourceEvent.topic());
+				}
 
 			}
 		}
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.put(sourceEvent.name(), sourceEvent.topic());
-
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.put(sourceEvent.value(), sourceEvent.topic());
+				} else {
+					result.put(sourceEvent.key(), sourceEvent.topic());
+				}
 			}
 		}
 		return result;
@@ -155,26 +161,38 @@ public class IOEventBpmnPart {
 
 	public Map<String, String> addTarget(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		boolean isSuffix=false;
-		String suffix="";
+		boolean isSuffix = false;
+		String suffix = "";
 		for (TargetEvent targetEvent : ioEvent.target()) {
 			if (!targetEvent.suffix().equals("")) {
-				isSuffix = true ;
-				suffix=targetEvent.suffix();
+				isSuffix = true;
+				suffix = targetEvent.suffix();
 			}
-			if (!targetEvent.name().equals("")) {
-				result.put(targetEvent.name(), targetEvent.topic());
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+				if (!StringUtils.isBlank(targetEvent.value())) {
+					result.put(targetEvent.value(), targetEvent.topic());
+				}else {
+					result.put(targetEvent.key(), targetEvent.topic());
+				}
 			}
 		}
 		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!targetEvent.name().equals("")) {
-				result.put(targetEvent.name(), targetEvent.topic());
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+				if (!StringUtils.isBlank(targetEvent.value())) {
+					result.put(targetEvent.value(), targetEvent.topic());
+				}else {
+					result.put(targetEvent.key(), targetEvent.topic());
+				}
 			}
 		}
 		if (isSuffix) {
 			for (SourceEvent sourceEvent : ioEvent.source()) {
-				if (!sourceEvent.name().equals("")) {
-					result.put(sourceEvent.name()+suffix, sourceEvent.topic());
+				if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+					if (!StringUtils.isBlank(sourceEvent.value())) {
+						result.put(sourceEvent.value() + suffix, sourceEvent.topic());
+					} else {
+						result.put(sourceEvent.key() + suffix, sourceEvent.topic());
+					}
 
 				}
 			}
@@ -188,6 +206,5 @@ public class IOEventBpmnPart {
 				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", sourceEvent=" + sourceEvent
 				+ ", targetEvent=" + targetEvent + "]";
 	}
-
 
 }

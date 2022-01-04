@@ -58,14 +58,22 @@ public class IOEventService {
 		List<String> result = new ArrayList<>();
 
 		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.add(sourceEvent.name());
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.add(sourceEvent.value());
+				} else {
+					result.add(sourceEvent.key());
+				}
 			}
 		}
 
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.add(sourceEvent.name());
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.add(sourceEvent.value());
+				} else {
+					result.add(sourceEvent.key());
+				}
 			}
 		}
 		return result;
@@ -80,8 +88,12 @@ public class IOEventService {
 	public List<String> getParalleListSource(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.name().equals("")) {
-				result.add(sourceEvent.name());
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+				if (!StringUtils.isBlank(sourceEvent.value())) {
+					result.add(sourceEvent.value());
+				}else {
+					result.add(sourceEvent.key());
+				}
 			}
 		}
 		return result;
@@ -97,14 +109,22 @@ public class IOEventService {
 		List<String> result = new ArrayList<>();
 
 		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!targetEvent.name().equals("")) {
-				result.add(targetEvent.name());
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+				if (!StringUtils.isBlank(targetEvent.value())) {
+					result.add(targetEvent.value());
+				} else {
+					result.add(targetEvent.key());
+				}
 			}
 		}
 
 		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!targetEvent.name().equals("")) {
-				result.add(targetEvent.name());
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+				if (!StringUtils.isBlank(targetEvent.value())) {
+					result.add(targetEvent.value());
+				} else {
+					result.add(targetEvent.key());
+				}
 			}
 		}
 		return result;
@@ -120,13 +140,13 @@ public class IOEventService {
 		List<TargetEvent> result = new ArrayList<>();
 
 		for (TargetEvent targetEvent : ioEvent.target()) {
-			if ((!targetEvent.name().equals("")) || (!targetEvent.suffix().equals(""))) {
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value() + targetEvent.suffix())) {
 				result.add(targetEvent);
 			}
 		}
 
 		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!targetEvent.name().equals("")) {
+			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value() + targetEvent.suffix())) {
 				result.add(targetEvent);
 			}
 		}
@@ -143,18 +163,19 @@ public class IOEventService {
 		List<SourceEvent> result = new ArrayList<>();
 
 		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!sourceEvent.name().equals("")) {
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
 				result.add(sourceEvent);
 			}
 		}
 
 		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.name().equals("")) {
+			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
 				result.add(sourceEvent);
 			}
 		}
 		return result;
 	}
+
 	/**
 	 * method returns all topics of @IOEvent annotation,
 	 * 
@@ -189,6 +210,7 @@ public class IOEventService {
 		}
 		return result;
 	}
+
 	/**
 	 * method returns all source topics of @IOEvent definition,
 	 * 
@@ -218,10 +240,11 @@ public class IOEventService {
 
 		return result;
 	}
+
 	/**
-	 * method returns if two lists are equal 
+	 * method returns if two lists are equal
 	 * 
-	 * @param firstList list of String,
+	 * @param firstList  list of String,
 	 * @param secondList list of String,
 	 * @return boolean ,
 	 */
@@ -229,81 +252,92 @@ public class IOEventService {
 		return (firstList.size() == secondList.size() && firstList.containsAll(secondList)
 				&& secondList.containsAll(firstList));
 	}
+
 	/**
-	 * method returns  event type from the IOEvent annotation
+	 * method returns event type from the IOEvent annotation
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return IOEventType  ,
+	 * @return IOEventType ,
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
-		if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
+		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
 			return IOEventType.START;
-		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
+		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {
 			return IOEventType.TASK;
 		}
 	}
+
 	/**
-	 * method returns if the IOEvent annotation is of a Start Event 
+	 * method returns if the IOEvent annotation is of a Start Event
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isStart(IOEvent ioEvent) {
-		return (!StringUtils.isBlank(ioEvent.startEvent().key()) && (!getTargets(ioEvent).isEmpty()));
+		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
+				&& (!getTargets(ioEvent).isEmpty()));
 
 	}
+
 	/**
-	 * method returns if the IOEvent annotation is of a End Event 
+	 * method returns if the IOEvent annotation is of a End Event
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isEnd(IOEvent ioEvent) {
-		return (!StringUtils.isBlank(ioEvent.endEvent().key()) && (!getSources(ioEvent).isEmpty()));
+		return (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
+				&& (!getSources(ioEvent).isEmpty()));
 	}
+
 	/**
-	 * method returns if the IOEvent annotation is of a Implicit Task Event 
+	 * method returns if the IOEvent annotation is of a Implicit Task Event
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isImplicitTask(IOEvent ioEvent) {
 		return ((getSources(ioEvent).isEmpty() || getTargets(ioEvent).isEmpty())
-				&& (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())));
+				&& (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
+						&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
 
 	}
+
 	/**
-	 * method returns if the IOEvent annotation is of a Task Event 
+	 * method returns if the IOEvent annotation is of a Task Event
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isTransition(IOEvent ioEvent) {
-		return (StringUtils.isBlank(ioEvent.startEvent().key()) && StringUtils.isBlank(ioEvent.endEvent().key())
+		return (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
+				&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
 				&& !getSources(ioEvent).isEmpty() && !getTargets(ioEvent).isEmpty());
 	}
+
 	/**
 	 * method returns source event of @IOEvent by name,
 	 * 
-	 * @param ioEvent for the IOEvent annotation,
+	 * @param ioEvent    for the IOEvent annotation,
 	 * @param sourceName for the source event name
 	 * @return SourceEvent ,
 	 */
 	public SourceEvent getSourceEventByName(IOEvent ioEvent, String sourceName) {
 		for (SourceEvent sourceEvent : getSources(ioEvent)) {
-			if (sourceName.equals(sourceEvent.name())) {
+			if (sourceName.equals(sourceEvent.key())) {
 				return sourceEvent;
 			}
 		}
 		return null;
 	}
+
 	/**
-	 * method returns  Task specific type from the IOEvent annotation
+	 * method returns Task specific type from the IOEvent annotation
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return IOEventType  ,
+	 * @return IOEventType ,
 	 */
 	public IOEventType checkTaskType(IOEvent ioEvent) {
 		IOEventType type = IOEventType.TASK;
@@ -319,32 +353,40 @@ public class IOEventService {
 
 		return type;
 	}
+
 	/**
-	 * method returns  ID generated from @IOEvent elements ,
+	 * method returns ID generated from @IOEvent elements ,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return String of ID generated ,
 	 */
 	public String generateID(IOEvent ioEvent) {
 
-		return ioEvent.name().replaceAll("[^a-zA-Z ]", "").toLowerCase().replace(" ", "") + "-"
+		return ioEvent.key().replaceAll("[^a-zA-Z ]", "").toLowerCase().replace(" ", "") + "-"
 				+ getSourceNames(ioEvent).hashCode() + "-" + getTargetNames(ioEvent).hashCode();
 	}
+
 	/**
-	 * method returns  ProcessName from @IOEvent ,@IOFlow and recordProcessName ,
+	 * method returns ProcessName from @IOEvent ,@IOFlow and recordProcessName ,
 	 * 
-	 * @param ioEvent for the IOEvent annotation,
-	 * @param ioFlow for the IOFlow annotation,
-	 * @param recordProcessName for the process name consumed from record , 
+	 * @param ioEvent           for the IOEvent annotation,
+	 * @param ioFlow            for the IOFlow annotation,
+	 * @param recordProcessName for the process name consumed from record ,
 	 * @return String of ProcessName ,
 	 */
 	public String getProcessName(IOEvent ioEvent, IOFlow ioFlow, String recordProcessName) {
 		if (!StringUtils.isBlank(recordProcessName)) {
 			return recordProcessName;
 
-		} else if (!StringUtils.isBlank(ioEvent.startEvent().key())) {
+		} else if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
+			if (!StringUtils.isBlank(ioEvent.startEvent().value())) {
+				return ioEvent.startEvent().value();
+			}
 			return ioEvent.startEvent().key();
-		} else if (!StringUtils.isBlank(ioEvent.endEvent().key())) {
+		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
+			if (!StringUtils.isBlank(ioEvent.endEvent().value())) {
+				return ioEvent.endEvent().value();
+			}
 			return ioEvent.endEvent().key();
 
 		} else if (!Objects.isNull(ioFlow)) {
@@ -352,12 +394,13 @@ public class IOEventService {
 		}
 		return "";
 	}
+
 	/**
-	 * method returns  target topic from @IOEvent ,@IOFlow and targetEventTopic ,
+	 * method returns target topic from @IOEvent ,@IOFlow and targetEventTopic ,
 	 * 
-	 * @param ioEvent for the IOEvent annotation,
-	 * @param ioFlow for the IOFlow annotation,
-	 * @param targetEventTopic for the target Event Topic name, 
+	 * @param ioEvent          for the IOEvent annotation,
+	 * @param ioFlow           for the IOFlow annotation,
+	 * @param targetEventTopic for the target Event Topic name,
 	 * @return String of TopicName ,
 	 */
 	public String getTargetTopicName(IOEvent ioEvent, IOFlow ioFlow, String targetEventTopic) {
@@ -372,11 +415,12 @@ public class IOEventService {
 			return "";
 		}
 	}
+
 	/**
-	 * method returns  ApiKey from @IOFlow and WaveProperties ,
+	 * method returns ApiKey from @IOFlow and WaveProperties ,
 	 * 
-	 * @param ioFlow for the IOFlow annotation,
-	 * @param WaveProperties for the IOEvent custom properties value , 
+	 * @param ioFlow         for the IOFlow annotation,
+	 * @param WaveProperties for the IOEvent custom properties value ,
 	 * @return String of ApiKey ,
 	 */
 	public String getApiKey(WaveProperties waveProperties, IOFlow ioFlow) {
@@ -387,4 +431,13 @@ public class IOEventService {
 		}
 		return "";
 	}
-}
+
+	public String getTargetKey(TargetEvent targetEvent) {
+			if (!StringUtils.isBlank(targetEvent.value())) {
+				return targetEvent.value();
+			} else {
+			return	targetEvent.key();
+			}
+		}
+	}
+

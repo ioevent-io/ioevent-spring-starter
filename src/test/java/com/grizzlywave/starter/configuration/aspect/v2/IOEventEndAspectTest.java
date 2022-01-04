@@ -59,8 +59,8 @@ class IOEventEndAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "terminate the event", topic = "Topic", //
-			source = @SourceEvent(name = "previous Task"), //
+	@IOEvent(key = "terminate the event", topic = "Topic", //
+			source = @SourceEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name")//
 	)
 	public boolean endAnnotationMethod() {
@@ -68,15 +68,15 @@ class IOEventEndAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "stepname",source = @SourceEvent(name = "previous Task"), //
+	@IOEvent(key = "stepname",source = @SourceEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name"))
 	public boolean endAnnotationMethod2() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(name = "test annotation", topic = "topic1", //
-			source = @SourceEvent(name = "source", topic = "T"), target = @TargetEvent(name = "target", topic = "T"))
+	@IOEvent(key = "test annotation", topic = "topic1", //
+			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
