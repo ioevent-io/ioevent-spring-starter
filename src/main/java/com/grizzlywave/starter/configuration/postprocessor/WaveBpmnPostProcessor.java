@@ -97,7 +97,7 @@ public class WaveBpmnPostProcessor implements BeanPostProcessor, WavePostProcess
 													waveProperties.getPrefix() + topicName,
 													waveProperties.getGroup_id(), Thread.currentThread());
 										} catch (Throwable e) {
-											log.error("failed to create Listener !!!");
+											log.error("Listener failed   !!!");
 										}
 									}
 								};

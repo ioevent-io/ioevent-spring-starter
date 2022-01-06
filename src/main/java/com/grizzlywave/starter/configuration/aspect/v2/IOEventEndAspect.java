@@ -1,5 +1,7 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
+import java.util.Map;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,6 +16,7 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventHeaders;
@@ -58,36 +61,23 @@ public class IOEventEndAspect {
 			throws JsonProcessingException {
 		if (ioEventService.isEnd(ioEvent)) {
 			WaveRecordInfo waveRecordInfo = WaveContextHolder.getContext();
+		Map<String, Object> headers=ioEventService.prepareHeaders(waveRecordInfo.getHeaderList(),ioEventService.getpayload(joinPoint, returnObject).getHeaders());
+
 			StopWatch watch = waveRecordInfo.getWatch();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 			waveRecordInfo
 					.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, waveRecordInfo.getWorkFlowName()));
-			Object payload = getpayload(joinPoint, returnObject);
+			IOResponse<Object> payload =ioEventService.getpayload(joinPoint, returnObject);
 			String target = "END";
 			Message<Object> message = this.buildEventMessage(ioEvent, ioFlow, payload, target, waveRecordInfo,
-					waveRecordInfo.getStartTime());
+					waveRecordInfo.getStartTime(),headers);
 			kafkaTemplate.send(message);
-			prepareAndDisplayEventLogger(eventLogger, ioEvent, payload, watch, waveRecordInfo);
+			prepareAndDisplayEventLogger(eventLogger, ioEvent, payload.getBody(), watch, waveRecordInfo);
 		}
 	}
 
-	/**
-	 * Method that returns event payload according to method parameters and return
-	 * object,
-	 * 
-	 * @param joinPoint    for the point during the execution of the program,
-	 * @param returnObject for the returned object,
-	 * @return An object of type Object,
-	 */
-	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
-		if (returnObject == null) {
-			return joinPoint.getArgs()[0];
-
-		}
-		return returnObject;
-	}
 
 	/**
 	 * Method that build the event message of End task to be send in kafka topic,
@@ -100,13 +90,14 @@ public class IOEventEndAspect {
 	 * @param targetEvent    for the target Event where the event will send ,
 	 * @param waveRecordInfo for the record information from the consumed event,
 	 * @param startTime      for the start time of the event,
+	 * @param headers 
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildEventMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, String targetEvent,
-			WaveRecordInfo waveRecordInfo, Long startTime) {
+	public Message<Object> buildEventMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String targetEvent,
+			WaveRecordInfo waveRecordInfo, Long startTime, Map<String, Object> headers) {
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), waveRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent)

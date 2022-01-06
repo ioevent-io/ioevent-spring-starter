@@ -19,6 +19,7 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
@@ -72,34 +73,19 @@ public class IOEventStartAspect {
 
 			UUID uuid = UUID.randomUUID();
 			String target = "";
-			Object payload = getpayload(joinPoint, returnObject);
+			IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
 			String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 
 			for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, payload, processName, uuid.toString(),
+				Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
 						targetEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
 				kafkaTemplate.send(message);
+
 				target += ioEventService.getTargetKey(targetEvent) + ",";
 			}
-			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, target, payload, watch);
+			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, target, response.getBody(), watch);
 		}
 
-	}
-
-	/**
-	 * Method that returns event payload according to method parameters and return
-	 * object,
-	 * 
-	 * @param joinPoint    for the point during the execution of the program,
-	 * @param returnObject for the returned object,
-	 * @return An object of type Object,
-	 */
-	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
-		if (returnObject == null) {
-			return joinPoint.getArgs()[0];
-
-		}
-		return returnObject;
 	}
 
 	/**
@@ -114,19 +100,20 @@ public class IOEventStartAspect {
 	 * @param startTime   for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, String processName,
-			String uuid, TargetEvent targetEvent, Long startTime) {
+	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
+			String processName, String uuid, TargetEvent targetEvent, Long startTime) {
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetEvent.topic());
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders()).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
 				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("Start")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(),ioEventService.getTargetKey(targetEvent))
+				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), ioEventService.getTargetKey(targetEvent))
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
+
 	}
 
 	/**

@@ -28,6 +28,7 @@ import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.StartEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
@@ -87,8 +88,8 @@ class IOEventStartAspectTest {
 		when(ioEventService.getTargetTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("topic");
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-
-		Message messageResult = startAspect.buildStartMessage(ioEvent, null,"payload","process", "1155", ioEvent.target()[0],
+		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
+		Message messageResult = startAspect.buildStartMessage(ioEvent, null,ioEventResponse,"process", "1155", ioEvent.target()[0],
 				(long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
@@ -99,12 +100,12 @@ class IOEventStartAspectTest {
 
 		Method method2 = this.getClass().getMethod("startAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = startAspect.buildStartMessage(ioEvent2,null, "payload","process", "1155", ioEvent2.target()[0],
+		Message messageResult2 = startAspect.buildStartMessage(ioEvent2,null, ioEventResponse,"process", "1155", ioEvent2.target()[0],
 				(long) 123546);
 		assertEquals(message.getHeaders().get("kafka_topic"), messageResult2.getHeaders().get("kafka_topic"));
 
 	}
-
+ 
 	@Test
 	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException {
 

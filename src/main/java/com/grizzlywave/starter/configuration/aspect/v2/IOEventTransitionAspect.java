@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -17,8 +18,8 @@ import org.springframework.util.StopWatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
-import com.grizzlywave.starter.annotations.v2.IOEventResponse;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventHeaders;
@@ -68,47 +69,32 @@ public class IOEventTransitionAspect {
 			eventLogger.startEventLog();
 			StopWatch watch = waveRecordInfo.getWatch();
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-			waveRecordInfo
-					.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, waveRecordInfo.getWorkFlowName()));
+			waveRecordInfo.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, waveRecordInfo.getWorkFlowName()));
 			String targets = "";
 			IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
-			Object payload = getpayload(joinPoint, returnObject);
+			IOResponse<Object> response =ioEventService.getpayload(joinPoint, returnObject);
 
 			if (ioEvent.gatewayTarget().target().length != 0) {
 
 				if (ioEvent.gatewayTarget().parallel()) {
 					ioEventType = IOEventType.GATEWAY_PARALLEL;
-					targets = parallelEventSendProcess(ioEvent, ioFlow, payload, targets, waveRecordInfo);
+					targets = parallelEventSendProcess(ioEvent, ioFlow, response, targets, waveRecordInfo);
 
 				} else if (ioEvent.gatewayTarget().exclusive()) {
 					ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
-					targets = exclusiveEventSendProcess(ioEvent, ioFlow, payload, targets, waveRecordInfo);
+					targets = exclusiveEventSendProcess(ioEvent, ioFlow, returnObject, targets, waveRecordInfo);
 
 				}
 			} else {
 
-				targets = simpleEventSendProcess(ioEvent, ioFlow, payload, targets, waveRecordInfo, ioEventType);
+				targets = simpleEventSendProcess(ioEvent, ioFlow, response, targets, waveRecordInfo, ioEventType);
 			}
 
-			prepareAndDisplayEventLogger(eventLogger, waveRecordInfo, ioEvent, targets, watch, payload, ioEventType);
+			prepareAndDisplayEventLogger(eventLogger, waveRecordInfo, ioEvent, targets, watch, response.getBody(), ioEventType);
 		}
 	}
 
-	/**
-	 * Method that returns event payload according to method parameters and return
-	 * object,
-	 * 
-	 * @param joinPoint    for the point during the execution of the program,
-	 * @param returnObject for the returned object,
-	 * @return An object of type Object,
-	 */
-	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
-		if (returnObject == null) {
-			return joinPoint.getArgs()[0];
-
-		}
-		return returnObject;
-	}
+	
 
 	/**
 	 * Method that build and send the event of a simple task,
@@ -122,23 +108,23 @@ public class IOEventTransitionAspect {
 	 * @param ioEventType    for the event type,
 	 * @return string format list of targets of the event separated by "," ,
 	 */
-	public String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String targets,
+	public String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String targets,
 			WaveRecordInfo waveRecordInfo, IOEventType ioEventType) throws ParseException {
 
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 
 			Message<Object> message;
-
+			Map<String, Object> headers=ioEventService.prepareHeaders(waveRecordInfo.getHeaderList(),response.getHeaders());
 			if (!StringUtils.isBlank(targetEvent.suffix())) {
 
-				message = this.buildSuffixMessage(ioEvent, ioFlow, returnObject, targetEvent, waveRecordInfo,
-						waveRecordInfo.getStartTime(), ioEventType);
+				message = this.buildSuffixMessage(ioEvent, ioFlow, response, targetEvent, waveRecordInfo,
+						waveRecordInfo.getStartTime(), ioEventType,headers);
 				kafkaTemplate.send(message);
 
 				targets += waveRecordInfo.getTargetName() + targetEvent.suffix();
 			} else {
-				message = this.buildTransitionTaskMessage(ioEvent, ioFlow, returnObject, targetEvent, waveRecordInfo,
-						waveRecordInfo.getStartTime(), ioEventType);
+				message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, targetEvent, waveRecordInfo,
+						waveRecordInfo.getStartTime(), ioEventType,headers);
 				kafkaTemplate.send(message);
 
 				targets +=ioEventService.getTargetKey(targetEvent) + ",";
@@ -162,11 +148,12 @@ public class IOEventTransitionAspect {
 	public String exclusiveEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String targets,
 			WaveRecordInfo waveRecordInfo) throws ParseException {
 
-		IOEventResponse<Object> ioEventResponse = IOEventResponse.class.cast(returnObject);
+		IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
+		Map<String, Object> headers=ioEventService.prepareHeaders(waveRecordInfo.getHeaderList(),ioEventResponse.getHeaders());
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 			if (ioEventResponse.getString().equals(ioEventService.getTargetKey(targetEvent))) {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow,
-						ioEventResponse.getBody(), targetEvent, waveRecordInfo, waveRecordInfo.getStartTime());
+						ioEventResponse, targetEvent, waveRecordInfo, waveRecordInfo.getStartTime(),headers);
 				kafkaTemplate.send(message);
 
 				targets +=ioEventService.getTargetKey(targetEvent) + ",";
@@ -188,11 +175,12 @@ public class IOEventTransitionAspect {
 	 * @param waveRecordInfo for the record information from the consumed event,
 	 * @return string format list of targets of the event separated by "," ,
 	 */
-	public String parallelEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String targets,
+	public String parallelEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String targets,
 			WaveRecordInfo waveRecordInfo) {
+		Map<String, Object> headers=ioEventService.prepareHeaders(waveRecordInfo.getHeaderList(),response.getHeaders());
 		for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
-			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, ioFlow, returnObject,
-					targetEvent, waveRecordInfo, waveRecordInfo.getStartTime());
+			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, ioFlow, response,
+					targetEvent, waveRecordInfo, waveRecordInfo.getStartTime(),headers);
 			kafkaTemplate.send(message);
 
 			targets += ioEventService.getTargetKey(targetEvent)+ ",";
@@ -236,12 +224,12 @@ public class IOEventTransitionAspect {
 	 * @param startTime       for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload,
-			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
+	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
+			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType,Map<String, Object> headers) {
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetEvent.topic());
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), waveRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
@@ -268,12 +256,12 @@ public class IOEventTransitionAspect {
 	 * @param startTime       for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload,
-			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime) {
+	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
+			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime,Map<String, Object> headers) {
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetEvent.topic());
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), waveRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
@@ -300,12 +288,12 @@ public class IOEventTransitionAspect {
 	 * @param startTime       for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload,
-			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime) {
+	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
+			TargetEvent targetEvent, WaveRecordInfo waveRecordInfo, Long startTime,Map<String, Object> headers) {
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetEvent.topic());
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), waveRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
@@ -332,13 +320,13 @@ public class IOEventTransitionAspect {
 	 * @param startTime       for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildSuffixMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, TargetEvent targetEvent,
-			WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType) {
+	public Message<Object> buildSuffixMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, TargetEvent targetEvent,
+			WaveRecordInfo waveRecordInfo, Long startTime, IOEventType ioEventType,Map<String, Object> headers) {
 		String sourcetopic = ioEventService.getSourceEventByName(ioEvent, waveRecordInfo.getTargetName()).topic();
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, sourcetopic);
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, waveRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), waveRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), waveRecordInfo.getId())
