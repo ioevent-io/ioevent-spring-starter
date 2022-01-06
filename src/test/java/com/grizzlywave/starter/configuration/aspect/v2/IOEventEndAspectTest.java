@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.aspectj.lang.JoinPoint;
 import org.junit.Assert;
@@ -28,6 +30,7 @@ import org.springframework.util.concurrent.SettableListenableFuture;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.grizzlywave.starter.annotations.v2.EndEvent;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
@@ -97,8 +100,10 @@ class IOEventEndAspectTest {
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
 		
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
+		Map<String, Object> headersMap=new HashMap<>();
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo("1155", "process name", "_", new StopWatch());
-		Message messageResult = endAspect.buildEventMessage(ioEvent,null, "payload", "END", waveRecordInfo, (long) 123546);
+		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
+		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", waveRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "terminate the event").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
@@ -111,7 +116,7 @@ class IOEventEndAspectTest {
 
 		Method method2 = this.getClass().getMethod("endAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, "payload", "END", waveRecordInfo, (long) 123546);
+		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, ioEventResponse, "END", waveRecordInfo, (long) 123546,headersMap);
 		assertEquals("test-", messageResult2.getHeaders().get("kafka_topic"));
 
 	}

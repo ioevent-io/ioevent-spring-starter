@@ -1,5 +1,6 @@
 package com.grizzlywave.starter.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -7,7 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.record.TimestampType;
+import org.aspectj.lang.JoinPoint;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +32,7 @@ import com.grizzlywave.starter.annotations.v2.EndEvent;
 import com.grizzlywave.starter.annotations.v2.GatewaySourceEvent;
 import com.grizzlywave.starter.annotations.v2.GatewayTargetEvent;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.StartEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
@@ -36,6 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class IOEventServiceTest {
+	@Mock
+	JoinPoint joinPoint;
+	
 
 	@InjectMocks
 	IOEventService ioEventService = new IOEventService();
@@ -270,4 +281,32 @@ class IOEventServiceTest {
 
 
 	}
+	@Test
+	void getpayload() {
+	Map<String, Object> headersMap=new HashMap<String, Object>();
+	when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
+	headersMap.put("firstheader", "2");
+	headersMap.put("anotherHeader", 1159);
+		IOResponse<String> ioEventResponse=new IOResponse<String>("our payload",headersMap);
+		assertEquals(ioEventResponse, ioEventService.getpayload(null, ioEventResponse));
+		assertEquals(ioEventResponse.getBody(), ioEventService.getpayload(null, "our payload").getBody());
+		assertEquals("payload", ioEventService.getpayload(joinPoint, null).getBody());
+	}
+	@Test
+	void prepareHeaders() {
+		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
+				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
+		consumerRecord.headers().add(IOEventHeaders.TARGET_EVENT.toString(), "target name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.CORRELATION_ID.toString(), "id".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.PROCESS_NAME.toString(), "workflow name".getBytes());
+		consumerRecord.headers().add("another header", "value".getBytes());
+	List<Header> headers=Arrays.asList(consumerRecord.headers().toArray());
+	Map<String, Object> headersMap=new HashMap<String, Object>();
+	headersMap.put("firstheader", "2");
+	headersMap.put("anotherHeader", 1159);
+	assertEquals(6, ioEventService.prepareHeaders(headers, headersMap).size());
+	assertEquals(2, ioEventService.prepareHeaders(null, headersMap).size());
+
+	}
+
 }

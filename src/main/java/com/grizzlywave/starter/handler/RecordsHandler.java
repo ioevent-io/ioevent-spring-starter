@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -176,7 +177,7 @@ public class RecordsHandler {
 
 	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
-		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()));
+		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream().filter(header->!header.key().equals("spring_json_header_types")).collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals(IOEventHeaders.TARGET_EVENT.toString())) {

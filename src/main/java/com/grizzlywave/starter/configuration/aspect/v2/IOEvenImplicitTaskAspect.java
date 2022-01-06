@@ -1,6 +1,7 @@
 package com.grizzlywave.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
+import java.util.Map;
 import java.util.UUID;
 
 import org.aspectj.lang.JoinPoint;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
 import com.grizzlywave.starter.domain.IOEventHeaders;
@@ -64,7 +66,7 @@ public class IOEvenImplicitTaskAspect {
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
-			Object payload = getpayload(joinPoint, returnObject);
+			IOResponse<Object> response =ioEventService.getpayload(joinPoint, returnObject);
 			StopWatch watch = new StopWatch();
 			UUID uuid = UUID.randomUUID();
 			String target = "";
@@ -73,56 +75,43 @@ public class IOEvenImplicitTaskAspect {
 			if (!ioEventService.getSources(ioEvent).isEmpty()) {
 				WaveRecordInfo waveRecordInfo = WaveContextHolder.getContext();
 				watch = waveRecordInfo.getWatch();
+				Map<String, Object> headers=ioEventService.prepareHeaders(waveRecordInfo.getHeaderList(),response.getHeaders());
 				waveRecordInfo.setWorkFlowName(
 						ioEventService.getProcessName(ioEvent, ioFlow, waveRecordInfo.getWorkFlowName()));
-				Message<Object> message = this.buildMessage(ioEvent, ioFlow, payload, waveRecordInfo.getWorkFlowName(),
+				Message<Object> message = this.buildMessage(ioEvent, ioFlow, response, waveRecordInfo.getWorkFlowName(),
 						waveRecordInfo.getId(), "", "", eventLogger.getTimestamp(eventLogger.getStartTime()),
-						ioEventType);
+						ioEventType,headers);
 
 				kafkaTemplate.send(message);
-				prepareAndDisplayEventLogger(eventLogger, ioEvent, payload, watch, waveRecordInfo);
+				prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch, waveRecordInfo);
 			} else if (!ioEventService.getTargets(ioEvent).isEmpty()) {
 
 				watch.start("IOEvent annotation Implicit TASK Aspect");
 				String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
+				Map<String, Object> headers=ioEventService.prepareHeaders(null,response.getHeaders());
 				for (TargetEvent targetEvent : ioEventService.getTargets(ioEvent)) {
 				String targetKey=	ioEventService.getTargetKey(targetEvent) ;
-					Message<Object> message = this.buildMessage(ioEvent, ioFlow, payload, processName, uuid.toString(),
+					Message<Object> message = this.buildMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
 							targetKey, targetEvent.topic(),
-							eventLogger.getTimestamp(eventLogger.getStartTime()), ioEventType);
+							eventLogger.getTimestamp(eventLogger.getStartTime()), ioEventType,headers);
 					kafkaTemplate.send(message);
 					target += targetKey + ",";
 				}
-				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, target, payload, watch);
+				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, target, response, watch);
 			} else {
 
 				watch.start("IOEvent annotation Implicit TASK Aspect");
-				Message<Object> message = this.buildMessage(ioEvent, ioFlow, payload, ioFlow.name(), uuid.toString(),
-						"", "", eventLogger.getTimestamp(eventLogger.getStartTime()), ioEventType);
+				Map<String, Object> headers=ioEventService.prepareHeaders(null,response.getHeaders());
+				Message<Object> message = this.buildMessage(ioEvent, ioFlow, response, ioFlow.name(), uuid.toString(),
+						"", "", eventLogger.getTimestamp(eventLogger.getStartTime()), ioEventType,headers);
 
 				kafkaTemplate.send(message);
 
-				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, ioFlow, payload, watch);
+				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, ioFlow, response, watch);
 			}
 
 		}
 
-	}
-
-	/**
-	 * Method that returns event payload according to method parameters and return
-	 * object,
-	 * 
-	 * @param joinPoint    for the point during the execution of the program,
-	 * @param returnObject for the returned object,
-	 * @return An object of type Object,
-	 */
-	public Object getpayload(JoinPoint joinPoint, Object returnObject) {
-		if (returnObject == null) {
-			return joinPoint.getArgs()[0];
-
-		}
-		return returnObject;
 	}
 
 	/**
@@ -140,13 +129,13 @@ public class IOEvenImplicitTaskAspect {
 	 * @param startTime       for the start time of the event,
 	 * @return message type of Message,
 	 */
-	public Message<Object> buildMessage(IOEvent ioEvent, IOFlow ioFlow, Object payload, String processName, String uuid,
-			String targetEventName, String targetTopic, Long startTime, IOEventType ioEventType) {
+	public Message<Object> buildMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String processName, String uuid,
+			String targetEventName, String targetTopic, Long startTime, IOEventType ioEventType,Map<String, Object> headers) {
 
 		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, targetTopic);
 		String apiKey = ioEventService.getApiKey(waveProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers).setHeader(KafkaHeaders.TOPIC, waveProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
@@ -168,10 +157,10 @@ public class IOEvenImplicitTaskAspect {
 	 * @param watch       for capturing time,
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, IOFlow ioFlow,
-			Object payload, StopWatch watch) throws JsonProcessingException {
+			IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
 		eventLogger.loggerSetting(uuid.toString(), ioFlow.name(), ioEvent.key(), "START", "END",
-				IOEventType.IMPLICITTASK.toString(), payload);
+				IOEventType.IMPLICITTASK.toString(), payload.getBody());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
@@ -186,12 +175,12 @@ public class IOEvenImplicitTaskAspect {
 	 * @param watch          for capturing time,
 	 * @param waveRecordInfo for the record information from the consumed event,
 	 */
-	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, Object payload, StopWatch watch,
+	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, IOResponse<Object> payload, StopWatch watch,
 			WaveRecordInfo waveRecordInfo) throws JsonProcessingException {
 
 		watch.stop();
 		eventLogger.loggerSetting(waveRecordInfo.getId(), waveRecordInfo.getWorkFlowName(), ioEvent.key(),
-				waveRecordInfo.getTargetName(), "__", "End", payload);
+				waveRecordInfo.getTargetName(), "__", "End", payload.getBody());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
@@ -210,9 +199,9 @@ public class IOEvenImplicitTaskAspect {
 	 * @param watch       for capturing time,
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, UUID uuid, IOEvent ioEvent, String processName,
-			String target, Object payload, StopWatch watch) throws JsonProcessingException {
+			String target, IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
-		eventLogger.loggerSetting(uuid.toString(), processName, ioEvent.key(), null, target, "START", payload);
+		eventLogger.loggerSetting(uuid.toString(), processName, ioEvent.key(), null, target, "START", payload.getBody());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);

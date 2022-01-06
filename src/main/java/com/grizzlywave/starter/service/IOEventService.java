@@ -1,10 +1,15 @@
 package com.grizzlywave.starter.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kafka.common.header.Header;
+import org.aspectj.lang.JoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -13,6 +18,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
@@ -91,7 +97,7 @@ public class IOEventService {
 			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
 				if (!StringUtils.isBlank(sourceEvent.value())) {
 					result.add(sourceEvent.value());
-				}else {
+				} else {
 					result.add(sourceEvent.key());
 				}
 			}
@@ -432,12 +438,46 @@ public class IOEventService {
 		return "";
 	}
 
+	/**
+	 * method returns Target Key from TargetEvent ,
+	 * 
+	 * @param TargetEvent for the TargetEvent annotation,
+	 * @return String of Target Key ,
+	 */
 	public String getTargetKey(TargetEvent targetEvent) {
-			if (!StringUtils.isBlank(targetEvent.value())) {
-				return targetEvent.value();
-			} else {
-			return	targetEvent.key();
-			}
+		if (!StringUtils.isBlank(targetEvent.value())) {
+			return targetEvent.value();
+		} else {
+			return targetEvent.key();
 		}
 	}
 
+	public IOResponse<Object> getpayload(JoinPoint joinPoint, Object returnObject) {
+		try {
+		if (returnObject!=null) {
+			IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
+			return ioEventResponse;
+		}
+		throw new NullPointerException();	
+
+		} catch (Exception e) {
+			
+			if (returnObject == null) {
+				return new IOResponse<>(null,joinPoint.getArgs()[0]);
+
+			}
+			return new IOResponse<>(null,returnObject);
+			
+		}
+	}
+
+	public Map<String, Object> prepareHeaders(List<Header> headersConsumed, Map<String, Object> newHeaders) {
+		Map<String, Object> result = new HashMap<>();
+		if (headersConsumed!=null) {
+		result = headersConsumed.stream().collect(
+                Collectors.toMap(Header::key, Header::value));
+	}	
+		result.putAll(newHeaders);
+		return result;
+	}
+}
