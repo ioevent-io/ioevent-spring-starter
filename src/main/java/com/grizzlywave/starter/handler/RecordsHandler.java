@@ -1,13 +1,18 @@
 package com.grizzlywave.starter.handler;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.header.Header;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,8 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grizzlywave.starter.annotations.v2.IOHeaders;
+import com.grizzlywave.starter.annotations.v2.IOPayload;
 import com.grizzlywave.starter.configuration.context.AppContext;
 import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.domain.IOEventHeaders;
@@ -47,9 +53,8 @@ public class RecordsHandler {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-
 	public Object parseConsumedValue(Object consumedValue, Class<?> type)
-			throws JsonMappingException, JsonProcessingException {
+			throws  JsonProcessingException {
 		if (type.equals(String.class)) {
 			return consumedValue;
 		} else {
@@ -57,35 +62,22 @@ public class RecordsHandler {
 		}
 	}
 
-	/** method to invoke the method from a specific bean **/
-	public void InvokeWithOneParameter(Method method, Object bean, Object args) throws Throwable {
-		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
-		if (beanmObject != null) {
-			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
-				if (met.getName().equals(method.getName())) {
-					Class<?>[] params = method.getParameterTypes();
-					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),
-							parseConsumedValue(args, params[0]));
+	/** method to invoke the method from a specific bean 
+	 * @throws JsonProcessingException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
+	 * @throws IllegalAccessException 
+	 * @throws  
+	 * @throws BeansException **/
+	public void invokeWithOneParameter(Method method, Object bean, Object args) throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException   {
+		Class<?>[] params = method.getParameterTypes();
+		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), parseConsumedValue(args, params[0]));
 
-				}
-			}
-
-		}
 	}
 
-	public void InvokeWithtwoParameter(Method method, Object bean, Object arg1, Object arg2) throws Throwable {
-		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
-		if (beanmObject != null) {
-			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
-				if (met.getName().equals(method.getName())) {
-					Class<?>[] params = method.getParameterTypes();
-					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),
-							parseConsumedValue(arg1, params[0]), arg2);
-
-				}
-
-			}
-		}
+	public void invokeWithtwoParameter(Method method, Object bean, Object[] params)
+			throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), params);
 	}
 
 	/**
@@ -98,7 +90,7 @@ public class RecordsHandler {
 	 **/
 
 	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs)
-			throws Throwable {
+			 {
 
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
@@ -115,7 +107,12 @@ public class RecordsHandler {
 
 						} else {
 
-							simpleInvoke(pair, consumerRecord, waveRecordInfo);
+							try {
+								simpleInvokeMethod(pair, consumerRecord.value(), waveRecordInfo);
+							} catch (BeansException | IllegalAccessException | IllegalArgumentException
+									| InvocationTargetException | JsonProcessingException e) {
+								log.error("error while invoking methode");
+							}
 						}
 
 					}
@@ -126,7 +123,7 @@ public class RecordsHandler {
 	}
 
 	public void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
-			WaveRecordInfo waveRecordInfo)  {
+			WaveRecordInfo waveRecordInfo) {
 		WaveParallelEventInformation parallelEventInfo = new WaveParallelEventInformation(consumerRecord,
 				waveRecordInfo, pair, ioEventService.getSourceNames(pair.getIoEvent()), appName);
 		sendParallelInfo(parallelEventInfo);
@@ -140,33 +137,78 @@ public class RecordsHandler {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
-						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()) + parallelEventInfo.getSourceRequired())
+						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString())
+								+ parallelEventInfo.getSourceRequired())
 				.build();
 		kafkaTemplate.send(message);
 		kafkaTemplate.flush();
 		return message;
 	}
 
-	private void simpleInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
-			WaveRecordInfo waveRecordInfo) throws Throwable {
-		this.invokeMethod(pair, consumerRecord.value(), waveRecordInfo);
-	}
 
-	private void invokeMethod(BeanMethodPair pair, String consumerValue, WaveRecordInfo waveRecordInfo)
-			throws Throwable {
+
+	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, WaveRecordInfo waveRecordInfo) throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException
+			 {
 
 		if (pair.getMethod().getParameterCount() == 1) {
-			this.InvokeWithOneParameter(pair.getMethod(), pair.getBean(), consumerValue);
+			this.invokeWithOneParameter(pair.getMethod(), pair.getBean(), consumerValue);
 		} else if (pair.getMethod().getParameterCount() == 2) {
-			this.InvokeWithtwoParameter(pair.getMethod(), pair.getBean(), consumerValue,
-					waveRecordInfo.getTargetName());
+			Map<String, Object> headersMap = waveRecordInfo.getHeaderList().stream()
+					.collect(Collectors.toMap(Header::key, header -> new String(header.value())));
+			Object[] params = prepareParameters(pair.getMethod(), consumerValue, headersMap);
+			this.invokeWithtwoParameter(pair.getMethod(), pair.getBean(), params);
 		} else {
 			log.error("the method " + pair.getMethod().getName() + " must had one or two parameters");
 		}
 	}
 
+	public Object[] prepareParameters(Method method, String consumerValue, Map<String, Object> headersMap)
+			throws  JsonProcessingException {
+		Class[] parameterTypes = method.getParameterTypes();
+		List<Object> paramList = new ArrayList<>();
+		int payloadIndex = getIOPayloadIndex(method);
+
+		int headerIndex = getIOHeadersIndex(method);
+		if ((headerIndex >= 0)&&(payloadIndex < 0)) {
+			paramList.add(parseConsumedValue(consumerValue, parameterTypes[(headerIndex + 1) % 2]));
+		} else {
+			paramList.add(parseConsumedValue(consumerValue, parameterTypes[getIOPayloadIndex(method)]));
+		}
+		if (headerIndex >= 0) {
+			paramList.add(headerIndex, headersMap);
+
+		}
+		return paramList.toArray();
+	}
+
+	private int getIOPayloadIndex(Method method) {
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		int parameterIndex = 0;
+		for (Annotation[] annotations : parameterAnnotations) {
+			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
+				return parameterIndex;
+			}
+			
+			parameterIndex++;
+		}
+		return -1;
+	}
+
+	public int getIOHeadersIndex(Method method) {
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		int parameterIndex = 0;
+		for (Annotation[] annotations : parameterAnnotations) {
+			if (Arrays.asList(annotations).stream().filter(IOHeaders.class::isInstance).count() != 0) {
+				return parameterIndex;
+			}
+			
+			parameterIndex++;
+		}
+		return -1;
+	}
+
 	public List<String> parseStringToArray(String s) {
-		List<String> output = new ArrayList<String>();
+		List<String> output = new ArrayList<>();
 		String listString = s.substring(1, s.length() - 1);
 		String[] strings = listString.split(", ");
 		for (String stringElement : strings) {
@@ -177,7 +219,8 @@ public class RecordsHandler {
 
 	public WaveRecordInfo getWaveHeaders(ConsumerRecord<String, String> consumerRecord) {
 		WaveRecordInfo waveRecordInfo = new WaveRecordInfo();
-		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream().filter(header->!header.key().equals("spring_json_header_types")).collect(Collectors.toList()));
+		waveRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream()
+				.filter(header -> !header.key().equals("spring_json_header_types")).collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals(IOEventHeaders.TARGET_EVENT.toString())) {
