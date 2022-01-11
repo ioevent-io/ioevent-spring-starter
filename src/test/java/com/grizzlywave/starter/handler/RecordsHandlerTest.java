@@ -119,7 +119,7 @@ class RecordsHandlerTest {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
-						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()) + parallelEventInfo.getSourceRequired())
+						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString() + parallelEventInfo.getSourceRequired())
 				.build();
 
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));

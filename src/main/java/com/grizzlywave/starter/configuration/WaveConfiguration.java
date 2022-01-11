@@ -102,7 +102,7 @@ public class WaveConfiguration {
 					List<String> updatedTargetList = Stream
 							.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
 							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
-					Map<String, String> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
+					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
 					updatedValue.setTargetsArrived(updatedTargetList);

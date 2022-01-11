@@ -130,7 +130,7 @@ class IOEventServiceTest {
 
 	    ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 	    when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-	    ioEventService.sendParallelEventInfo(new WaveParallelEventInformation("aaa", Arrays.asList("5"), "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, String>() {{
+	    ioEventService.sendParallelEventInfo(new WaveParallelEventInformation("aaa", Arrays.asList("5"), "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, Object>() {{
 	        put(IOEventHeaders.CORRELATION_ID.toString(), "value1");
 	    }}));
 	    Assert.assertTrue(true);

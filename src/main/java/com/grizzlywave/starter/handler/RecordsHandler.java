@@ -111,7 +111,7 @@ public class RecordsHandler {
 								simpleInvokeMethod(pair, consumerRecord.value(), waveRecordInfo);
 							} catch (BeansException | IllegalAccessException | IllegalArgumentException
 									| InvocationTargetException | JsonProcessingException e) {
-								log.error("error while invoking methode");
+								log.error("error while invoking method");
 							}
 						}
 
@@ -137,7 +137,7 @@ public class RecordsHandler {
 		Message<WaveParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
-						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString())
+						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
 								+ parallelEventInfo.getSourceRequired())
 				.build();
 		kafkaTemplate.send(message);

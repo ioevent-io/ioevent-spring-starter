@@ -28,14 +28,14 @@ public class WaveParallelEventInformation {
 	private String method;
 	private String className;
 	private List<String> sourceRequired;
-	private Map<String, String> headers = new HashMap<String, String>();
+	private Map<String, Object> headers = new HashMap<String, Object>();
 
 	public WaveParallelEventInformation() {
 		super();
 	}
 
 	public WaveParallelEventInformation(String value, List<String> targetsArrived, String listenerTopic, String method,
-			String className, List<String> sourceRequired, Map<String, String> headers) {
+			String className, List<String> sourceRequired, Map<String, Object> headers) {
 		super();
 		this.value = value;
 		this.targetsArrived = targetsArrived;
@@ -107,11 +107,11 @@ public class WaveParallelEventInformation {
 		this.sourceRequired = sourceRequired;
 	}
 
-	public Map<String, String> getHeaders() {
+	public Map<String, Object> getHeaders() {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, String> headers) {
+	public void setHeaders(Map<String, Object> headers) {
 		this.headers = headers;
 	}
 
