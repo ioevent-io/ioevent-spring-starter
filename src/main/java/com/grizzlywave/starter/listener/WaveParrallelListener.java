@@ -2,6 +2,7 @@ package com.grizzlywave.starter.listener;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -9,12 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.grizzlywave.starter.configuration.context.AppContext;
+import com.grizzlywave.starter.configuration.postprocessor.BeanMethodPair;
 import com.grizzlywave.starter.domain.IOEventHeaders;
 import com.grizzlywave.starter.domain.WaveParallelEventInformation;
+import com.grizzlywave.starter.handler.RecordsHandler;
 import com.grizzlywave.starter.handler.WaveRecordInfo;
 import com.grizzlywave.starter.service.IOEventService;
 import com.grizzlywave.starter.service.WaveContextHolder;
@@ -29,55 +31,78 @@ public class WaveParrallelListener {
 
 	@Autowired
 	private List<Listener> listeners;
-
+	@Autowired
+	RecordsHandler recordsHandler;
 	@Autowired
 	private AppContext ctx;
 
 	@Autowired
 	private IOEventService ioEventService;
-	
 
 	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "${ioevent.group_id}")
-	public void consumeParallelEvent(String s) throws JsonMappingException, JsonProcessingException, ClassNotFoundException,
-			NoSuchMethodException, SecurityException {
+	public void consumeParallelEvent(String s)
+			throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		Gson gson = new Gson();
 		WaveParallelEventInformation waveParallelEventInformation = gson.fromJson(s,
 				WaveParallelEventInformation.class);
-		if ((waveParallelEventInformation!=null) && (sameList(waveParallelEventInformation.getSourceRequired(),
+		if ((waveParallelEventInformation != null) && (sameList(waveParallelEventInformation.getSourceRequired(),
 				waveParallelEventInformation.getTargetsArrived()))) {
-			
-				try {
-					Object beanmObject = ctx.getApplicationContext()
-							.getBean(Class.forName(waveParallelEventInformation.getClassName()));
-					if (beanmObject != null) {
-					StopWatch watch=new StopWatch();
-					watch.start(waveParallelEventInformation.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()));
-					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(waveParallelEventInformation.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()),
-							waveParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString()),
-							waveParallelEventInformation.getTargetsArrived().toString(),watch);
+
+			try {
+				Object beanmObject = ctx.getApplicationContext()
+						.getBean(Class.forName(waveParallelEventInformation.getClassName()));
+				if (beanmObject != null) {
+					StopWatch watch = new StopWatch();
+					watch.start((String) waveParallelEventInformation.getHeaders()
+							.get(IOEventHeaders.CORRELATION_ID.toString()));
+					WaveRecordInfo waveRecordInfo = new WaveRecordInfo(
+							waveParallelEventInformation.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString())
+									.toString(),
+							waveParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString())
+									.toString(),
+							waveParallelEventInformation.getTargetsArrived().toString(), watch);
 					WaveContextHolder.setContext(waveRecordInfo);
 
-					InvokeWithOneParameter(waveParallelEventInformation.getMethod(), beanmObject,
-							waveParallelEventInformation.getValue());
+					invokeTargetMethod(waveParallelEventInformation.getMethod(), beanmObject,
+							waveParallelEventInformation);
 
-					}} catch (Throwable e) {
-					//e.printStackTrace();
 				}
-
+			} catch (Throwable e) {
+				log.error("error while invoking method ");
 			}
-	 else {
-			log.info("Parallel Event Source Not Completed, target arrived : "+waveParallelEventInformation.getTargetsArrived() );
+
+		} else {
+			log.info("Parallel Event Source Not Completed, target arrived : "
+					+ waveParallelEventInformation.getTargetsArrived());
 		}
 
 	}
 
 	/** method to invoke the method from a specific bean **/
-	public void InvokeWithOneParameter(String method, Object beanmObject, Object args) throws Throwable {
+	public void invokeTargetMethod(String methodName, Object beanmObject,
+			WaveParallelEventInformation parallelEventInformation) throws Throwable {
 		if (beanmObject != null) {
+
 			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
-				if (met.getName().equals(method)) {
-					Class<?>[] params = met.getParameterTypes();
-					met.invoke(beanmObject, parseConsumedValue(args, params[0]));
+				if (met.getName().equals(methodName)) {
+					Method method = met;
+					
+					if (met.getParameterCount() == 1) {
+				
+						recordsHandler.invokeWithOneParameter(method, beanmObject, parallelEventInformation.getValue());
+					} else if (met.getParameterCount() == 2) {
+						for (Listener listener : listeners) {
+							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
+									.filter(x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())&&x.getMethod().getName().equals(parallelEventInformation.getMethod())))
+									.findFirst();
+							if (pair.isPresent()) {
+								method=pair.get().getMethod();
+							}
+						}
+						Object[] params = recordsHandler.prepareParameters(method, parallelEventInformation.getValue(),
+								parallelEventInformation.getHeaders());
+						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
+					}
 
 				}
 			}
@@ -85,23 +110,7 @@ public class WaveParrallelListener {
 		}
 	}
 
-	public void InvokeWithtwoParameter(Method method, Object bean, Object arg1, Object arg2) throws Throwable {
-		Object beanmObject = ctx.getApplicationContext().getBean(bean.getClass());
-		if (beanmObject != null) {
-			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
-				if (met.getName().equals(method.getName())) {
-					Class<?>[] params = method.getParameterTypes();
-					met.invoke(ctx.getApplicationContext().getBean(bean.getClass()),
-							parseConsumedValue(arg1, params[0]), arg2);
-
-				}
-
-			}
-		}
-	}
-
-	public Object parseConsumedValue(Object consumedValue, Class<?> type)
-			throws JsonMappingException, JsonProcessingException {
+	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
 			return consumedValue;
 		} else {

@@ -18,8 +18,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
-import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
+import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
 import com.grizzlywave.starter.configuration.properties.WaveProperties;
@@ -475,7 +475,7 @@ public class IOEventService {
 		Map<String, Object> result = new HashMap<>();
 		if (headersConsumed!=null) {
 		result = headersConsumed.stream().collect(
-                Collectors.toMap(Header::key, Header::value));
+                Collectors.toMap(Header::key, h->new String(h.value())));
 	}	
 		result.putAll(newHeaders);
 		return result;
