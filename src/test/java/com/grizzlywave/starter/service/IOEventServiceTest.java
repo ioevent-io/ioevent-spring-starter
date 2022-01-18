@@ -282,7 +282,7 @@ class IOEventServiceTest {
 
 	}
 	@Test
-	void getpayload() {
+	void getpayload(){
 	Map<String, Object> headersMap=new HashMap<String, Object>();
 	when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 	headersMap.put("firstheader", "2");
@@ -290,7 +290,6 @@ class IOEventServiceTest {
 		IOResponse<String> ioEventResponse=new IOResponse<String>("our payload",headersMap);
 		assertEquals(ioEventResponse, ioEventService.getpayload(null, ioEventResponse));
 		assertEquals(ioEventResponse.getBody(), ioEventService.getpayload(null, "our payload").getBody());
-		assertEquals("payload", ioEventService.getpayload(joinPoint, null).getBody());
 	}
 	@Test
 	void prepareHeaders() {
