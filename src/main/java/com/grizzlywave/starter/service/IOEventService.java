@@ -1,6 +1,9 @@
 package com.grizzlywave.starter.service;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.common.header.Header;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.grizzlywave.starter.annotations.v2.IOEvent;
 import com.grizzlywave.starter.annotations.v2.IOFlow;
+import com.grizzlywave.starter.annotations.v2.IOPayload;
 import com.grizzlywave.starter.annotations.v2.IOResponse;
 import com.grizzlywave.starter.annotations.v2.SourceEvent;
 import com.grizzlywave.starter.annotations.v2.TargetEvent;
@@ -452,31 +457,70 @@ public class IOEventService {
 		}
 	}
 
+	/**
+	 * method returns payload of the method ,
+	 * 
+	 * @param joinPoint    for the JoinPoint where the method have been called ,
+	 * @param returnObject for the object returned by the method
+	 * @return IOResponse ,
+	 */
 	public IOResponse<Object> getpayload(JoinPoint joinPoint, Object returnObject) {
 		try {
-		if (returnObject!=null) {
-			IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
-			return ioEventResponse;
-		}
-		throw new NullPointerException();	
+			if (returnObject != null) {
+				IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
+				return ioEventResponse;
+			}
+			throw new NullPointerException();
 
 		} catch (Exception e) {
-			
+
 			if (returnObject == null) {
-				return new IOResponse<>(null,joinPoint.getArgs()[0]);
+				MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+				int ioPayloadIndex = getIOPayloadIndex(signature.getMethod());
+				if (ioPayloadIndex >= 0) {
+					return new IOResponse<>(null, joinPoint.getArgs()[ioPayloadIndex]);
+				}
+				return new IOResponse<>(null, joinPoint.getArgs()[0]);
 
 			}
-			return new IOResponse<>(null,returnObject);
-			
+			return new IOResponse<>(null, returnObject);
+
 		}
 	}
 
+	/**
+	 * method returns IOPayload Annotation index in method parameters,
+	 * 
+	 * @param method for the method object ,
+	 * @return int ,
+	 */
+	public int getIOPayloadIndex(Method method) {
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		int parameterIndex = 0;
+		for (Annotation[] annotations : parameterAnnotations) {
+			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
+				return parameterIndex;
+			}
+
+			parameterIndex++;
+		}
+		return -1;
+	}
+
+	/**
+	 * method returns map of headers by merging the consumed headers with the new
+	 * headers created in method,
+	 * 
+	 * @param headersConsumed for the List<Header> consumed from the event ,
+	 * @param newHeaders      a Map<String, Object> for the new headers declared in
+	 *                        method
+	 * @return Map<String, Object> ,
+	 */
 	public Map<String, Object> prepareHeaders(List<Header> headersConsumed, Map<String, Object> newHeaders) {
 		Map<String, Object> result = new HashMap<>();
-		if (headersConsumed!=null) {
-		result = headersConsumed.stream().collect(
-                Collectors.toMap(Header::key, h->new String(h.value())));
-	}	
+		if (headersConsumed != null) {
+			result = headersConsumed.stream().collect(Collectors.toMap(Header::key, h -> new String(h.value())));
+		}
 		result.putAll(newHeaders);
 		return result;
 	}
