@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 /**
  * IOEvent Response annotation allows us to simplify the IOEvent response ,
  **/
 @Data
+@Builder
 @AllArgsConstructor
 public class IOResponse<T> {
 
