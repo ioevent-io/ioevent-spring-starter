@@ -104,8 +104,12 @@ public class IOEventConfiguration {
 					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
+					Map<String, Object> updatedPayload = Stream.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
+							.flatMap(map -> map.entrySet().stream())
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
 					updatedValue.setTargetsArrived(updatedTargetList);
 					updatedValue.setHeaders(updatedHeaders);
+					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));

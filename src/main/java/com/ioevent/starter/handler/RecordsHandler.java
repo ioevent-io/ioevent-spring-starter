@@ -30,8 +30,8 @@ import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.postprocessor.BeanMethodPair;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
-import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,8 +53,7 @@ public class RecordsHandler {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	public Object parseConsumedValue(Object consumedValue, Class<?> type)
-			throws  JsonProcessingException {
+	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
 			return consumedValue;
 		} else {
@@ -62,14 +61,18 @@ public class RecordsHandler {
 		}
 	}
 
-	/** method to invoke the method from a specific bean 
-	 * @throws JsonProcessingException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalArgumentException 
-	 * @throws IllegalAccessException 
-	 * @throws  
-	 * @throws BeansException **/
-	public void invokeWithOneParameter(Method method, Object bean, Object args) throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException   {
+	/**
+	 * method to invoke the method from a specific bean
+	 * 
+	 * @throws JsonProcessingException
+	 * @throws InvocationTargetException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws
+	 * @throws BeansException
+	 **/
+	public void invokeWithOneParameter(Method method, Object bean, Object args) throws BeansException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException {
 		Class<?>[] params = method.getParameterTypes();
 		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), parseConsumedValue(args, params[0]));
 
@@ -82,15 +85,14 @@ public class RecordsHandler {
 
 	/**
 	 * method called when the listener consume event , the method scan the header
-	 * from consumer records and create ioeventRecordInfo from it , check if the target
-	 * of the event equals to our methods source , if our method annotation has
-	 * parallel gateway :check if the list of source are all arrived then send
-	 * ioeventRecordInfo to aspect and call doinvoke(), else send ioeventRecordsInfo to
-	 * aspect and call doinvoke()
+	 * from consumer records and create ioeventRecordInfo from it , check if the
+	 * target of the event equals to our methods source , if our method annotation
+	 * has parallel gateway :check if the list of source are all arrived then send
+	 * ioeventRecordInfo to aspect and call doinvoke(), else send ioeventRecordsInfo
+	 * to aspect and call doinvoke()
 	 **/
 
-	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs)
-			 {
+	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) {
 
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
@@ -132,7 +134,8 @@ public class RecordsHandler {
 
 	}
 
-	public Message<IOEventParallelEventInformation> sendParallelInfo(IOEventParallelEventInformation parallelEventInfo) {
+	public Message<IOEventParallelEventInformation> sendParallelInfo(
+			IOEventParallelEventInformation parallelEventInfo) {
 
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
@@ -145,10 +148,9 @@ public class RecordsHandler {
 		return message;
 	}
 
-
-
-	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo) throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException
-			 {
+	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo)
+			throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			JsonProcessingException {
 
 		if (pair.getMethod().getParameterCount() == 1) {
 			this.invokeWithOneParameter(pair.getMethod(), pair.getBean(), consumerValue);
@@ -163,13 +165,13 @@ public class RecordsHandler {
 	}
 
 	public Object[] prepareParameters(Method method, String consumerValue, Map<String, Object> headersMap)
-			throws  JsonProcessingException {
+			throws JsonProcessingException {
 		Class[] parameterTypes = method.getParameterTypes();
 		List<Object> paramList = new ArrayList<>();
 		int payloadIndex = getIOPayloadIndex(method);
 
 		int headerIndex = getIOHeadersIndex(method);
-		if ((headerIndex >= 0)&&(payloadIndex < 0)) {
+		if ((headerIndex >= 0) && (payloadIndex < 0)) {
 			paramList.add(parseConsumedValue(consumerValue, parameterTypes[(headerIndex + 1) % 2]));
 		} else {
 			paramList.add(parseConsumedValue(consumerValue, parameterTypes[getIOPayloadIndex(method)]));
@@ -181,6 +183,51 @@ public class RecordsHandler {
 		return paramList.toArray();
 	}
 
+	public Object[] prepareParallelParameters(Method method, IOEventParallelEventInformation parallelEventConsumed)
+			throws JsonProcessingException {
+		Class[] parameterTypes = method.getParameterTypes();
+		List<Object> paramList = new ArrayList<>();
+		List<Integer> payloadIndex = getIOPayloadIndexlist(method);
+		for (int i = 0; i < payloadIndex.size(); i++) {
+			if (payloadIndex.get(i)>=0) {
+				String payloadSourceName= parallelEventConsumed.getSourceRequired().get(payloadIndex.get(i));
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName), parameterTypes[i]));
+			}else if (payloadIndex.get(i)==-1) {
+				paramList.add(parallelEventConsumed.getHeaders());
+			}else {
+				String payloadSourceName= parallelEventConsumed.getSourceRequired().get(0);
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName), parameterTypes[i]));
+			}
+		}
+		
+		return paramList.toArray();
+	}
+
+	private List<Integer> getIOPayloadIndexlist(Method method) {
+		List<Integer> indexList = new ArrayList<>();
+		Annotation[][] parametersAnnotations = method.getParameterAnnotations();
+		for (Annotation[] parameterAnnotations : parametersAnnotations) {
+			if (parameterAnnotations.length == 0) {
+				indexList.add(-2);
+			}
+			for (Annotation annotations : parameterAnnotations) {
+				try {
+					IOPayload ioPayload = (IOPayload) annotations;
+					indexList.add(ioPayload.index());
+				} catch (Exception e) {
+					try {
+						IOHeaders ioHeaders = (IOHeaders) annotations;
+						indexList.add(-1);
+					} catch (Exception e2) {
+						log.error("Bad Parameter Annotations use");
+					}
+				}
+
+			}
+		}
+		return indexList;
+	}
+
 	private int getIOPayloadIndex(Method method) {
 		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 		int parameterIndex = 0;
@@ -188,7 +235,7 @@ public class RecordsHandler {
 			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
 				return parameterIndex;
 			}
-			
+
 			parameterIndex++;
 		}
 		return -1;
@@ -201,7 +248,7 @@ public class RecordsHandler {
 			if (Arrays.asList(annotations).stream().filter(IOHeaders.class::isInstance).count() != 0) {
 				return parameterIndex;
 			}
-			
+
 			parameterIndex++;
 		}
 		return -1;
