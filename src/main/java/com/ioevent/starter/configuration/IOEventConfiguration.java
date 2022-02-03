@@ -1,9 +1,11 @@
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -201,7 +203,11 @@ public class IOEventConfiguration {
 	public List<IOEventBpmnPart> iobpmnlist() {
 		return new LinkedList<>();
 	}
-
+	
+	@Bean("apiKeys")
+	public Set<String> apiKeys() {
+		return new HashSet<>();
+	}
 	@Bean("listeners")
 	public List<Listener> listeners() {
 		return new ArrayList<>();
