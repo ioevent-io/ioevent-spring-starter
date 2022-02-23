@@ -2,6 +2,8 @@ package com.ioevent.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +36,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private ListenerCreator listenerCreator;
 	@Autowired
 	private List<Listener> listeners;
-
+	@Autowired
+	private Set<String> apiKeys;
 	@Autowired
 	private IOEventService ioEventService;
 
@@ -78,13 +81,14 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	@Override
 	public void process(Object bean, String beanName) throws Throwable {
 		IOFlow ioFlow = bean.getClass().getAnnotation(IOFlow.class);
+		addApikey(apiKeys, ioFlow,iOEventProperties);
 		for (Method method : bean.getClass().getMethods()) {
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 
 			for (IOEvent ioEvent : ioEvents) {
 
-				if (StringUtils.isBlank(ioEvent.startEvent().key()+ioEvent.startEvent().value())) {
+				if (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
 
 					for (String topicName : ioEventService.getSourceTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
@@ -112,6 +116,15 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
 						method.getName()));
 
+			}
+		}
+	}
+
+	public void addApikey(Set<String> apiKeys, IOFlow ioFlow, IOEventProperties iOEventProperties) {
+		apiKeys.add(iOEventProperties.getApikey()) ;
+		if (!Objects.isNull(ioFlow)) {
+			if (StringUtils.isNotBlank(ioFlow.apiKey())) {
+				apiKeys.add(ioFlow.apiKey());
 			}
 		}
 	}

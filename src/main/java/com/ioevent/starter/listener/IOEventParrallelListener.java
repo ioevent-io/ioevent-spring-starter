@@ -16,10 +16,10 @@ import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.postprocessor.BeanMethodPair;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
-import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.handler.IOEventRecordInfo;
-import com.ioevent.starter.service.IOEventService;
+import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,9 +88,6 @@ public class IOEventParrallelListener {
 					Method method = met;
 					
 					if (met.getParameterCount() == 1) {
-				
-						recordsHandler.invokeWithOneParameter(method, beanmObject, parallelEventInformation.getValue());
-					} else if (met.getParameterCount() == 2) {
 						for (Listener listener : listeners) {
 							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
 									.filter(x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())&&x.getMethod().getName().equals(parallelEventInformation.getMethod())))
@@ -99,8 +96,20 @@ public class IOEventParrallelListener {
 								method=pair.get().getMethod();
 							}
 						}
-						Object[] params = recordsHandler.prepareParameters(method, parallelEventInformation.getValue(),
-								parallelEventInformation.getHeaders());
+						//recordsHandler.invokeWithOneParameter(method, beanmObject, parallelEventInformation.getValue());
+						Object[] params = 	recordsHandler.prepareParallelParameters(method, parallelEventInformation);
+						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
+					} else {
+						for (Listener listener : listeners) {
+							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
+									.filter(x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())&&x.getMethod().getName().equals(parallelEventInformation.getMethod())))
+									.findFirst();
+							if (pair.isPresent()) {
+								method=pair.get().getMethod();
+							}
+						}
+						Object[] params = 	recordsHandler.prepareParallelParameters(method, parallelEventInformation);
+						//recordsHandler.prepareParameters(method, parallelEventInformation.getValue(),parallelEventInformation.getHeaders());
 						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
 					}
 

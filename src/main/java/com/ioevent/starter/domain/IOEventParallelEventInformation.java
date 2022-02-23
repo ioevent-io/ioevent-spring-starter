@@ -23,33 +23,36 @@ import com.ioevent.starter.handler.IOEventRecordInfo;
 public class IOEventParallelEventInformation {
 
 	private String value;
-	private List<String> targetsArrived = new ArrayList<String>();
+	private List<String> targetsArrived = new ArrayList<>();
+	private Map<String, Object> payloadMap=new HashMap<>();
 	private String listenerTopic;
 	private String method;
 	private String className;
 	private List<String> sourceRequired;
-	private Map<String, Object> headers = new HashMap<String, Object>();
+	private Map<String, Object> headers = new HashMap<>();
 
 	public IOEventParallelEventInformation() {
 		super();
 	}
-
-	public IOEventParallelEventInformation(String value, List<String> targetsArrived, String listenerTopic, String method,
-			String className, List<String> sourceRequired, Map<String, Object> headers) {
+	public IOEventParallelEventInformation(String value, List<String> targetsArrived, Map<String, Object> payloadMap,
+			String listenerTopic, String method, String className, List<String> sourceRequired,
+			Map<String, Object> headers) {
 		super();
 		this.value = value;
 		this.targetsArrived = targetsArrived;
+		this.payloadMap = payloadMap;
 		this.listenerTopic = listenerTopic;
 		this.method = method;
 		this.className = className;
 		this.sourceRequired = sourceRequired;
 		this.headers = headers;
 	}
-
+	
 	public IOEventParallelEventInformation(ConsumerRecord<String, String> consumerRecord, IOEventRecordInfo ioeventRecordInfo,
 			BeanMethodPair pair, List<String> sourceRequired,String appName) {
 		super();
 		this.value = consumerRecord.value();
+		this.payloadMap.put(ioeventRecordInfo.getTargetName(),  consumerRecord.value());
 		this.targetsArrived.add(ioeventRecordInfo.getTargetName());
 		this.listenerTopic = consumerRecord.topic();
 		this.method = pair.getMethod().getName();
@@ -75,6 +78,12 @@ public class IOEventParallelEventInformation {
 		this.targetsArrived = targetsArrived;
 	}
 
+	public Map<String, Object> getPayloadMap() {
+		return payloadMap;
+	}
+	public void setPayloadMap(Map<String, Object> payloadMap) {
+		this.payloadMap = payloadMap;
+	}
 	public String getListenerTopic() {
 		return listenerTopic;
 	}

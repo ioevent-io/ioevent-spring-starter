@@ -37,9 +37,8 @@ import com.ioevent.starter.annotations.SourceEvent;
 import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.annotations.TargetEvent;
 import com.ioevent.starter.domain.IOEventHeaders;
-import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
-import com.ioevent.starter.service.IOEventService;
+import com.ioevent.starter.domain.IOEventType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -131,7 +130,8 @@ class IOEventServiceTest {
 
 	    ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 	    when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-	    ioEventService.sendParallelEventInfo(new IOEventParallelEventInformation("aaa", Arrays.asList("5"), "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, Object>() {{
+	    ioEventService.sendParallelEventInfo(new IOEventParallelEventInformation("aaa", Arrays.asList("5"), new HashMap<String, Object>() {{
+	        put("key","value");}}, "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, Object>() {{
 	        put(IOEventHeaders.CORRELATION_ID.toString(), "value1");
 	    }}));
 	    Assert.assertTrue(true);

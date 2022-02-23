@@ -1,6 +1,8 @@
 package com.ioevent.starter.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,9 @@ public class IOEventController {
 
 	@Autowired
 	private List<IOEventBpmnPart> iobpmnlist;
-
+	
+	@Autowired
+	private Set<String> apiKeys;
 	/**
 	 * Method that return all BPMN parts of processes,
 	 * 
@@ -42,5 +46,14 @@ public class IOEventController {
 	@GetMapping("/IOEventTopics")
 	public List<String> getIOEventTopics() throws InterruptedException, ExecutionException {
 		return topicServices.getAllTopic();
+	}
+	/**
+	 * Method that return all API-Keys used in application,
+	 * 
+	 * @return list of API-Key names,
+	 */
+	@GetMapping("/IOEventApiKeys")
+	public List<String> getIOEventApiKeys() {
+		return new ArrayList<>(apiKeys);
 	}
 }

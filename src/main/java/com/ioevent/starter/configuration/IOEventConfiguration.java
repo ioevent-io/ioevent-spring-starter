@@ -1,9 +1,11 @@
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -104,8 +106,12 @@ public class IOEventConfiguration {
 					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
+					Map<String, Object> updatedPayload = Stream.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
+							.flatMap(map -> map.entrySet().stream())
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
 					updatedValue.setTargetsArrived(updatedTargetList);
 					updatedValue.setHeaders(updatedHeaders);
+					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
@@ -197,7 +203,11 @@ public class IOEventConfiguration {
 	public List<IOEventBpmnPart> iobpmnlist() {
 		return new LinkedList<>();
 	}
-
+	
+	@Bean("apiKeys")
+	public Set<String> apiKeys() {
+		return new HashSet<>();
+	}
 	@Bean("listeners")
 	public List<Listener> listeners() {
 		return new ArrayList<>();

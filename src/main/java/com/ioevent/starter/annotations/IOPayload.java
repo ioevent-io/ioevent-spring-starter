@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOPayload {
 	String value() default "";
+	int index() default 0;
 }
