@@ -9,11 +9,11 @@
 		<version>2.4.3</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.grizzly-wave</groupId>
-	<artifactId>grizzly-wave-starter</artifactId>
+	<groupId>io.ioevent</groupId>
+	<artifactId>ioevent-spring-boot-starter</artifactId>
 	<version>1.0.0-beta</version>
-	<name>grizzly-wave-starter</name>
-	<description>Demo project for Spring Boot</description>
+	<name>ioevent-spring-boot-starter</name>
+	<description>IOEvent is a new framework for choreographing microservices</description>
 	<properties>
 		<java.version>11</java.version>
 		<spring-cloud.version>2020.0.2</spring-cloud.version>
