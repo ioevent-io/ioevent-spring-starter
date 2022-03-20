@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.kafka.common.header.Header;
 import org.springframework.util.StopWatch;
 
-
 /**
  * class for the record event information consumed from event
  */
@@ -13,32 +12,35 @@ public class IOEventRecordInfo {
 	private String id;
 
 	private String workFlowName;
-	
+
 	private String targetName;
 	private List<Header> headerList;
-	
-	private StopWatch watch;
 
-	private Long startTime=System.currentTimeMillis();
-	
-	
+	private StopWatch watch;
+	private Long instanceStartTime;
+	private Long startTime = System.currentTimeMillis();
 
 	public IOEventRecordInfo() {
 	}
 
-	public IOEventRecordInfo(String id, String workFlowName, String targetName,StopWatch watch) {
+	public IOEventRecordInfo(String id, String workFlowName, String targetName, StopWatch watch,
+			Long instanceStartTime) {
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.targetName = targetName;
 		this.watch = watch;
+		this.instanceStartTime = instanceStartTime;
 	}
 
-	public IOEventRecordInfo(String id, String workFlowName, String targetName, List<Header> headerList) {
+	public IOEventRecordInfo(String id, String workFlowName, String targetName, List<Header> headerList,
+			Long instanceStartTime) {
 		super();
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.targetName = targetName;
 		this.headerList = headerList;
+		this.instanceStartTime = instanceStartTime;
+
 	}
 
 	public String getId() {
@@ -80,6 +82,15 @@ public class IOEventRecordInfo {
 	public void setWatch(StopWatch watch) {
 		this.watch = watch;
 	}
+
+	public Long getInstanceStartTime() {
+		return instanceStartTime;
+	}
+
+	public void setInstanceStartTime(Long instanceStartTime) {
+		this.instanceStartTime = instanceStartTime;
+	}
+
 	public Long getStartTime() {
 		return startTime;
 	}

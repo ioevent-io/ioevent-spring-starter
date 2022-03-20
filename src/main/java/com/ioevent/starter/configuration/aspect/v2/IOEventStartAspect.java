@@ -112,7 +112,7 @@ public class IOEventStartAspect {
 				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), ioEventService.getTargetKey(targetEvent))
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
-				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).build();
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime).build();
 
 	}
 

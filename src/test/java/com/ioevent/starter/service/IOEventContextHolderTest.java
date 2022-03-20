@@ -7,19 +7,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
 
 import com.ioevent.starter.handler.IOEventRecordInfo;
-import com.ioevent.starter.service.IOEventContextHolder;
 
 class IOEventContextHolderTest {
 
 	@Test
 	void ioeventContextTest() {
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch());
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch(),1000L);
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		Assert.assertEquals(ioeventRecordInfo, IOEventContextHolder.getContext());
 	}
 	@Test
 	void ioeventContextUnloadTest() {
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch());
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch(),1000L);
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		Assert.assertEquals(ioeventRecordInfo, IOEventContextHolder.getContext());
 		IOEventContextHolder.unload();

@@ -29,8 +29,8 @@ import com.ioevent.starter.annotations.SourceEvent;
 import com.ioevent.starter.annotations.TargetEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
-import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
+import com.ioevent.starter.domain.IOEventType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -251,7 +251,35 @@ public class IOEventService {
 
 		return result;
 	}
+	/**
+	 * method returns all source topics of @IOEvent definition,
+	 * 
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return list of Topics names ,
+	 */
 
+	public List<String> getTargetEventTopics(IOEvent ioEvent, IOFlow ioFlow) {
+		List<String> result = new ArrayList<>();
+		if ((ioFlow != null) && !StringUtils.isBlank(ioFlow.topic())) {
+			result.add(ioFlow.topic());
+		}
+		if (!StringUtils.isBlank(ioEvent.topic())) {
+			result.add(ioEvent.topic());
+		}
+		for (TargetEvent targetEvent : ioEvent.target()) {
+			if (!StringUtils.isBlank(targetEvent.topic())) {
+				result.add(targetEvent.topic());
+			}
+		}
+
+		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
+			if (!StringUtils.isBlank(targetEvent.topic())) {
+				result.add(targetEvent.topic());
+			}
+		}
+
+		return result;
+	}
 	/**
 	 * method returns if two lists are equal
 	 * 

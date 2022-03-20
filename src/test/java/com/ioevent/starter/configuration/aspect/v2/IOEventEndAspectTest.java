@@ -33,14 +33,13 @@ import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.SourceEvent;
 import com.ioevent.starter.annotations.TargetEvent;
-import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
-import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventService;
 
 class IOEventEndAspectTest {
 	@InjectMocks
@@ -102,7 +101,7 @@ class IOEventEndAspectTest {
 		
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Map<String, Object> headersMap=new HashMap<>();
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch());
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")

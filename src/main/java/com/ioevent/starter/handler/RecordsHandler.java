@@ -189,17 +189,19 @@ public class RecordsHandler {
 		List<Object> paramList = new ArrayList<>();
 		List<Integer> payloadIndex = getIOPayloadIndexlist(method);
 		for (int i = 0; i < payloadIndex.size(); i++) {
-			if (payloadIndex.get(i)>=0) {
-				String payloadSourceName= parallelEventConsumed.getSourceRequired().get(payloadIndex.get(i));
-				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName), parameterTypes[i]));
-			}else if (payloadIndex.get(i)==-1) {
+			if (payloadIndex.get(i) >= 0) {
+				String payloadSourceName = parallelEventConsumed.getSourceRequired().get(payloadIndex.get(i));
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName),
+						parameterTypes[i]));
+			} else if (payloadIndex.get(i) == -1) {
 				paramList.add(parallelEventConsumed.getHeaders());
-			}else {
-				String payloadSourceName= parallelEventConsumed.getSourceRequired().get(0);
-				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName), parameterTypes[i]));
+			} else {
+				String payloadSourceName = parallelEventConsumed.getSourceRequired().get(0);
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName),
+						parameterTypes[i]));
 			}
 		}
-		
+
 		return paramList.toArray();
 	}
 
@@ -277,6 +279,8 @@ public class RecordsHandler {
 				watch.start(new String(header.value()));
 			} else if (header.key().equals(IOEventHeaders.PROCESS_NAME.toString())) {
 				ioeventRecordInfo.setWorkFlowName(new String(header.value()));
+			} else if (header.key().equals(IOEventHeaders.START_INSTANCE_TIME.toString())) {
+				ioeventRecordInfo.setInstanceStartTime(Long.valueOf(new String(header.value())));
 			}
 
 		});
