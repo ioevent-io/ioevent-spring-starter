@@ -6,16 +6,16 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
-import com.ioevent.starter.annotations.SourceEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 
 /**
  * class IOEventBpmnPart include all event information , - id for the ID of the
  * event, - ClassName for the class name with include the task (IOEvent), -
  * MethodName for method name which annotated by IOEvent, - stepName for the
  * task name, - workflow for the process name, - ioEventType for the event type,
- * - sourceEvent for the source events of the task/part, - targetEvent for the
- * target event of the task/part,
+ * - InputEvent for the Input events of the task/part, - outputEvent for the
+ * output event of the task/part,
  */
 public class IOEventBpmnPart {
 	private String id;
@@ -26,8 +26,8 @@ public class IOEventBpmnPart {
 	private String workflow;
 	private IOEventType ioEventType;
 	private IOEventGatwayInformation ioeventGatway;
-	private Map<String, String> sourceEvent;
-	private Map<String, String> targetEvent;
+	private Map<String, String> inputEvent;
+	private Map<String, String> outputEvent;
 	private int processCount = 0;
 
 	public IOEventBpmnPart() {
@@ -43,8 +43,8 @@ public class IOEventBpmnPart {
 		this.MethodName = methodName;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
-		this.sourceEvent = this.addSource(ioEvent);
-		this.targetEvent = this.addTarget(ioEvent);
+		this.inputEvent = this.addInput(ioEvent);
+		this.outputEvent = this.addOutput(ioEvent);
 	}
 
 	public String getId() {
@@ -111,20 +111,20 @@ public class IOEventBpmnPart {
 		this.ioeventGatway = ioeventGatway;
 	}
 
-	public Map<String, String> getSourceEvent() {
-		return sourceEvent;
+	public Map<String, String> getInputEvent() {
+		return inputEvent;
 	}
 
-	public void setSourceEvent(Map<String, String> sourceEvent) {
-		this.sourceEvent = sourceEvent;
+	public void setInputEvent(Map<String, String> inputEvent) {
+		this.inputEvent = inputEvent;
 	}
 
-	public Map<String, String> getTargetEvent() {
-		return targetEvent;
+	public Map<String, String> getOutputEvent() {
+		return outputEvent;
 	}
 
-	public void setTargetEvent(Map<String, String> targetEvent) {
-		this.targetEvent = targetEvent;
+	public void setOutputEvent(Map<String, String> outputEvent) {
+		this.outputEvent = outputEvent;
 	}
 
 	public int getProcessCount() {
@@ -135,63 +135,63 @@ public class IOEventBpmnPart {
 		this.processCount = processCount;
 	}
 
-	public Map<String, String> addSource(IOEvent ioEvent) {
+	public Map<String, String> addInput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.put(sourceEvent.value(), sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.put(inputEvent.value(), inputEvent.topic());
 				} else {
-					result.put(sourceEvent.key(), sourceEvent.topic());
+					result.put(inputEvent.key(), inputEvent.topic());
 				}
 
 			}
 		}
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.put(sourceEvent.value(), sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.put(inputEvent.value(), inputEvent.topic());
 				} else {
-					result.put(sourceEvent.key(), sourceEvent.topic());
+					result.put(inputEvent.key(), inputEvent.topic());
 				}
 			}
 		}
 		return result;
 	}
 
-	public Map<String, String> addTarget(IOEvent ioEvent) {
+	public Map<String, String> addOutput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
 		boolean isSuffix = false;
 		String suffix = "";
-		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!targetEvent.suffix().equals("")) {
+		for (OutputEvent outputEvent : ioEvent.output()) {
+			if (!outputEvent.suffix().equals("")) {
 				isSuffix = true;
-				suffix = targetEvent.suffix();
+				suffix = outputEvent.suffix();
 			}
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.put(targetEvent.value(), targetEvent.topic());
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.put(outputEvent.value(), outputEvent.topic());
 				}else {
-					result.put(targetEvent.key(), targetEvent.topic());
+					result.put(outputEvent.key(), outputEvent.topic());
 				}
 			}
 		}
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.put(targetEvent.value(), targetEvent.topic());
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.put(outputEvent.value(), outputEvent.topic());
 				}else {
-					result.put(targetEvent.key(), targetEvent.topic());
+					result.put(outputEvent.key(), outputEvent.topic());
 				}
 			}
 		}
 		if (isSuffix) {
-			for (SourceEvent sourceEvent : ioEvent.source()) {
-				if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-					if (!StringUtils.isBlank(sourceEvent.value())) {
-						result.put(sourceEvent.value() + suffix, sourceEvent.topic());
+			for (InputEvent inputEvent : ioEvent.input()) {
+				if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+					if (!StringUtils.isBlank(inputEvent.value())) {
+						result.put(inputEvent.value() + suffix, inputEvent.topic());
 					} else {
-						result.put(sourceEvent.key() + suffix, sourceEvent.topic());
+						result.put(inputEvent.key() + suffix, inputEvent.topic());
 					}
 
 				}
@@ -203,8 +203,8 @@ public class IOEventBpmnPart {
 	@Override
 	public String toString() {
 		return "IOEventBpmnPart [id=" + id + ", ClassName=" + ClassName + ", MethodName=" + MethodName + ", stepName="
-				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", sourceEvent=" + sourceEvent
-				+ ", targetEvent=" + targetEvent + "]";
+				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", inputEvent=" + inputEvent
+				+ ", outputEvent=" + outputEvent + "]";
 	}
 
 }

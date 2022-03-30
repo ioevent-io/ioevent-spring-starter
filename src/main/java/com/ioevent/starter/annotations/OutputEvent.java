@@ -6,16 +6,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * SourceEvent annotation allows us to specify/define a source event ,
+ * OutputEvent annotation allows us to specify/define a output event ,
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SourceEvent {
-
+public @interface OutputEvent {
+	
 	String value() default "";
 
 	String key() default "";
 
 	String topic() default "";
+
+	String suffix() default "";
 
 }

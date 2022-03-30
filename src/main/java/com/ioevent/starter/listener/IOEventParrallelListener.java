@@ -45,8 +45,8 @@ public class IOEventParrallelListener {
 		Gson gson = new Gson();
 		IOEventParallelEventInformation ioeventParallelEventInformation = gson.fromJson(s,
 				IOEventParallelEventInformation.class);
-		if ((ioeventParallelEventInformation != null) && (sameList(ioeventParallelEventInformation.getSourceRequired(),
-				ioeventParallelEventInformation.getTargetsArrived()))) {
+		if ((ioeventParallelEventInformation != null) && (sameList(ioeventParallelEventInformation.getInputRequired(),
+				ioeventParallelEventInformation.getInputsArrived()))) {
 
 			try {
 				Object beanmObject = ctx.getApplicationContext()
@@ -60,7 +60,7 @@ public class IOEventParrallelListener {
 									.toString(),
 							ioeventParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString())
 									.toString(),
-							ioeventParallelEventInformation.getTargetsArrived().toString(), watch,
+							ioeventParallelEventInformation.getInputsArrived().toString(), watch,
 							(long) ioeventParallelEventInformation.getHeaders()
 									.get(IOEventHeaders.START_INSTANCE_TIME.toString()));
 					IOEventContextHolder.setContext(ioeventRecordInfo);
@@ -74,8 +74,8 @@ public class IOEventParrallelListener {
 			}
 
 		} else {
-			log.info("Parallel Event Source Not Completed, target arrived : "
-					+ ioeventParallelEventInformation.getTargetsArrived());
+			log.info("Parallel Event Input Not Completed, output arrived : "
+					+ ioeventParallelEventInformation.getInputsArrived());
 		}
 
 	}

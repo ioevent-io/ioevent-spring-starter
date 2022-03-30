@@ -6,103 +6,103 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
-import com.ioevent.starter.annotations.SourceEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 
 /**
  * class for @IOEvent annotation gateway information that will be send within
  * the BPMN Parts to the Admin, it contains information of the type of the
- * gateway also the source events and target events of the gateway.
+ * gateway also the input events and output events of the gateway.
  **/
 public class IOEventGatwayInformation {
 
-	private Boolean exclusiveSource;
-	private Boolean parallelSource;
-	private Boolean exclusiveTarget;
-	private Boolean parallelTarget;
-	private Map<String, String> sourceEvent;
-	private Map<String, String> targetEvent;
+	private Boolean exclusiveInput;
+	private Boolean parallelInput;
+	private Boolean exclusiveOutput;
+	private Boolean parallelOutput;
+	private Map<String, String> inputEvent;
+	private Map<String, String> outputEvent;
 
 	public IOEventGatwayInformation() {
 	}
 
-	public IOEventGatwayInformation(Boolean exclusiveSource, Boolean parallelSource, Boolean exclusiveTarget,
-			Boolean parallelTarget, Map<String, String> sourceEvent, Map<String, String> targetEvent) {
-		this.exclusiveSource = exclusiveSource;
-		this.parallelSource = parallelSource;
-		this.exclusiveTarget = exclusiveTarget;
-		this.parallelTarget = parallelTarget;
-		this.sourceEvent = sourceEvent;
-		this.targetEvent = targetEvent;
+	public IOEventGatwayInformation(Boolean exclusiveInput, Boolean parallelInput, Boolean exclusiveOutput,
+			Boolean parallelOutput, Map<String, String> inputEvent, Map<String, String> outputEvent) {
+		this.exclusiveInput = exclusiveInput;
+		this.parallelInput = parallelInput;
+		this.exclusiveOutput = exclusiveOutput;
+		this.parallelOutput = parallelOutput;
+		this.inputEvent = inputEvent;
+		this.outputEvent = outputEvent;
 	}
 
 	public IOEventGatwayInformation(IOEvent ioEvent) {
 
-		this.exclusiveSource = ioEvent.gatewaySource().exclusive();
-		this.parallelSource = ioEvent.gatewaySource().parallel();
-		this.exclusiveTarget = ioEvent.gatewayTarget().exclusive();
-		this.parallelTarget = ioEvent.gatewayTarget().parallel();
-		this.sourceEvent = this.addSource(ioEvent);
-		this.targetEvent = this.addTarget(ioEvent);
+		this.exclusiveInput = ioEvent.gatewayInput().exclusive();
+		this.parallelInput = ioEvent.gatewayInput().parallel();
+		this.exclusiveOutput = ioEvent.gatewayOutput().exclusive();
+		this.parallelOutput = ioEvent.gatewayOutput().parallel();
+		this.inputEvent = this.addInput(ioEvent);
+		this.outputEvent = this.addOutput(ioEvent);
 	}
 
-	public Boolean getExclusiveSource() {
-		return exclusiveSource;
+	public Boolean getExclusiveInput() {
+		return exclusiveInput;
 	}
 
-	public void setExclusiveSource(Boolean exclusiveSource) {
-		this.exclusiveSource = exclusiveSource;
+	public void setExclusiveInput(Boolean exclusiveInput) {
+		this.exclusiveInput = exclusiveInput;
 	}
 
-	public Boolean getParallelSource() {
-		return parallelSource;
+	public Boolean getParallelInput() {
+		return parallelInput;
 	}
 
-	public void setParallelSource(Boolean parallelSource) {
-		this.parallelSource = parallelSource;
+	public void setParallelInput(Boolean parallelInput) {
+		this.parallelInput = parallelInput;
 	}
 
-	public Boolean getExclusiveTarget() {
-		return exclusiveTarget;
+	public Boolean getExclusiveOutput() {
+		return exclusiveOutput;
 	}
 
-	public void setExclusiveTarget(Boolean exclusiveTarget) {
-		this.exclusiveTarget = exclusiveTarget;
+	public void setExclusiveOutput(Boolean exclusiveOutput) {
+		this.exclusiveOutput = exclusiveOutput;
 	}
 
-	public Boolean getParallelTarget() {
-		return parallelTarget;
+	public Boolean getParallelOutput() {
+		return parallelOutput;
 	}
 
-	public void setParallelTarget(Boolean parallelTarget) {
-		this.parallelTarget = parallelTarget;
+	public void setParallelOutput(Boolean parallelOutput) {
+		this.parallelOutput = parallelOutput;
 	}
 
-	public Map<String, String> getSourceEvent() {
-		return sourceEvent;
+	public Map<String, String> getInputEvent() {
+		return inputEvent;
 	}
 
-	public void setSourceEvent(Map<String, String> sourceEvent) {
-		this.sourceEvent = sourceEvent;
+	public void setInputEvent(Map<String, String> inputEvent) {
+		this.inputEvent = inputEvent;
 	}
 
-	public Map<String, String> getTargetEvent() {
-		return targetEvent;
+	public Map<String, String> getOutputEvent() {
+		return outputEvent;
 	}
 
-	public void setTargetEvent(Map<String, String> targetEvent) {
-		this.targetEvent = targetEvent;
+	public void setOutputEvent(Map<String, String> outputEvent) {
+		this.outputEvent = outputEvent;
 	}
 
-	public Map<String, String> addSource(IOEvent ioEvent) {
+	public Map<String, String> addInput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
 
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.put(sourceEvent.value(), sourceEvent.topic());
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.put(inputEvent.value(), inputEvent.topic());
 				} else {
-					result.put(sourceEvent.key(), sourceEvent.topic());
+					result.put(inputEvent.key(), inputEvent.topic());
 				}
 
 			}
@@ -112,15 +112,15 @@ public class IOEventGatwayInformation {
 		return result;
 	}
 
-	public Map<String, String> addTarget(IOEvent ioEvent) {
+	public Map<String, String> addOutput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
 
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.put(targetEvent.value(), targetEvent.topic());
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.put(outputEvent.value(), outputEvent.topic());
 				} else {
-					result.put(targetEvent.key(), targetEvent.topic());
+					result.put(outputEvent.key(), outputEvent.topic());
 				}
 
 			}

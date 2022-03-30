@@ -10,54 +10,53 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import com.ioevent.starter.configuration.postprocessor.BeanMethodPair;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 
-
-
-/** this class has information about parallel event :
- * - ClassName for the class name which include the @IOEvent annotation,
- * - MethodName for the method name which annotated by  the @IOEvent annotation,
- * - sourceRequired for the source event required to validate the parallel event ,
- * - targetsArrived for the target event arrived,
- * - listenerTopic for topic name which the listener is subscribed,
- * - headers for the header's info sent by events
- * */
+/**
+ * this class has information about parallel event : - ClassName for the class
+ * name which include the @IOEvent annotation, - MethodName for the method name
+ * which annotated by the @IOEvent annotation, - InputRequired for the Input
+ * event required to validate the parallel event , - inputsArrived for the
+ * input event arrived, - listenerTopic for topic name which the listener is
+ * subscribed, - headers for the header's info sent by events
+ */
 public class IOEventParallelEventInformation {
 
 	private String value;
-	private List<String> targetsArrived = new ArrayList<>();
-	private Map<String, Object> payloadMap=new HashMap<>();
+	private List<String> inputsArrived = new ArrayList<>();
+	private Map<String, Object> payloadMap = new HashMap<>();
 	private String listenerTopic;
 	private String method;
 	private String className;
-	private List<String> sourceRequired;
+	private List<String> inputRequired;
 	private Map<String, Object> headers = new HashMap<>();
 
 	public IOEventParallelEventInformation() {
 		super();
 	}
-	public IOEventParallelEventInformation(String value, List<String> targetsArrived, Map<String, Object> payloadMap,
-			String listenerTopic, String method, String className, List<String> sourceRequired,
+
+	public IOEventParallelEventInformation(String value, List<String> inputsArrived, Map<String, Object> payloadMap,
+			String listenerTopic, String method, String className, List<String> inputRequired,
 			Map<String, Object> headers) {
 		super();
 		this.value = value;
-		this.targetsArrived = targetsArrived;
+		this.inputsArrived = inputsArrived;
 		this.payloadMap = payloadMap;
 		this.listenerTopic = listenerTopic;
 		this.method = method;
 		this.className = className;
-		this.sourceRequired = sourceRequired;
+		this.inputRequired = inputRequired;
 		this.headers = headers;
 	}
-	
-	public IOEventParallelEventInformation(ConsumerRecord<String, String> consumerRecord, IOEventRecordInfo ioeventRecordInfo,
-			BeanMethodPair pair, List<String> sourceRequired,String appName) {
+
+	public IOEventParallelEventInformation(ConsumerRecord<String, String> consumerRecord,
+			IOEventRecordInfo ioeventRecordInfo, BeanMethodPair pair, List<String> inputRequired, String appName) {
 		super();
 		this.value = consumerRecord.value();
-		this.payloadMap.put(ioeventRecordInfo.getTargetName(),  consumerRecord.value());
-		this.targetsArrived.add(ioeventRecordInfo.getTargetName());
+		this.payloadMap.put(ioeventRecordInfo.getOutputConsumedName(), consumerRecord.value());
+		this.inputsArrived.add(ioeventRecordInfo.getOutputConsumedName());
 		this.listenerTopic = consumerRecord.topic();
 		this.method = pair.getMethod().getName();
 		this.className = pair.getBean().getClass().getName();
-		this.sourceRequired = sourceRequired;
+		this.inputRequired = inputRequired;
 		headers.put("AppName", appName);
 		consumerRecord.headers().forEach(header -> this.headers.put(header.key(), new String(header.value())));
 	}
@@ -70,20 +69,22 @@ public class IOEventParallelEventInformation {
 		this.value = value;
 	}
 
-	public List<String> getTargetsArrived() {
-		return targetsArrived;
+	public List<String> getInputsArrived() {
+		return inputsArrived;
 	}
 
-	public void setTargetsArrived(List<String> targetsArrived) {
-		this.targetsArrived = targetsArrived;
+	public void setInputsArrived(List<String> inputsArrived) {
+		this.inputsArrived = inputsArrived;
 	}
 
 	public Map<String, Object> getPayloadMap() {
 		return payloadMap;
 	}
+
 	public void setPayloadMap(Map<String, Object> payloadMap) {
 		this.payloadMap = payloadMap;
 	}
+
 	public String getListenerTopic() {
 		return listenerTopic;
 	}
@@ -108,12 +109,12 @@ public class IOEventParallelEventInformation {
 		this.className = className;
 	}
 
-	public List<String> getSourceRequired() {
-		return sourceRequired;
+	public List<String> getInputRequired() {
+		return inputRequired;
 	}
 
-	public void setSourceRequired(List<String> sourceRequired) {
-		this.sourceRequired = sourceRequired;
+	public void setInputRequired(List<String> inputRequired) {
+		this.inputRequired = inputRequired;
 	}
 
 	public Map<String, Object> getHeaders() {
@@ -126,9 +127,9 @@ public class IOEventParallelEventInformation {
 
 	@Override
 	public String toString() {
-		return "IOEventParallelEventInformation [value=" + value + ", targetsArrived=" + targetsArrived
+		return "IOEventParallelEventInformation [value=" + value + ", inputsArrived=" + inputsArrived
 				+ ", listenerTopic=" + listenerTopic + ", method=" + method + ", className=" + className
-				+ ", sourceRequired=" + sourceRequired + ", headers=" + headers + "]";
+				+ ", inputRequired=" + inputRequired + ", headers=" + headers + "]";
 	}
 
 }

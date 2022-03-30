@@ -12,7 +12,7 @@ public class BeanMethodPair {
 	private Method method;
 	private IOEvent ioEvent;
 
-	private List<String> sourceEventsArrived = new ArrayList<String>();
+	private List<String> inputEventsArrived = new ArrayList<String>();
 	public BeanMethodPair() {
 	}
 
@@ -47,14 +47,14 @@ public class BeanMethodPair {
 		this.ioEvent = ioEvent;
 	}
 
-	public List<String> getSourceEventsArrived() {
-		return sourceEventsArrived;
+	public List<String> getInputEventsArrived() {
+		return inputEventsArrived;
 	}
-	public void addSourceEventsArrived(String sourceEvent) {
-		this.sourceEventsArrived.add(sourceEvent);
+	public void addInputEventsArrived(String inputEvent) {
+		this.inputEventsArrived.add(inputEvent);
 	}
-	public void setSourceEventsArrived(List<String> sourceEventsArrived) {
-		this.sourceEventsArrived = sourceEventsArrived;
+	public void setInputEventsArrived(List<String> inputEventsArrived) {
+		this.inputEventsArrived = inputEventsArrived;
 	}
 
 	@Override

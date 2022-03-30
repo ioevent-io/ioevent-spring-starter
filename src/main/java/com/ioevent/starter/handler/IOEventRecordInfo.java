@@ -13,7 +13,7 @@ public class IOEventRecordInfo {
 
 	private String workFlowName;
 
-	private String targetName;
+	private String outputConsumedName;
 	private List<Header> headerList;
 
 	private StopWatch watch;
@@ -23,21 +23,21 @@ public class IOEventRecordInfo {
 	public IOEventRecordInfo() {
 	}
 
-	public IOEventRecordInfo(String id, String workFlowName, String targetName, StopWatch watch,
+	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, StopWatch watch,
 			Long instanceStartTime) {
 		this.id = id;
 		this.workFlowName = workFlowName;
-		this.targetName = targetName;
+		this.outputConsumedName = outputConsumedName;
 		this.watch = watch;
 		this.instanceStartTime = instanceStartTime;
 	}
 
-	public IOEventRecordInfo(String id, String workFlowName, String targetName, List<Header> headerList,
+	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, List<Header> headerList,
 			Long instanceStartTime) {
 		super();
 		this.id = id;
 		this.workFlowName = workFlowName;
-		this.targetName = targetName;
+		this.outputConsumedName = outputConsumedName;
 		this.headerList = headerList;
 		this.instanceStartTime = instanceStartTime;
 
@@ -59,12 +59,12 @@ public class IOEventRecordInfo {
 		this.workFlowName = workFlowName;
 	}
 
-	public String getTargetName() {
-		return targetName;
+	public String getOutputConsumedName() {
+		return outputConsumedName;
 	}
 
-	public void setTargetName(String targetName) {
-		this.targetName = targetName;
+	public void setOutputConsumedName(String outputConsumedName) {
+		this.outputConsumedName = outputConsumedName;
 	}
 
 	public List<Header> getHeaderList() {

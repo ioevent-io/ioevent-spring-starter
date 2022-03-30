@@ -29,9 +29,9 @@ import org.springframework.util.concurrent.SettableListenableFuture;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
-import com.ioevent.starter.annotations.SourceEvent;
+import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.annotations.StartEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
@@ -58,19 +58,19 @@ class IOEventStartAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(key = "stepname", startEvent = @StartEvent("process name"), topic = "topic", target = @TargetEvent(key = "target", topic = "topic"))
+	@IOEvent(key = "stepname", startEvent = @StartEvent("process name"), topic = "topic", output = @OutputEvent(key = "output", topic = "topic"))
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(key = "stepname", topic = "topic", startEvent = @StartEvent(key = "process name"), target = @TargetEvent(key = "target"))
+	@IOEvent(key = "stepname", topic = "topic", startEvent = @StartEvent(key = "process name"), output = @OutputEvent(key = "output"))
 	public boolean startAnnotationMethod2() {
 		return true;
 	}
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
+			input = @InputEvent(key = "input", topic = "T"), output = @OutputEvent(key = "output", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
@@ -86,22 +86,22 @@ class IOEventStartAspectTest {
 	@Test
 	void buildStartMessageTest() throws NoSuchMethodException, SecurityException {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		when(ioEventService.getTargetTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("topic");
+		when(ioEventService.getOutputTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("topic");
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
-		Message messageResult = startAspect.buildStartMessage(ioEvent, null,ioEventResponse,"process", "1155", ioEvent.target()[0],
+		Message messageResult = startAspect.buildStartMessage(ioEvent, null,ioEventResponse,"process", "1155", ioEvent.output()[0],
 				(long) 123546);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader("IOEventHeaders.STEP_NAME.toString()", "stepname").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("Start"))).setHeader(IOEventHeaders.TARGET_EVENT.toString(), "target")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start"))).setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "output")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name").setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		Method method2 = this.getClass().getMethod("startAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = startAspect.buildStartMessage(ioEvent2,null, ioEventResponse,"process", "1155", ioEvent2.target()[0],
+		Message messageResult2 = startAspect.buildStartMessage(ioEvent2,null, ioEventResponse,"process", "1155", ioEvent2.output()[0],
 				(long) 123546);
 		assertEquals(message.getHeaders().get("kafka_topic"), messageResult2.getHeaders().get("kafka_topic"));
 
@@ -118,7 +118,7 @@ class IOEventStartAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "process","target", "payload", watch);
+		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "process","output", "payload", watch);
 
 		assertThatNoException();
 
@@ -132,7 +132,7 @@ class IOEventStartAspectTest {
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
 	    ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 	    when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.target()));
+		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.output()));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 

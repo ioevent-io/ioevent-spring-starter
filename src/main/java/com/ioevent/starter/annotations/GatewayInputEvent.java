@@ -6,17 +6,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * GatewayTargetEvent annotation allows us to specify the targets of the task,
+ * GatewayInputEvent annotation allows us to specify the inputs of the task,
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GatewayTargetEvent {
+public @interface GatewayInputEvent {
 
 	boolean parallel() default false;
 
 	boolean exclusive() default true;
 
-	TargetEvent[] target() default {};
+	InputEvent[] input() default {};
 
 	String topic() default "";
 

@@ -31,8 +31,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ioevent.starter.annotations.EndEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
-import com.ioevent.starter.annotations.SourceEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
@@ -63,7 +63,7 @@ class IOEventEndAspectTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "terminate the event", topic = "Topic", //
-			source = @SourceEvent(key = "previous Task"), //
+			input = @InputEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name")//
 	)
 	public boolean endAnnotationMethod() {
@@ -71,7 +71,7 @@ class IOEventEndAspectTest {
 	}
 
 	/** method to test annotations **/
-	@IOEvent(key = "stepname",source = @SourceEvent(key = "previous Task"), //
+	@IOEvent(key = "stepname",input = @InputEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name"))
 	public boolean endAnnotationMethod2() {
 		return true;
@@ -79,7 +79,7 @@ class IOEventEndAspectTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
+			input = @InputEvent(key = "input", topic = "T"), output = @OutputEvent(key = "output", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
@@ -96,7 +96,7 @@ class IOEventEndAspectTest {
 	@Test
 	void buildEventMessageTest() throws NoSuchMethodException, SecurityException {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		when(ioEventService.getTargetTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("");
+		when(ioEventService.getOutputTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("");
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
 		
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
@@ -107,8 +107,8 @@ class IOEventEndAspectTest {
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "terminate the event").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "END").setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "END").setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 
 		assertEquals(message.getHeaders().get(IOEventHeaders.STEP_NAME.toString()), messageResult.getHeaders().get(IOEventHeaders.STEP_NAME.toString()));
@@ -149,7 +149,7 @@ class IOEventEndAspectTest {
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		when(ioeventRecordInfo.getWatch()).thenReturn(watch);
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.target()));
+		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.output()));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 

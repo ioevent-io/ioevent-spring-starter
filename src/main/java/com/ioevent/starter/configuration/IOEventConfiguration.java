@@ -100,8 +100,8 @@ public class IOEventConfiguration {
 					} else {
 						updatedValue = currentValue;
 					}
-					List<String> updatedTargetList = Stream
-							.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
+					List<String> updatedOutputList = Stream
+							.of(currentValue.getInputsArrived(), updatedValue.getInputsArrived())
 							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
 					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
@@ -109,7 +109,7 @@ public class IOEventConfiguration {
 					Map<String, Object> updatedPayload = Stream.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					updatedValue.setTargetsArrived(updatedTargetList);
+					updatedValue.setInputsArrived(updatedOutputList);
 					updatedValue.setHeaders(updatedHeaders);
 					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);

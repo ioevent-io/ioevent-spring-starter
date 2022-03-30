@@ -30,12 +30,12 @@ import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ioevent.starter.annotations.EndEvent;
-import com.ioevent.starter.annotations.GatewayTargetEvent;
+import com.ioevent.starter.annotations.GatewayOutputEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
-import com.ioevent.starter.annotations.SourceEvent;
+import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.annotations.StartEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
@@ -67,13 +67,13 @@ class IOEventTransitionAspectTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "terminate the event", topic = "Topic", startEvent = @StartEvent(key = "process name")//
-			, target = @TargetEvent(key = "target"))
+			, output = @OutputEvent(key = "output"))
 	public boolean startAnnotationMethod() {
 		return true;
 	}
 
 	/** method to test annotations **/
-	@IOEvent(key = "stepname", source = @SourceEvent(key = "previous Task"), //
+	@IOEvent(key = "stepname", input = @InputEvent(key = "previous Task"), //
 			endEvent = @EndEvent(key = "process name"))
 	public boolean endAnnotationMethod() {
 		return true;
@@ -81,35 +81,35 @@ class IOEventTransitionAspectTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "GeneralTopic", //
-			source = @SourceEvent(key = "source", topic = "topic"), target = @TargetEvent(key = "target", topic = "topic"))
+			input = @InputEvent(key = "input", topic = "topic"), output = @OutputEvent(key = "output", topic = "topic"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
 
 	@IOEvent(key = "parallel gatway task", topic = "topic", //
-			source = @SourceEvent(key = "sourceEvent"), //
-			gatewayTarget = @GatewayTargetEvent(parallel = true, target = { //
-					@TargetEvent(key = "Target1"), //
-					@TargetEvent(key = "Target2")//
+			input = @InputEvent(key = "inputEvent"), //
+			gatewayOutput = @GatewayOutputEvent(parallel = true, output = { //
+					@OutputEvent(key = "Output1"), //
+					@OutputEvent(key = "Output2")//
 			}))
 	public boolean parralelTaskAnnotationMethod() {
 		return true;
 	}
 
 	@IOEvent(key  = "exclusive gatway task", topic = "topic", //
-			source = @SourceEvent(key = "sourceEvent"), //
-			gatewayTarget = @GatewayTargetEvent(exclusive = true, target = { //
-					@TargetEvent(key = "Target2"), //
-					@TargetEvent(key = "Target1")//
+			input = @InputEvent(key = "inputEvent"), //
+			gatewayOutput = @GatewayOutputEvent(exclusive = true, output = { //
+					@OutputEvent(key = "Output2"), //
+					@OutputEvent(key = "Output1")//
 			}))
 	public boolean exclusiveTaskAnnotationMethod() {
 		return true;
 	}
 
 	@IOEvent(key = "add suffix task", topic = "topic", //
-			source = { @SourceEvent(key = "previous target"), //
+			input = { @InputEvent(key = "previous output"), //
 			}, //
-			target = @TargetEvent(suffix = "_suffixAdded"))
+			output = @OutputEvent(suffix = "_suffixAdded"))
 	public boolean suffixTaskAnnotation() {
 		return true;
 	}
@@ -147,15 +147,15 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Method method = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordTarget", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
 		Message messageResult = transitionAspect.buildTransitionTaskMessage(ioEvent, null, ioEventResponse,
-				ioEvent.target()[0], ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
+				ioEvent.output()[0], ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.TASK.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "target")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "output")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 
@@ -179,21 +179,21 @@ class IOEventTransitionAspectTest {
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		when(ioEventService.getSourceEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.source()[0]);
+		when(ioEventService.getInputEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.input()[0]);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "previous targe", new StopWatch(),1000L);
-		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent, null, ioEventResponse, ioEvent.target()[0],
+		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent, null, ioEventResponse, ioEvent.output()[0],
 				ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.TASK.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), ioeventRecordInfo.getTargetName() + "_suffixAdded")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioeventRecordInfo.getOutputConsumedName() + "_suffixAdded")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 
-		assertEquals(message.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()),
-				messageResult.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()));
+		assertEquals(message.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()),
+				messageResult.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()));
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		/*
@@ -208,25 +208,25 @@ class IOEventTransitionAspectTest {
 	@Test
 	void buildTransitionGatewayParallelMessageTest() throws NoSuchMethodException, SecurityException {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		when(ioEventService.getTargetKey(Mockito.any())).thenReturn("Target1");
+		when(ioEventService.getOutputKey(Mockito.any())).thenReturn("Output1");
 		Method method = this.getClass().getMethod("parralelTaskAnnotationMethod", null);
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordTarget", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
 		Message messageResult = transitionAspect.buildTransitionGatewayParallelMessage(ioEvent, null, ioEventResponse,
-				ioEvent.gatewayTarget().target()[0], ioeventRecordInfo, (long) 123546,headersMap);
+				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "Target1")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "Output1")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 
-		assertEquals(message.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()),
-				messageResult.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()));
+		assertEquals(message.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()),
+				messageResult.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()));
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		/*
@@ -245,21 +245,21 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Method method = this.getClass().getMethod("exclusiveTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordTarget", new StopWatch(),1000L);
-		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target2");		
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
+		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output2");		
 		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent, null, ioEventResponse,
-				ioEvent.gatewayTarget().target()[0], ioeventRecordInfo, (long) 123546,headersMap);
+				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), "Target2")
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "Output2")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
 				.setHeader(IOEventHeaders.START_TIME.toString(), (long) 123546).build();
 		
-		assertEquals(message.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()),
-				messageResult.getHeaders().get(IOEventHeaders.TARGET_EVENT.toString()));
+		assertEquals(message.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()),
+				messageResult.getHeaders().get(IOEventHeaders.OUTPUT_EVENT.toString()));
 		assertEquals(message.getHeaders().get("kafka_messageKey"), messageResult.getHeaders().get("kafka_messageKey"));
 
 		/*
@@ -280,9 +280,9 @@ class IOEventTransitionAspectTest {
 		watch.start("IOEvent annotation Task Aspect");
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "target", watch,1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "output", watch,1000L);
 
-		transitionAspect.prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, "target", watch, "payload",
+		transitionAspect.prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, "output", watch, "payload",
 				IOEventType.TASK);
 
 		assertThatNoException();
@@ -297,12 +297,12 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.target()));
-		when(ioEventService.getTargets(ioEvent2)).thenReturn(Arrays.asList(ioEvent2.target()));
-		when(ioEventService.getTargetKey(ioEvent.target()[0])).thenReturn("target");		
-		when(ioEventService.getSourceEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.source()[0]);
+		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.output()));
+		when(ioEventService.getOutputs(ioEvent2)).thenReturn(Arrays.asList(ioEvent2.output()));
+		when(ioEventService.getOutputKey(ioEvent.output()[0])).thenReturn("output");		
+		when(ioEventService.getInputEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.input()[0]);
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous target",
+		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
 				new StopWatch(),1000L);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
@@ -310,12 +310,12 @@ class IOEventTransitionAspectTest {
 		watch.start("IOEvent annotation Start Aspect");
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
-		String simpleTasktarget = transitionAspect.simpleEventSendProcess(ioEvent, null, ioEventResponse, "", ioeventRecordInfo,
+		String simpleTaskoutput = transitionAspect.simpleEventSendProcess(ioEvent, null, ioEventResponse, "", ioeventRecordInfo,
 				IOEventType.TASK);
-		String suffixTasktarget = transitionAspect.simpleEventSendProcess(ioEvent2, null, ioEventResponse, "",
+		String suffixTaskoutput = transitionAspect.simpleEventSendProcess(ioEvent2, null, ioEventResponse, "",
 				ioeventRecordInfoForSuffix, IOEventType.TASK);
-		assertEquals("target,", simpleTasktarget);
-		assertEquals("previous target_suffixAdded", suffixTasktarget);
+		assertEquals("output,", simpleTaskoutput);
+		assertEquals("previous output_suffixAdded", suffixTaskoutput);
 
 	}
 
@@ -327,19 +327,19 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayTarget().target()));
+		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayOutput().output()));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target1");
-		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[1])).thenReturn("Target2");
-		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous target",
+		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output1");
+		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[1])).thenReturn("Output2");
+		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
 				new StopWatch(),1000L);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTasktarget = transitionAspect.parallelEventSendProcess(ioEvent, null, ioEventResponse, "",
+		String simpleTaskoutput = transitionAspect.parallelEventSendProcess(ioEvent, null, ioEventResponse, "",
 				ioeventRecordInfo);
-		assertEquals("Target1,Target2,", simpleTasktarget);
+		assertEquals("Output1,Output2,", simpleTaskoutput);
 
 	}
 
@@ -350,18 +350,18 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayTarget().target()));
-		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[0])).thenReturn("Target1");		
-		when(ioEventService.getTargetKey(ioEvent.gatewayTarget().target()[1])).thenReturn("Target2");
-		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous target",
+		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayOutput().output()));
+		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output1");		
+		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[1])).thenReturn("Output2");
+		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
 				new StopWatch(),1000L);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTasktarget = transitionAspect.exclusiveEventSendProcess(ioEvent, null,
-				new IOResponse<String>("Target2", "payload"), "", ioeventRecordInfo);
-		assertEquals("Target2,", simpleTasktarget);
+		String simpleTaskoutput = transitionAspect.exclusiveEventSendProcess(ioEvent, null,
+				new IOResponse<String>("Output2", "payload"), "", ioeventRecordInfo);
+		assertEquals("Output2,", simpleTaskoutput);
 
 	}
 
@@ -382,14 +382,14 @@ class IOEventTransitionAspectTest {
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		when(ioeventRecordInfo.getWatch()).thenReturn(watch);
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		when(ioEventService.getTargets(ioEventSimpleTask)).thenReturn(Arrays.asList(ioEventSimpleTask.target()));
+		when(ioEventService.getOutputs(ioEventSimpleTask)).thenReturn(Arrays.asList(ioEventSimpleTask.output()));
 		when(ioEventService.checkTaskType(ioEventSimpleTask)).thenReturn(IOEventType.TASK);
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 
 		transitionAspect.transitionAspect(joinPoint, ioEventSimpleTask, "payload");
 		transitionAspect.transitionAspect(joinPoint, ioEventExclusive,
-				new IOResponse<String>("Target2", "payload"));
+				new IOResponse<String>("Output2", "payload"));
 		transitionAspect.transitionAspect(joinPoint, ioEventParallel, "payload");
 		transitionAspect.transitionAspect(joinPoint, ioEventEnd, "payload");
 

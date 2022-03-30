@@ -86,8 +86,8 @@ public class RecordsHandler {
 	/**
 	 * method called when the listener consume event , the method scan the header
 	 * from consumer records and create ioeventRecordInfo from it , check if the
-	 * target of the event equals to our methods source , if our method annotation
-	 * has parallel gateway :check if the list of source are all arrived then send
+	 * output of the event equals to our methods Input , if our method annotation
+	 * has parallel gateway :check if the list of Input are all arrived then send
 	 * ioeventRecordInfo to aspect and call doinvoke(), else send ioeventRecordsInfo
 	 * to aspect and call doinvoke()
 	 **/
@@ -99,11 +99,11 @@ public class RecordsHandler {
 			IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
 			for (BeanMethodPair pair : beanMethodPairs) {
 
-				for (String SourceName : ioEventService.getSourceNames(pair.getIoEvent())) {
+				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
 
-					if (SourceName.equals(ioeventRecordInfo.getTargetName())) {
+					if (InputName.equals(ioeventRecordInfo.getOutputConsumedName())) {
 						IOEventContextHolder.setContext(ioeventRecordInfo);
-						if (pair.getIoEvent().gatewaySource().parallel()) {
+						if (pair.getIoEvent().gatewayInput().parallel()) {
 
 							parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
 
@@ -127,10 +127,10 @@ public class RecordsHandler {
 	public void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			IOEventRecordInfo ioeventRecordInfo) {
 		IOEventParallelEventInformation parallelEventInfo = new IOEventParallelEventInformation(consumerRecord,
-				ioeventRecordInfo, pair, ioEventService.getSourceNames(pair.getIoEvent()), appName);
+				ioeventRecordInfo, pair, ioEventService.getInputNames(pair.getIoEvent()), appName);
 		sendParallelInfo(parallelEventInfo);
 		log.info("IOEventINFO : " + parallelEventInfo);
-		log.info("parallel event arrived : " + ioeventRecordInfo.getTargetName());
+		log.info("parallel event arrived : " + ioeventRecordInfo.getOutputConsumedName());
 
 	}
 
@@ -141,7 +141,7 @@ public class RecordsHandler {
 				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
-								+ parallelEventInfo.getSourceRequired())
+								+ parallelEventInfo.getInputRequired())
 				.build();
 		kafkaTemplate.send(message);
 		kafkaTemplate.flush();
@@ -190,14 +190,14 @@ public class RecordsHandler {
 		List<Integer> payloadIndex = getIOPayloadIndexlist(method);
 		for (int i = 0; i < payloadIndex.size(); i++) {
 			if (payloadIndex.get(i) >= 0) {
-				String payloadSourceName = parallelEventConsumed.getSourceRequired().get(payloadIndex.get(i));
-				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName),
+				String payloadInputName = parallelEventConsumed.getInputRequired().get(payloadIndex.get(i));
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 						parameterTypes[i]));
 			} else if (payloadIndex.get(i) == -1) {
 				paramList.add(parallelEventConsumed.getHeaders());
 			} else {
-				String payloadSourceName = parallelEventConsumed.getSourceRequired().get(0);
-				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadSourceName),
+				String payloadInputName = parallelEventConsumed.getInputRequired().get(0);
+				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 						parameterTypes[i]));
 			}
 		}
@@ -272,8 +272,8 @@ public class RecordsHandler {
 				.filter(header -> !header.key().equals("spring_json_header_types")).collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
-			if (header.key().equals(IOEventHeaders.TARGET_EVENT.toString())) {
-				ioeventRecordInfo.setTargetName(new String(header.value()));
+			if (header.key().equals(IOEventHeaders.OUTPUT_EVENT.toString())) {
+				ioeventRecordInfo.setOutputConsumedName(new String(header.value()));
 			} else if (header.key().equals(IOEventHeaders.CORRELATION_ID.toString())) {
 				ioeventRecordInfo.setId(new String(header.value()));
 				watch.start(new String(header.value()));

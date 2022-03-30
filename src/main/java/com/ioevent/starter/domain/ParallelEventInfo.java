@@ -5,19 +5,19 @@ import java.util.List;
 /**
  * class which define the parallel event model information :
  *  - id for the ID of the task,
- *  - targets for the list of targets of the task,
+ *  - outputs for the list of outputs of the task,
  */
 public class ParallelEventInfo {
 	private String id;
-	private List<String> targets;
+	private List<String> outputs;
 
 	public ParallelEventInfo() {
 		super();
 	}
 
-	public ParallelEventInfo(String id, List<String> targets) {
+	public ParallelEventInfo(String id, List<String> outputs) {
 		this.id = id;
-		this.targets = targets;
+		this.outputs = outputs;
 	}
 
 	public String getId() {
@@ -28,17 +28,17 @@ public class ParallelEventInfo {
 		this.id = id;
 	}
 
-	public List<String> getTargets() {
-		return targets;
+	public List<String> getOutputs() {
+		return outputs;
 	}
 
-	public void setTargets(List<String> targets) {
-		this.targets = targets;
+	public void setOutputs(List<String> outputs) {
+		this.outputs = outputs;
 	}
 
 	@Override
 	public String toString() {
-		return "CustomEvent [id=" + id + ", targets=" + targets + "]";
+		return "CustomEvent [id=" + id + ", outputs=" + outputs + "]";
 	}
 
 }

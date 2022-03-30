@@ -11,8 +11,8 @@ public class EventLogger {
 	private String correlationId;
 	private String workflow;
 	private String stepName;
-	private String sourceEvent;
-	private String targetEvent;
+	private String inputEvent;
+	private String outputEvent;
 	private String eventType;
 	private Object payload;
 	private String startTime;
@@ -23,24 +23,24 @@ public class EventLogger {
 		super();
 	}
 
-	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String inputEvent, String outputEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
 		this.stepName = stepName;
-		this.sourceEvent = sourceEvent;
-		this.targetEvent = targetEvent;
+		this.inputEvent = inputEvent;
+		this.outputEvent = outputEvent;
 		this.eventType = eventType;
 		this.payload = payload;
 	} 
 
-	public EventLogger(String correlationId, String workflow, String stepName, String sourceEvent, String targetEvent,
+	public EventLogger(String correlationId, String workflow, String stepName, String inputEvent, String outputEvent,
 			String eventType, Object payload, String startTime, String endTime, Long duration) {
 		this.correlationId = correlationId;
 		this.workflow = workflow;
 		this.stepName = stepName;
-		this.sourceEvent = sourceEvent;
-		this.targetEvent = targetEvent;
+		this.inputEvent = inputEvent;
+		this.outputEvent = outputEvent;
 		this.eventType = eventType;
 		this.payload = payload;
 		this.startTime = startTime;
@@ -72,20 +72,20 @@ public class EventLogger {
 		this.stepName = stepName;
 	}
 
-	public String getSourceEvent() {
-		return sourceEvent;
+	public String getInputEvent() {
+		return inputEvent;
 	}
 
-	public void setSourceEvent(String sourceEvent) {
-		this.sourceEvent = sourceEvent;
+	public void setInputEvent(String inputEvent) {
+		this.inputEvent = inputEvent;
 	}
 
-	public String getTargetEvent() {
-		return targetEvent;
+	public String getOutputEvent() {
+		return outputEvent;
 	}
 
-	public void setTargetEvent(String targetEvent) {
-		this.targetEvent = targetEvent;
+	public void setOutputEvent(String outputEvent) {
+		this.outputEvent = outputEvent;
 	}
 
 	public String getEventType() {
@@ -150,13 +150,13 @@ public class EventLogger {
 		
 		return date.getTime();
 	}
-	public void loggerSetting(String id, String workflow, String stepName, String string, String targetEvent,
+	public void loggerSetting(String id, String workflow, String stepName, String string, String outputEvent,
 			String eventType, Object payload) {
 		this.correlationId = id;
 		this.workflow = workflow;
 		this.stepName=stepName;
-		this.sourceEvent=string;
-		this.targetEvent=targetEvent;
+		this.inputEvent=string;
+		this.outputEvent=outputEvent;
 		this.eventType=eventType;
 		this.payload=payload;
 	}

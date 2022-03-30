@@ -21,9 +21,9 @@ import org.mockito.Spy;
 
 import com.ioevent.starter.annotations.EndEvent;
 import com.ioevent.starter.annotations.IOEvent;
-import com.ioevent.starter.annotations.SourceEvent;
+import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.annotations.StartEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
@@ -46,7 +46,7 @@ class IOEventBpmnPostProcessorTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
+			input = @InputEvent(key = "input", topic = "T"), output = @OutputEvent(key = "output", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}

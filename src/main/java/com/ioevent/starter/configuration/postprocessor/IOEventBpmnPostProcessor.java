@@ -90,7 +90,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 				if (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
 
-					for (String topicName : ioEventService.getSourceTopic(ioEvent, ioFlow)) {
+					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
 							synchronized (method) {
 								Thread listenerThread = new Thread() {

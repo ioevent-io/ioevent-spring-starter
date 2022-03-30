@@ -71,8 +71,8 @@ public class IOEventEndAspect {
 			ioeventRecordInfo.setWorkFlowName(
 					ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 			IOResponse<Object> payload = ioEventService.getpayload(joinPoint, returnObject);
-			String target = "END";
-			Message<Object> message = this.buildEventMessage(ioEvent, ioFlow, payload, target, ioeventRecordInfo,
+			String output = "END";
+			Message<Object> message = this.buildEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
 					ioeventRecordInfo.getStartTime(), headers);
 			kafkaTemplate.send(message);
 			prepareAndDisplayEventLogger(eventLogger, ioEvent, payload.getBody(), watch, ioeventRecordInfo);
@@ -88,24 +88,24 @@ public class IOEventEndAspect {
 	 *                          information,
 	 * @param payload           for the payload of the event,
 	 * @param processName       for the process name
-	 * @param targetEvent       for the target Event where the event will send ,
+	 * @param outputEvent       for the output Event where the event will send ,
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @param startTime         for the start time of the event,
 	 * @param headers
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildEventMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload,
-			String targetEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, Map<String, Object> headers) {
-		String topicName = ioEventService.getTargetTopicName(ioEvent, ioFlow, "");
+			String outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, Map<String, Object> headers) {
+		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
-				.setHeader(IOEventHeaders.TARGET_EVENT.toString(), targetEvent)
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
-				.setHeader(IOEventHeaders.SOURCE.toString(), ioEventService.getSourceNames(ioEvent))
+				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
@@ -128,7 +128,7 @@ public class IOEventEndAspect {
 
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
-				ioeventRecordInfo.getTargetName(), "__", "End", payload);
+				ioeventRecordInfo.getOutputConsumedName(), "__", "End", payload);
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);

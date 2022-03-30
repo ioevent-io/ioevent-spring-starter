@@ -12,13 +12,13 @@ class IOEventContextHolderTest {
 
 	@Test
 	void ioeventContextTest() {
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "output", new StopWatch(),1000L);
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		Assert.assertEquals(ioeventRecordInfo, IOEventContextHolder.getContext());
 	}
 	@Test
 	void ioeventContextUnloadTest() {
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "target", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("object stored in thread local", "name", "output", new StopWatch(),1000L);
 		IOEventContextHolder.setContext(ioeventRecordInfo);
 		Assert.assertEquals(ioeventRecordInfo, IOEventContextHolder.getContext());
 		IOEventContextHolder.unload();
