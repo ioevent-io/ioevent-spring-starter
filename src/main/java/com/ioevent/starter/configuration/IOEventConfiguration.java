@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +38,6 @@ import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
-import com.ioevent.starter.configuration.eureka.EurekaConfig;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProcessor;
@@ -48,6 +49,7 @@ import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.listener.IOEventParrallelListener;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
+import com.ioevent.starter.service.IOEventRegistryService;
 import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.TopicServices;
 
@@ -63,8 +65,9 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableKafkaStreams
+@EnableScheduling
 @EnableAsync
-@Import({ KafkaConfig.class, EurekaConfig.class })
+@Import({ KafkaConfig.class})
 @Service
 @RequiredArgsConstructor
 public class IOEventConfiguration {
@@ -217,4 +220,13 @@ public class IOEventConfiguration {
 	public IOEventService IOEventService() {
 		return new IOEventService();
 	}
+	@Bean
+	public IOEventRegistryService ioeventRegistryService() {
+		return new IOEventRegistryService();
+	}
+	@Bean("instanceID")
+	public UUID instanceID() {
+		return UUID.randomUUID();
+	}
+	
 }

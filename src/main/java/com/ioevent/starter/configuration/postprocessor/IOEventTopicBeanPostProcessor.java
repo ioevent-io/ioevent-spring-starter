@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.BeansException;
@@ -193,7 +193,6 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	 */
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-		// TODO Auto-generated method stub
 
 	}
 }

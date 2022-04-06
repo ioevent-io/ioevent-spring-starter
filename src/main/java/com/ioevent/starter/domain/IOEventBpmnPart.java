@@ -3,7 +3,7 @@ package com.ioevent.starter.domain;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.InputEvent;
@@ -20,6 +20,7 @@ import com.ioevent.starter.annotations.OutputEvent;
 public class IOEventBpmnPart {
 	private String id;
 	private String apiKey;
+	private String ioAppName;
 	private String ClassName;
 	private String MethodName;
 	private String stepName;
@@ -33,10 +34,11 @@ public class IOEventBpmnPart {
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String workflow, IOEventType ioEventType,
-			String stepName, String className, String methodName) {
+	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String ioAppName, String workflow,
+			IOEventType ioEventType, String stepName, String className, String methodName) {
 		this.id = id;
 		this.apiKey = apiKey;
+		this.ioAppName = ioAppName;
 		this.workflow = workflow;
 		this.ioEventType = ioEventType;
 		this.ClassName = className;
@@ -61,6 +63,14 @@ public class IOEventBpmnPart {
 
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
+	}
+
+	public String getIoAppName() {
+		return ioAppName;
+	}
+
+	public void setIoAppName(String ioAppName) {
+		this.ioAppName = ioAppName;
 	}
 
 	public String getClassName() {
@@ -137,22 +147,22 @@ public class IOEventBpmnPart {
 
 	public Map<String, String> addInput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (InputEvent inputEvent : ioEvent.input()) {
-			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
-				if (!StringUtils.isBlank(inputEvent.value())) {
-					result.put(inputEvent.value(), inputEvent.topic());
+		for (InputEvent input : ioEvent.input()) {
+			if (!StringUtils.isBlank(input.key() + input.value())) {
+				if (!StringUtils.isBlank(input.value())) {
+					result.put(input.value(), input.topic());
 				} else {
-					result.put(inputEvent.key(), inputEvent.topic());
+					result.put(input.key(), input.topic());
 				}
 
 			}
 		}
-		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
-			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
-				if (!StringUtils.isBlank(inputEvent.value())) {
-					result.put(inputEvent.value(), inputEvent.topic());
+		for (InputEvent input : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(input.key() + input.value())) {
+				if (!StringUtils.isBlank(input.value())) {
+					result.put(input.value(), input.topic());
 				} else {
-					result.put(inputEvent.key(), inputEvent.topic());
+					result.put(input.key(), input.topic());
 				}
 			}
 		}
@@ -163,35 +173,35 @@ public class IOEventBpmnPart {
 		Map<String, String> result = new HashMap<String, String>();
 		boolean isSuffix = false;
 		String suffix = "";
-		for (OutputEvent outputEvent : ioEvent.output()) {
-			if (!outputEvent.suffix().equals("")) {
+		for (OutputEvent output : ioEvent.output()) {
+			if (!output.suffix().equals("")) {
 				isSuffix = true;
-				suffix = outputEvent.suffix();
+				suffix = output.suffix();
 			}
-			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
-				if (!StringUtils.isBlank(outputEvent.value())) {
-					result.put(outputEvent.value(), outputEvent.topic());
-				}else {
-					result.put(outputEvent.key(), outputEvent.topic());
+			if (!StringUtils.isBlank(output.key() + output.value())) {
+				if (!StringUtils.isBlank(output.value())) {
+					result.put(output.value(), output.topic());
+				} else {
+					result.put(output.key(), output.topic());
 				}
 			}
 		}
-		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
-			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
-				if (!StringUtils.isBlank(outputEvent.value())) {
-					result.put(outputEvent.value(), outputEvent.topic());
-				}else {
-					result.put(outputEvent.key(), outputEvent.topic());
+		for (OutputEvent output : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(output.key() + output.value())) {
+				if (!StringUtils.isBlank(output.value())) {
+					result.put(output.value(), output.topic());
+				} else {
+					result.put(output.key(), output.topic());
 				}
 			}
 		}
 		if (isSuffix) {
-			for (InputEvent inputEvent : ioEvent.input()) {
-				if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
-					if (!StringUtils.isBlank(inputEvent.value())) {
-						result.put(inputEvent.value() + suffix, inputEvent.topic());
+			for (InputEvent input : ioEvent.input()) {
+				if (!StringUtils.isBlank(input.key() + input.value())) {
+					if (!StringUtils.isBlank(input.value())) {
+						result.put(input.value() + suffix, input.topic());
 					} else {
-						result.put(inputEvent.key() + suffix, inputEvent.topic());
+						result.put(input.key() + suffix, input.topic());
 					}
 
 				}
@@ -202,9 +212,10 @@ public class IOEventBpmnPart {
 
 	@Override
 	public String toString() {
-		return "IOEventBpmnPart [id=" + id + ", ClassName=" + ClassName + ", MethodName=" + MethodName + ", stepName="
-				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", inputEvent=" + inputEvent
-				+ ", outputEvent=" + outputEvent + "]";
+		return "IOEventBpmnPart [id=" + id + ", apiKey=" + apiKey + ", ioAppName=" + ioAppName + ", ClassName="
+				+ ClassName + ", MethodName=" + MethodName + ", stepName=" + stepName + ", workflow=" + workflow
+				+ ", ioEventType=" + ioEventType + ", ioeventGatway=" + ioeventGatway + ", inputEvent=" + inputEvent
+				+ ", outputEvent=" + outputEvent + ", processCount=" + processCount + "]";
 	}
 
 }

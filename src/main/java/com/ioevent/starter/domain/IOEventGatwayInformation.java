@@ -3,7 +3,7 @@ package com.ioevent.starter.domain;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.InputEvent;
@@ -95,14 +95,14 @@ public class IOEventGatwayInformation {
 	}
 
 	public Map<String, String> addInput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
-		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
-			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+		Map<String, String> result = new HashMap<>();
+		for (InputEvent input : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(input.key() + input.value())) {
 
-				if (!StringUtils.isBlank(inputEvent.value())) {
-					result.put(inputEvent.value(), inputEvent.topic());
+				if (!StringUtils.isBlank(input.value())) {
+					result.put(input.value(), input.topic());
 				} else {
-					result.put(inputEvent.key(), inputEvent.topic());
+					result.put(input.key(), input.topic());
 				}
 
 			}
@@ -113,14 +113,14 @@ public class IOEventGatwayInformation {
 	}
 
 	public Map<String, String> addOutput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
-		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
-			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+		Map<String, String> result = new HashMap<>();
+		for (OutputEvent output : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(output.key() + output.value())) {
 
-				if (!StringUtils.isBlank(outputEvent.value())) {
-					result.put(outputEvent.value(), outputEvent.topic());
+				if (!StringUtils.isBlank(output.value())) {
+					result.put(output.value(), output.topic());
 				} else {
-					result.put(outputEvent.key(), outputEvent.topic());
+					result.put(output.key(), output.topic());
 				}
 
 			}

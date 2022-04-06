@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostProcessors {
+
+	@Value("${spring.application.name}")
+	private String appName;
 
 	@Autowired
 	private IOEventProperties iOEventProperties;
@@ -81,7 +85,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	@Override
 	public void process(Object bean, String beanName) throws Throwable {
 		IOFlow ioFlow = bean.getClass().getAnnotation(IOFlow.class);
-		addApikey(apiKeys, ioFlow,iOEventProperties);
+		addApikey(apiKeys, ioFlow, iOEventProperties);
 		for (Method method : bean.getClass().getMethods()) {
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
@@ -121,7 +125,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	public void addApikey(Set<String> apiKeys, IOFlow ioFlow, IOEventProperties iOEventProperties) {
-		apiKeys.add(iOEventProperties.getApikey()) ;
+		apiKeys.add(iOEventProperties.getApikey());
 		if (!Objects.isNull(ioFlow)) {
 			if (StringUtils.isNotBlank(ioFlow.apiKey())) {
 				apiKeys.add(ioFlow.apiKey());
@@ -166,8 +170,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			String methodName) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		return new IOEventBpmnPart(ioEvent, partID, apiKey, processName, ioEventService.getIOEventType(ioEvent),
-				ioEvent.key(), className, methodName);
+		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), className, methodName);
 
 	}
 

@@ -18,13 +18,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.ioevent.starter.annotations.EndEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.InputEvent;
-import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.annotations.OutputEvent;
-import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
+import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.IOEventType;
@@ -32,6 +32,8 @@ import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.service.IOEventService;
 
 class IOEventBpmnPostProcessorTest {
+	@Value("${spring.application.name}")
+	private String appName;
 	@InjectMocks
 	IOEventBpmnPostProcessor ioeventBpmnPostProcessor = new IOEventBpmnPostProcessor();
 	@Mock
@@ -84,7 +86,7 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(),"", "startkey", IOEventType.START,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -103,7 +105,7 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(),"", "endkey", IOEventType.END,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
@@ -121,7 +123,7 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(),"", "", IOEventType.TASK,
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
 				"test annotation", "testClass", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
