@@ -61,8 +61,8 @@ public class IOEventParrallelListener {
 							ioeventParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString())
 									.toString(),
 							ioeventParallelEventInformation.getInputsArrived().toString(), watch,
-							(long) ioeventParallelEventInformation.getHeaders()
-									.get(IOEventHeaders.START_INSTANCE_TIME.toString()));
+							Long.valueOf(ioeventParallelEventInformation.getHeaders()
+									.get(IOEventHeaders.START_INSTANCE_TIME.toString()).toString()));
 					IOEventContextHolder.setContext(ioeventRecordInfo);
 
 					invokeTargetMethod(ioeventParallelEventInformation.getMethod(), beanmObject,

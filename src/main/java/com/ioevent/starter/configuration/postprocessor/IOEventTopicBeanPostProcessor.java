@@ -67,7 +67,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			e.printStackTrace();
 			SpringApplication.exit(context);
 		}
-		return bean;
+		return bean; 
 	}
 
 	/**
@@ -84,6 +84,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 		if (bean instanceof TopicServices) {
 			((TopicServices) bean).createTopic("ParallelEventTopic", "", iOEventProperties.getTopicReplication());
 			((TopicServices) bean).createTopic("resultTopic", "", iOEventProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("ioevent-apps", "", iOEventProperties.getTopicReplication());
 
 			if (iOEventProperties.getTopic_names() != null) {
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,

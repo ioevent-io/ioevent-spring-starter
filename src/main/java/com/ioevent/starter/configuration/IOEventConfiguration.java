@@ -1,6 +1,7 @@
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +90,7 @@ public class IOEventConfiguration {
 
 		KStream<String, String> kstream = builder
 				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
-				.map((k, v) -> new KeyValue<>(k, v)).filter((k, v) -> {
+				.map(KeyValue::new).filter((k, v) -> {
 					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
 					return appName.equals(value.getHeaders().get("AppName"));
 				});
@@ -105,7 +106,7 @@ public class IOEventConfiguration {
 					}
 					List<String> updatedOutputList = Stream
 							.of(currentValue.getInputsArrived(), updatedValue.getInputsArrived())
-							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
+							.flatMap(Collection::stream).distinct().collect(Collectors.toList());
 					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));

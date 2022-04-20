@@ -45,9 +45,11 @@ public class KafkaConfig {
 	private String SASL_SSL;
 	@Value("${spring.kafka.security.status:disable}")
 	private String security;
+	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent2}")
+	private String stateDir;
 	@Value("${ioevent.group_id}")
 	private String kafkaGroup_id;
-	@Value("${ioevent.topic_replication:1}")
+	@Value("${ioevent.topicReplication:1}")
 	private String topicReplication;
 
 	/**
@@ -70,8 +72,7 @@ public class KafkaConfig {
 			properties.put("sasl.jaas.config", SASL_JAAS_CONFIG);
 		}
 
-		AdminClient client = AdminClient.create(properties);
-		return client;
+		return AdminClient.create(properties);
 	}
 
 	/**
@@ -88,7 +89,7 @@ public class KafkaConfig {
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
 		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
-		props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/var/lib/kafka-streams-new3");
+		props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 		props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
