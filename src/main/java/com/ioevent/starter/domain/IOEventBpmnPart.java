@@ -21,8 +21,7 @@ public class IOEventBpmnPart {
 	private String id;
 	private String apiKey;
 	private String ioAppName;
-	private String ClassName;
-	private String MethodName;
+	private String methodQualifiedName;
 	private String stepName;
 	private String workflow;
 	private IOEventType ioEventType;
@@ -35,14 +34,13 @@ public class IOEventBpmnPart {
 	}
 
 	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String ioAppName, String workflow,
-			IOEventType ioEventType, String stepName, String className, String methodName) {
+			IOEventType ioEventType, String stepName, String methodName) {
 		this.id = id;
 		this.apiKey = apiKey;
 		this.ioAppName = ioAppName;
 		this.workflow = workflow;
 		this.ioEventType = ioEventType;
-		this.ClassName = className;
-		this.MethodName = methodName;
+		this.methodQualifiedName = methodName;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
 		this.inputEvent = this.addInput(ioEvent);
@@ -73,20 +71,12 @@ public class IOEventBpmnPart {
 		this.ioAppName = ioAppName;
 	}
 
-	public String getClassName() {
-		return ClassName;
+	public String getMethodQualifiedName() {
+		return methodQualifiedName;
 	}
 
-	public void setClassName(String className) {
-		ClassName = className;
-	}
-
-	public String getMethodName() {
-		return MethodName;
-	}
-
-	public void setMethodName(String methodName) {
-		MethodName = methodName;
+	public void setMethodQualifiedName(String methodQualifiedName) {
+		this.methodQualifiedName = methodQualifiedName;
 	}
 
 	public String getStepName() {
@@ -212,8 +202,8 @@ public class IOEventBpmnPart {
 
 	@Override
 	public String toString() {
-		return "IOEventBpmnPart [id=" + id + ", apiKey=" + apiKey + ", ioAppName=" + ioAppName + ", ClassName="
-				+ ClassName + ", MethodName=" + MethodName + ", stepName=" + stepName + ", workflow=" + workflow
+		return "IOEventBpmnPart [id=" + id + ", apiKey=" + apiKey + ", ioAppName=" + ioAppName
+				+ ", methodQualifiedName=" + methodQualifiedName + ", stepName=" + stepName + ", workflow=" + workflow
 				+ ", ioEventType=" + ioEventType + ", ioeventGatway=" + ioeventGatway + ", inputEvent=" + inputEvent
 				+ ", outputEvent=" + outputEvent + ", processCount=" + processCount + "]";
 	}

@@ -30,7 +30,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Value("${spring.application.name}")
 	private String appName;
-
+	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
+	private String kafkaGroupid;
 	@Autowired
 	private IOEventProperties iOEventProperties;
 
@@ -103,7 +104,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 										try {
 											listenerCreator.createListener(bean, method, ioEvent,
 													iOEventProperties.getPrefix() + topicName,
-													iOEventProperties.getGroup_id(), Thread.currentThread());
+													kafkaGroupid, Thread.currentThread());
 										} catch (Throwable e) {
 											log.error("Listener failed   !!!");
 										}
@@ -118,7 +119,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				}
 				String generateID = ioEventService.generateID(ioEvent);
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
-						method.getName()));
+						method.toGenericString()));
 
 			}
 		}
@@ -171,7 +172,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), className, methodName);
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName);
 
 	}
 

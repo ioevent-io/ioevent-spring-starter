@@ -55,7 +55,7 @@ class TopicServicesTest {
 	@Test
 	void createTopicTest()   {
 		when(client.createTopics(Mockito.anyCollection())).thenReturn(createResult);
-		topicServices.createTopic("Topic", "test-", "3");
+		topicServices.createTopic("Topic", "test-", "3",2);
 	    Assert.assertTrue(true);
 
 	}

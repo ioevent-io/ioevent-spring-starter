@@ -51,10 +51,10 @@ public class TopicServices {
 	 * @param replication for the replication value,
 	 * @param prefix      for the ioevent prefix,
 	 **/
-	public void createTopic(String topicName, String prefix, String replication) {
+	public void createTopic(String topicName, String prefix, String replication,int partition) {
 
 		CreateTopicsResult result = client
-				.createTopics(Arrays.asList(new NewTopic(prefix + topicName, 1, Short.valueOf(replication))));
+				.createTopics(Arrays.asList(new NewTopic(prefix + topicName, partition, Short.valueOf(replication))));
 		log.info(result.toString());
 	}
 

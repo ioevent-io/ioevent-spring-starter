@@ -82,13 +82,13 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic", "", iOEventProperties.getTopicReplication());
-			((TopicServices) bean).createTopic("resultTopic", "", iOEventProperties.getTopicReplication());
-			((TopicServices) bean).createTopic("ioevent-apps", "", iOEventProperties.getTopicReplication());
+			((TopicServices) bean).createTopic("ParallelEventTopic", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic("resultTopic", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic("ioevent-apps", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
 
 			if (iOEventProperties.getTopic_names() != null) {
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
-						iOEventProperties.getPrefix(), iOEventProperties.getTopicReplication()));
+						iOEventProperties.getPrefix(), iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition()));
 				log.info("topics created");
 			}
 
@@ -131,7 +131,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 								// TopicBuilder.name(ioeventProperties.getPrefix()+
 								// topicName).partitions(1).replicas((short) 1).build();
 								client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + topicName,
-										1, Short.valueOf(iOEventProperties.getTopicReplication()))));
+										iOEventProperties.getTopic_partition(), Short.valueOf(iOEventProperties.getTopicReplication()))));
 
 							} else
 								throw new Exception(
@@ -160,7 +160,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			if (!topicExist(ioFlow.topic())) {
 				if (iOEventProperties.getAuto_create_topic()) {
 					log.info("creating topic : " + ioFlow.topic());
-					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(), 1,
+					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(), iOEventProperties.getTopic_partition(),
 							Short.valueOf(iOEventProperties.getTopicReplication()))));
 				}
 			}

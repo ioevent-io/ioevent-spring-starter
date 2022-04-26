@@ -47,7 +47,7 @@ public class KafkaConfig {
 	private String security;
 	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent2}")
 	private String stateDir;
-	@Value("${ioevent.group_id}")
+	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
 	private String kafkaGroup_id;
 	@Value("${ioevent.topicReplication:1}")
 	private String topicReplication;

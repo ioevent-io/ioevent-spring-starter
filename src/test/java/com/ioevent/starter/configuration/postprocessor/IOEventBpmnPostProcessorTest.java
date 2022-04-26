@@ -87,7 +87,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
-				"test annotation", "testClass", "testMethod");
+				"test annotation", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -106,7 +106,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
-				"test annotation", "testClass", "testMethod");
+				"test annotation", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -124,7 +124,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null, "testClass",
 				bpmnPartId.toString(), "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
-				"test annotation", "testClass", "testMethod");
+				"test annotation", "testMethod");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
