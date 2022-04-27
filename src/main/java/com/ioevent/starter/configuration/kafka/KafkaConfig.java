@@ -45,9 +45,11 @@ public class KafkaConfig {
 	private String SASL_SSL;
 	@Value("${spring.kafka.security.status:disable}")
 	private String security;
-	@Value("${ioevent.group_id}")
+	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent2}")
+	private String stateDir;
+	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
 	private String kafkaGroup_id;
-	@Value("${ioevent.topic_replication:1}")
+	@Value("${ioevent.topicReplication:1}")
 	private String topicReplication;
 
 	/**
@@ -70,8 +72,7 @@ public class KafkaConfig {
 			properties.put("sasl.jaas.config", SASL_JAAS_CONFIG);
 		}
 
-		AdminClient client = AdminClient.create(properties);
-		return client;
+		return AdminClient.create(properties);
 	}
 
 	/**
@@ -88,9 +89,9 @@ public class KafkaConfig {
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
 		props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
-		props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/var/lib/kafka-streamsNEW");
+		props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-		props.put(ProducerConfig.LINGER_MS_CONFIG, 10);
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
 		if (security.equals("enable")) {
 			props.put("security.protocol", SASL_SSL);
@@ -113,6 +114,7 @@ public class KafkaConfig {
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+		
 		if (security.equals("enable")) {
 			config.put("security.protocol", SASL_SSL);
 			config.put("sasl.mechanism", PLAIN);
@@ -143,7 +145,6 @@ public class KafkaConfig {
 		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
 		config.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroup_id);
 		config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 10);
 

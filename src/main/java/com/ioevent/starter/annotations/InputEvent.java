@@ -6,18 +6,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TargetEvent annotation allows us to specify/define a target event ,
+ * InputEvent annotation allows us to specify/define a Input event ,
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface TargetEvent {
-	
+public @interface InputEvent {
+
 	String value() default "";
 
 	String key() default "";
 
 	String topic() default "";
-
-	String suffix() default "";
 
 }

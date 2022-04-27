@@ -21,26 +21,26 @@ public @interface IOEvent {
 
     /**
      * 
-     * Source event
+     * Input event
      */
-    SourceEvent[] source() default @SourceEvent();
+    InputEvent[] input() default @InputEvent();
     
     /**
      * 
-     * Source event
+     * Input event
      */
-    GatewaySourceEvent gatewaySource() default @GatewaySourceEvent();
+    GatewayInputEvent gatewayInput() default @GatewayInputEvent();
     
     /**
-     * Target Event
+     * Output Event
      */
-    TargetEvent[] target() default @TargetEvent();
+    OutputEvent[] output() default @OutputEvent();
     
     /**
-     * Gateway Target Event
+     * Gateway Output Event
      */
     
-    GatewayTargetEvent gatewayTarget() default @GatewayTargetEvent();
+    GatewayOutputEvent gatewayOutput() default @GatewayOutputEvent();
     
     /**
      * Start Event

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.header.Header;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -25,12 +25,12 @@ import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.IOPayload;
 import com.ioevent.starter.annotations.IOResponse;
-import com.ioevent.starter.annotations.SourceEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
-import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
+import com.ioevent.starter.domain.IOEventType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,30 +60,30 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns all sources names of @IOEvent definition,
+	 * method returns all Inputs names of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return list of sources names,
+	 * @return list of Inputs names,
 	 */
-	public List<String> getSourceNames(IOEvent ioEvent) {
+	public List<String> getInputNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.add(sourceEvent.value());
+		for (InputEvent inputEvent : ioEvent.input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.add(inputEvent.value());
 				} else {
-					result.add(sourceEvent.key());
+					result.add(inputEvent.key());
 				}
 			}
 		}
 
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.add(sourceEvent.value());
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.add(inputEvent.value());
 				} else {
-					result.add(sourceEvent.key());
+					result.add(inputEvent.key());
 				}
 			}
 		}
@@ -91,19 +91,19 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns all parallel source names of @IOEvent definition,
+	 * method returns all parallel Input names of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return list of sources names,
+	 * @return list of Inputs names,
 	 */
-	public List<String> getParalleListSource(IOEvent ioEvent) {
+	public List<String> getParalleListInput(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.add(sourceEvent.value());
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				if (!StringUtils.isBlank(inputEvent.value())) {
+					result.add(inputEvent.value());
 				} else {
-					result.add(sourceEvent.key());
+					result.add(inputEvent.key());
 				}
 			}
 		}
@@ -111,30 +111,30 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns all targets names of @IOEvent definition,
+	 * method returns all outputs names of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return list of targets names,
+	 * @return list of outputs names,
 	 */
-	public List<String> getTargetNames(IOEvent ioEvent) {
+	public List<String> getOutputNames(IOEvent ioEvent) {
 		List<String> result = new ArrayList<>();
 
-		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.add(targetEvent.value());
+		for (OutputEvent outputEvent : ioEvent.output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.add(outputEvent.value());
 				} else {
-					result.add(targetEvent.key());
+					result.add(outputEvent.key());
 				}
 			}
 		}
 
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.add(targetEvent.value());
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.add(outputEvent.value());
 				} else {
-					result.add(targetEvent.key());
+					result.add(outputEvent.key());
 				}
 			}
 		}
@@ -142,46 +142,46 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns all target Event of @IOEvent definition,
+	 * method returns all output Event of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return list of TargetEvent Object ,
+	 * @return list of OutputEvent Object ,
 	 */
-	public List<TargetEvent> getTargets(IOEvent ioEvent) {
-		List<TargetEvent> result = new ArrayList<>();
+	public List<OutputEvent> getOutputs(IOEvent ioEvent) {
+		List<OutputEvent> result = new ArrayList<>();
 
-		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value() + targetEvent.suffix())) {
-				result.add(targetEvent);
+		for (OutputEvent outputEvent : ioEvent.output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value() + outputEvent.suffix())) {
+				result.add(outputEvent);
 			}
 		}
 
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value() + targetEvent.suffix())) {
-				result.add(targetEvent);
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value() + outputEvent.suffix())) {
+				result.add(outputEvent);
 			}
 		}
 		return result;
 	}
 
 	/**
-	 * method returns all targets of @IOEvent definition,
+	 * method returns all inputs of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
-	 * @return list of TargetEvent Object ,
+	 * @return list of InputEvent Object ,
 	 */
-	public List<SourceEvent> getSources(IOEvent ioEvent) {
-		List<SourceEvent> result = new ArrayList<>();
+	public List<InputEvent> getInputs(IOEvent ioEvent) {
+		List<InputEvent> result = new ArrayList<>();
 
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				result.add(sourceEvent);
+		for (InputEvent inputEvent : ioEvent.input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				result.add(inputEvent);
 			}
 		}
 
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				result.add(sourceEvent);
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.key() + inputEvent.value())) {
+				result.add(inputEvent);
 			}
 		}
 		return result;
@@ -199,37 +199,37 @@ public class IOEventService {
 		if (!ioEvent.topic().equals("")) {
 			result.add(ioEvent.topic());
 		}
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!sourceEvent.topic().equals("")) {
-				result.add(sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.input()) {
+			if (!inputEvent.topic().equals("")) {
+				result.add(inputEvent.topic());
 			}
 		}
-		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!targetEvent.topic().equals("")) {
-				result.add(targetEvent.topic());
+		for (OutputEvent outputEvent : ioEvent.output()) {
+			if (!outputEvent.topic().equals("")) {
+				result.add(outputEvent.topic());
 			}
 		}
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!sourceEvent.topic().equals("")) {
-				result.add(sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!inputEvent.topic().equals("")) {
+				result.add(inputEvent.topic());
 			}
 		}
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!targetEvent.topic().equals("")) {
-				result.add(targetEvent.topic());
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!outputEvent.topic().equals("")) {
+				result.add(outputEvent.topic());
 			}
 		}
 		return result;
 	}
 
 	/**
-	 * method returns all source topics of @IOEvent definition,
+	 * method returns all Input topics of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Topics names ,
 	 */
 
-	public List<String> getSourceTopic(IOEvent ioEvent, IOFlow ioFlow) {
+	public List<String> getInputTopic(IOEvent ioEvent, IOFlow ioFlow) {
 		List<String> result = new ArrayList<>();
 		if ((ioFlow != null) && !StringUtils.isBlank(ioFlow.topic())) {
 			result.add(ioFlow.topic());
@@ -237,21 +237,49 @@ public class IOEventService {
 		if (!StringUtils.isBlank(ioEvent.topic())) {
 			result.add(ioEvent.topic());
 		}
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!StringUtils.isBlank(sourceEvent.topic())) {
-				result.add(sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.input()) {
+			if (!StringUtils.isBlank(inputEvent.topic())) {
+				result.add(inputEvent.topic());
 			}
 		}
 
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.topic())) {
-				result.add(sourceEvent.topic());
+		for (InputEvent inputEvent : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(inputEvent.topic())) {
+				result.add(inputEvent.topic());
 			}
 		}
 
 		return result;
 	}
+	/**
+	 * method returns all Input topics of @IOEvent definition,
+	 * 
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return list of Topics names ,
+	 */
 
+	public List<String> getOutputEventTopics(IOEvent ioEvent, IOFlow ioFlow) {
+		List<String> result = new ArrayList<>();
+		if ((ioFlow != null) && !StringUtils.isBlank(ioFlow.topic())) {
+			result.add(ioFlow.topic());
+		}
+		if (!StringUtils.isBlank(ioEvent.topic())) {
+			result.add(ioEvent.topic());
+		}
+		for (OutputEvent outputEvent : ioEvent.output()) {
+			if (!StringUtils.isBlank(outputEvent.topic())) {
+				result.add(outputEvent.topic());
+			}
+		}
+
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.topic())) {
+				result.add(outputEvent.topic());
+			}
+		}
+
+		return result;
+	}
 	/**
 	 * method returns if two lists are equal
 	 * 
@@ -288,7 +316,7 @@ public class IOEventService {
 	 */
 	public boolean isStart(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
-				&& (!getTargets(ioEvent).isEmpty()));
+				&& (!getOutputs(ioEvent).isEmpty()));
 
 	}
 
@@ -300,7 +328,7 @@ public class IOEventService {
 	 */
 	public boolean isEnd(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
-				&& (!getSources(ioEvent).isEmpty()));
+				&& (!getInputs(ioEvent).isEmpty()));
 	}
 
 	/**
@@ -310,7 +338,7 @@ public class IOEventService {
 	 * @return boolean ,
 	 */
 	public boolean isImplicitTask(IOEvent ioEvent) {
-		return ((getSources(ioEvent).isEmpty() || getTargets(ioEvent).isEmpty())
+		return ((getInputs(ioEvent).isEmpty() || getOutputs(ioEvent).isEmpty())
 				&& (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
 						&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
 
@@ -325,20 +353,20 @@ public class IOEventService {
 	public boolean isTransition(IOEvent ioEvent) {
 		return (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
 				&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
-				&& !getSources(ioEvent).isEmpty() && !getTargets(ioEvent).isEmpty());
+				&& !getInputs(ioEvent).isEmpty() && !getOutputs(ioEvent).isEmpty());
 	}
 
 	/**
-	 * method returns source event of @IOEvent by name,
+	 * method returns input event of @IOEvent by name,
 	 * 
 	 * @param ioEvent    for the IOEvent annotation,
-	 * @param sourceName for the source event name
-	 * @return SourceEvent ,
+	 * @param InputName for the Input event name
+	 * @return InputEvent ,
 	 */
-	public SourceEvent getSourceEventByName(IOEvent ioEvent, String sourceName) {
-		for (SourceEvent sourceEvent : getSources(ioEvent)) {
-			if (sourceName.equals(sourceEvent.key())) {
-				return sourceEvent;
+	public InputEvent getInputEventByName(IOEvent ioEvent, String inputName) {
+		for (InputEvent inputEvent : getInputs(ioEvent)) {
+			if (inputName.equals(inputEvent.key())) {
+				return inputEvent;
 			}
 		}
 		return null;
@@ -353,11 +381,11 @@ public class IOEventService {
 	public IOEventType checkTaskType(IOEvent ioEvent) {
 		IOEventType type = IOEventType.TASK;
 
-		if ((ioEvent.gatewayTarget().target().length != 0) || (ioEvent.gatewaySource().source().length != 0)) {
+		if ((ioEvent.gatewayOutput().output().length != 0) || (ioEvent.gatewayInput().input().length != 0)) {
 
-			if (ioEvent.gatewayTarget().parallel() || ioEvent.gatewaySource().parallel()) {
+			if (ioEvent.gatewayOutput().parallel() || ioEvent.gatewayInput().parallel()) {
 				type = IOEventType.GATEWAY_PARALLEL;
-			} else if (ioEvent.gatewayTarget().exclusive() || ioEvent.gatewaySource().exclusive()) {
+			} else if (ioEvent.gatewayOutput().exclusive() || ioEvent.gatewayInput().exclusive()) {
 				type = IOEventType.GATEWAY_EXCLUSIVE;
 			}
 		}
@@ -374,7 +402,7 @@ public class IOEventService {
 	public String generateID(IOEvent ioEvent) {
 
 		return ioEvent.key().replaceAll("[^a-zA-Z ]", "").toLowerCase().replace(" ", "") + "-"
-				+ getSourceNames(ioEvent).hashCode() + "-" + getTargetNames(ioEvent).hashCode();
+				+ getInputNames(ioEvent).hashCode() + "-" + getOutputNames(ioEvent).hashCode();
 	}
 
 	/**
@@ -407,16 +435,16 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns target topic from @IOEvent ,@IOFlow and targetEventTopic ,
+	 * method returns output topic from @IOEvent ,@IOFlow and outputEventTopic ,
 	 * 
 	 * @param ioEvent          for the IOEvent annotation,
 	 * @param ioFlow           for the IOFlow annotation,
-	 * @param targetEventTopic for the target Event Topic name,
+	 * @param outputEventTopic for the output Event Topic name,
 	 * @return String of TopicName ,
 	 */
-	public String getTargetTopicName(IOEvent ioEvent, IOFlow ioFlow, String targetEventTopic) {
-		if (!StringUtils.isBlank(targetEventTopic)) {
-			return targetEventTopic;
+	public String getOutputTopicName(IOEvent ioEvent, IOFlow ioFlow, String outputEventTopic) {
+		if (!StringUtils.isBlank(outputEventTopic)) {
+			return outputEventTopic;
 		} else if (!StringUtils.isBlank(ioEvent.topic())) {
 			return ioEvent.topic();
 		} else if ((ioFlow != null) && !StringUtils.isBlank(ioFlow.topic())) {
@@ -444,16 +472,16 @@ public class IOEventService {
 	}
 
 	/**
-	 * method returns Target Key from TargetEvent ,
+	 * method returns Output Key from OutputEvent ,
 	 * 
-	 * @param TargetEvent for the TargetEvent annotation,
-	 * @return String of Target Key ,
+	 * @param OutputEvent for the OutputEvent annotation,
+	 * @return String of Output Key ,
 	 */
-	public String getTargetKey(TargetEvent targetEvent) {
-		if (!StringUtils.isBlank(targetEvent.value())) {
-			return targetEvent.value();
+	public String getOutputKey(OutputEvent outputEvent) {
+		if (!StringUtils.isBlank(outputEvent.value())) {
+			return outputEvent.value();
 		} else {
-			return targetEvent.key();
+			return outputEvent.key();
 		}
 	}
 

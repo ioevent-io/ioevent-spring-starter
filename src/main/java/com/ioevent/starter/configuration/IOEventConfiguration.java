@@ -1,11 +1,13 @@
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,6 +29,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +39,6 @@ import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
-import com.ioevent.starter.configuration.eureka.EurekaConfig;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProcessor;
@@ -48,6 +50,7 @@ import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.listener.IOEventParrallelListener;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
+import com.ioevent.starter.service.IOEventRegistryService;
 import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.TopicServices;
 
@@ -63,8 +66,9 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableKafkaStreams
+@EnableScheduling
 @EnableAsync
-@Import({ KafkaConfig.class, EurekaConfig.class })
+@Import({ KafkaConfig.class})
 @Service
 @RequiredArgsConstructor
 public class IOEventConfiguration {
@@ -86,7 +90,7 @@ public class IOEventConfiguration {
 
 		KStream<String, String> kstream = builder
 				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
-				.map((k, v) -> new KeyValue<>(k, v)).filter((k, v) -> {
+				.map(KeyValue::new).filter((k, v) -> {
 					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
 					return appName.equals(value.getHeaders().get("AppName"));
 				});
@@ -100,16 +104,16 @@ public class IOEventConfiguration {
 					} else {
 						updatedValue = currentValue;
 					}
-					List<String> updatedTargetList = Stream
-							.of(currentValue.getTargetsArrived(), updatedValue.getTargetsArrived())
-							.flatMap(x -> x.stream()).distinct().collect(Collectors.toList());
+					List<String> updatedOutputList = Stream
+							.of(currentValue.getInputsArrived(), updatedValue.getInputsArrived())
+							.flatMap(Collection::stream).distinct().collect(Collectors.toList());
 					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
 					Map<String, Object> updatedPayload = Stream.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					updatedValue.setTargetsArrived(updatedTargetList);
+					updatedValue.setInputsArrived(updatedOutputList);
 					updatedValue.setHeaders(updatedHeaders);
 					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);
@@ -217,4 +221,13 @@ public class IOEventConfiguration {
 	public IOEventService IOEventService() {
 		return new IOEventService();
 	}
+	@Bean
+	public IOEventRegistryService ioeventRegistryService() {
+		return new IOEventRegistryService();
+	}
+	@Bean("instanceID")
+	public UUID instanceID() {
+		return UUID.randomUUID();
+	}
+	
 }

@@ -29,13 +29,13 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.ioevent.starter.annotations.EndEvent;
-import com.ioevent.starter.annotations.GatewaySourceEvent;
-import com.ioevent.starter.annotations.GatewayTargetEvent;
+import com.ioevent.starter.annotations.GatewayInputEvent;
+import com.ioevent.starter.annotations.GatewayOutputEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
-import com.ioevent.starter.annotations.SourceEvent;
+import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.annotations.StartEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
@@ -53,13 +53,13 @@ class IOEventServiceTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			source = { @SourceEvent(key = "SOURCE1"), //
-					@SourceEvent(key = "SOURCE2", topic = "topic2") }, gatewaySource = @GatewaySourceEvent(parallel = true, source = {
-							@SourceEvent(key = "SOURCE3", topic = "topic3") }), //
-			target = { @TargetEvent(key = "TARGET1", topic = "topic4"), //
-					@TargetEvent(key = "TARGET2") }, //
-			gatewayTarget = @GatewayTargetEvent(exclusive = true, target = {
-					@TargetEvent(key = "TARGET3", topic = "topic5") }//
+			input = { @InputEvent(key = "INPUT1"), //
+					@InputEvent(key = "INPUT2", topic = "topic2") }, gatewayInput = @GatewayInputEvent(parallel = true, input = {
+							@InputEvent(key = "INPUT3", topic = "topic3") }), //
+			output = { @OutputEvent(key = "OUTPUT1", topic = "topic4"), //
+					@OutputEvent(key = "OUTPUT2") }, //
+			gatewayOutput = @GatewayOutputEvent(exclusive = true, output = {
+					@OutputEvent(key = "OUTPUT3", topic = "topic5") }//
 			))
 	public boolean tryAnnotation() {
 		return true;
@@ -67,8 +67,8 @@ class IOEventServiceTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			gatewaySource = @GatewaySourceEvent(parallel = true, source = {
-					@SourceEvent(key = "SOURCE3", topic = "topic3") }) // //
+			gatewayInput = @GatewayInputEvent(parallel = true, input = {
+					@InputEvent(key = "INPUT3", topic = "topic3") }) // //
 	)
 	public boolean parallelGatewayAnnotationMethod() {
 		return true;
@@ -76,8 +76,8 @@ class IOEventServiceTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			gatewaySource = @GatewaySourceEvent(exclusive = true, source = {
-					@SourceEvent(key = "SOURCE3", topic = "topic3") }) // //
+			gatewayInput = @GatewayInputEvent(exclusive = true, input = {
+					@InputEvent(key = "INPUT3", topic = "topic3") }) // //
 	)
 	public boolean exclusiveGatewayAnnotationMethod() {
 		return true;
@@ -85,7 +85,7 @@ class IOEventServiceTest {
 
 	/** method to test annotations **/
 	@IOEvent(key = "test annotation", topic = "topic1", //
-			source = @SourceEvent(key = "source", topic = "T"), target = @TargetEvent(key = "target", topic = "T"))
+			input = @InputEvent(key = "input", topic = "T"), output = @OutputEvent(key = "output", topic = "T"))
 	public boolean simpleTaskAnnotationMethod() {
 		return true;
 	}
@@ -137,53 +137,53 @@ class IOEventServiceTest {
 	    Assert.assertTrue(true);
 	}
 	@Test
-	 void getSourceEventByName() throws NoSuchMethodException, SecurityException {
+	 void getInputEventByName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		SourceEvent sourceEvent= ioEventService.getSourceEventByName(ioEvent,"SOURCE2");
-		Assert.assertEquals( "topic2",sourceEvent.topic());
-		Assert.assertEquals(null,ioEventService.getSourceEventByName(ioEvent, "sourceNotExist"));
+		InputEvent inputEvent= ioEventService.getInputEventByName(ioEvent,"INPUT2");
+		Assert.assertEquals( "topic2",inputEvent.topic());
+		Assert.assertEquals(null,ioEventService.getInputEventByName(ioEvent, "inputNotExist"));
 
 		
 	}
 	
 
 	@Test
-	 void shouldReturnAllAnnotationSourceName() throws NoSuchMethodException, SecurityException {
+	 void shouldReturnAllAnnotationInputName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<String> sourceList = ioEventService.getSourceNames(ioEvent);
-			List<String> sourceName = new ArrayList<String>();
-			sourceName.add("SOURCE1");
-			sourceName.add("SOURCE2");
-			sourceName.add("SOURCE3");
-			Assert.assertArrayEquals(sourceName.toArray(), sourceList.toArray());
+			List<String> inputList = ioEventService.getInputNames(ioEvent);
+			List<String> inputName = new ArrayList<String>();
+			inputName.add("INPUT1");
+			inputName.add("INPUT2");
+			inputName.add("INPUT3");
+			Assert.assertArrayEquals(inputName.toArray(), inputList.toArray());
 
 		
 	}
 
 	@Test
-	 void shouldReturnAllAnnotationParallelSourceName() throws NoSuchMethodException, SecurityException {
+	 void shouldReturnAllAnnotationParallelInputName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<String> sourceList = ioEventService.getParalleListSource(ioEvent);
-			List<String> sourceName = new ArrayList<String>();
-			sourceName.add("SOURCE3");
-			Assert.assertArrayEquals(sourceName.toArray(), sourceList.toArray());
+			List<String> inputList = ioEventService.getParalleListInput(ioEvent);
+			List<String> inputName = new ArrayList<String>();
+			inputName.add("INPUT3");
+			Assert.assertArrayEquals(inputName.toArray(), inputList.toArray());
 
 		
 	}
 
 	@Test
-	 void shouldReturnAllAnnotationTargetName() throws NoSuchMethodException, SecurityException {
+	 void shouldReturnAllAnnotationOutputName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<String> targetList = ioEventService.getTargetNames(ioEvent);
-			List<String> targetName = new ArrayList<String>();
-			targetName.add("TARGET1");
-			targetName.add("TARGET2");
-			targetName.add("TARGET3");
-			Assert.assertArrayEquals(targetName.toArray(), targetList.toArray());
+			List<String> outputList = ioEventService.getOutputNames(ioEvent);
+			List<String> outputName = new ArrayList<String>();
+			outputName.add("OUTPUT1");
+			outputName.add("OUTPUT2");
+			outputName.add("OUTPUT3");
+			Assert.assertArrayEquals(outputName.toArray(), outputList.toArray());
 
 		
 
@@ -209,10 +209,10 @@ class IOEventServiceTest {
 	}
 
 	@Test
-	 void shouldReturnAllAnnotationSourceTopicName() throws NoSuchMethodException, SecurityException {
+	 void shouldReturnAllAnnotationInputTopicName() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<String> topiclist = ioEventService.getSourceTopic(ioEvent,null);
+			List<String> topiclist = ioEventService.getInputTopic(ioEvent,null);
 			List<String> topicName = new ArrayList<String>();
 			topicName.add("topic1");
 			topicName.add("topic2");
@@ -226,11 +226,11 @@ class IOEventServiceTest {
 	}
 
 	@Test
-	 void shouldReturnAllAnnotationSourceAnotations() throws NoSuchMethodException, SecurityException {
+	 void shouldReturnAllAnnotationInputAnotations() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<SourceEvent> Sourcelist = ioEventService.getSources(ioEvent);
-			Assert.assertEquals(3,Sourcelist.size());
+			List<InputEvent> Inputlist = ioEventService.getInputs(ioEvent);
+			Assert.assertEquals(3,Inputlist.size());
 
 
 		
@@ -238,11 +238,11 @@ class IOEventServiceTest {
 	}
 
 	@Test
-	 void shouldReturnAllAnnotationTargetAnotations() throws Throwable, SecurityException {
+	 void shouldReturnAllAnnotationOutputAnotations() throws Throwable, SecurityException {
 		Method method = this.getClass().getMethod("tryAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-			List<TargetEvent> targetlist = ioEventService.getTargets(ioEvent);
-			Assert.assertEquals(3,targetlist.size());
+			List<OutputEvent> outputlist = ioEventService.getOutputs(ioEvent);
+			Assert.assertEquals(3,outputlist.size());
 
 		
 	}
@@ -296,7 +296,7 @@ class IOEventServiceTest {
 	void prepareHeaders() {
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
-		consumerRecord.headers().add(IOEventHeaders.TARGET_EVENT.toString(), "target name".getBytes());
+		consumerRecord.headers().add(IOEventHeaders.OUTPUT_EVENT.toString(), "output name".getBytes());
 		consumerRecord.headers().add(IOEventHeaders.CORRELATION_ID.toString(), "id".getBytes());
 		consumerRecord.headers().add(IOEventHeaders.PROCESS_NAME.toString(), "workflow name".getBytes());
 		consumerRecord.headers().add("another header", "value".getBytes());

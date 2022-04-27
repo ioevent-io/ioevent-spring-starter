@@ -50,7 +50,7 @@ public class Listener {
 	}
 
 	/**
-	 * run consumer to subscribe to the target topic and start consuming ,as soon as
+	 * run consumer to subscribe to the output topic and start consuming ,as soon as
 	 * we get a record we send the record to the handler
 	 **/
 	public void runConsume(final Properties consumerProps) throws Throwable {

@@ -3,48 +3,48 @@ package com.ioevent.starter.domain;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
-import com.ioevent.starter.annotations.SourceEvent;
-import com.ioevent.starter.annotations.TargetEvent;
+import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.annotations.OutputEvent;
 
 /**
  * class IOEventBpmnPart include all event information , - id for the ID of the
  * event, - ClassName for the class name with include the task (IOEvent), -
  * MethodName for method name which annotated by IOEvent, - stepName for the
  * task name, - workflow for the process name, - ioEventType for the event type,
- * - sourceEvent for the source events of the task/part, - targetEvent for the
- * target event of the task/part,
+ * - InputEvent for the Input events of the task/part, - outputEvent for the
+ * output event of the task/part,
  */
 public class IOEventBpmnPart {
 	private String id;
 	private String apiKey;
-	private String ClassName;
-	private String MethodName;
+	private String ioAppName;
+	private String methodQualifiedName;
 	private String stepName;
 	private String workflow;
 	private IOEventType ioEventType;
 	private IOEventGatwayInformation ioeventGatway;
-	private Map<String, String> sourceEvent;
-	private Map<String, String> targetEvent;
+	private Map<String, String> inputEvent;
+	private Map<String, String> outputEvent;
 	private int processCount = 0;
 
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String workflow, IOEventType ioEventType,
-			String stepName, String className, String methodName) {
+	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String ioAppName, String workflow,
+			IOEventType ioEventType, String stepName, String methodName) {
 		this.id = id;
 		this.apiKey = apiKey;
+		this.ioAppName = ioAppName;
 		this.workflow = workflow;
 		this.ioEventType = ioEventType;
-		this.ClassName = className;
-		this.MethodName = methodName;
+		this.methodQualifiedName = methodName;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
-		this.sourceEvent = this.addSource(ioEvent);
-		this.targetEvent = this.addTarget(ioEvent);
+		this.inputEvent = this.addInput(ioEvent);
+		this.outputEvent = this.addOutput(ioEvent);
 	}
 
 	public String getId() {
@@ -63,20 +63,20 @@ public class IOEventBpmnPart {
 		this.apiKey = apiKey;
 	}
 
-	public String getClassName() {
-		return ClassName;
+	public String getIoAppName() {
+		return ioAppName;
 	}
 
-	public void setClassName(String className) {
-		ClassName = className;
+	public void setIoAppName(String ioAppName) {
+		this.ioAppName = ioAppName;
 	}
 
-	public String getMethodName() {
-		return MethodName;
+	public String getMethodQualifiedName() {
+		return methodQualifiedName;
 	}
 
-	public void setMethodName(String methodName) {
-		MethodName = methodName;
+	public void setMethodQualifiedName(String methodQualifiedName) {
+		this.methodQualifiedName = methodQualifiedName;
 	}
 
 	public String getStepName() {
@@ -111,20 +111,20 @@ public class IOEventBpmnPart {
 		this.ioeventGatway = ioeventGatway;
 	}
 
-	public Map<String, String> getSourceEvent() {
-		return sourceEvent;
+	public Map<String, String> getInputEvent() {
+		return inputEvent;
 	}
 
-	public void setSourceEvent(Map<String, String> sourceEvent) {
-		this.sourceEvent = sourceEvent;
+	public void setInputEvent(Map<String, String> inputEvent) {
+		this.inputEvent = inputEvent;
 	}
 
-	public Map<String, String> getTargetEvent() {
-		return targetEvent;
+	public Map<String, String> getOutputEvent() {
+		return outputEvent;
 	}
 
-	public void setTargetEvent(Map<String, String> targetEvent) {
-		this.targetEvent = targetEvent;
+	public void setOutputEvent(Map<String, String> outputEvent) {
+		this.outputEvent = outputEvent;
 	}
 
 	public int getProcessCount() {
@@ -135,63 +135,63 @@ public class IOEventBpmnPart {
 		this.processCount = processCount;
 	}
 
-	public Map<String, String> addSource(IOEvent ioEvent) {
+	public Map<String, String> addInput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (SourceEvent sourceEvent : ioEvent.source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.put(sourceEvent.value(), sourceEvent.topic());
+		for (InputEvent input : ioEvent.input()) {
+			if (!StringUtils.isBlank(input.key() + input.value())) {
+				if (!StringUtils.isBlank(input.value())) {
+					result.put(input.value(), input.topic());
 				} else {
-					result.put(sourceEvent.key(), sourceEvent.topic());
+					result.put(input.key(), input.topic());
 				}
 
 			}
 		}
-		for (SourceEvent sourceEvent : ioEvent.gatewaySource().source()) {
-			if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-				if (!StringUtils.isBlank(sourceEvent.value())) {
-					result.put(sourceEvent.value(), sourceEvent.topic());
+		for (InputEvent input : ioEvent.gatewayInput().input()) {
+			if (!StringUtils.isBlank(input.key() + input.value())) {
+				if (!StringUtils.isBlank(input.value())) {
+					result.put(input.value(), input.topic());
 				} else {
-					result.put(sourceEvent.key(), sourceEvent.topic());
+					result.put(input.key(), input.topic());
 				}
 			}
 		}
 		return result;
 	}
 
-	public Map<String, String> addTarget(IOEvent ioEvent) {
+	public Map<String, String> addOutput(IOEvent ioEvent) {
 		Map<String, String> result = new HashMap<String, String>();
 		boolean isSuffix = false;
 		String suffix = "";
-		for (TargetEvent targetEvent : ioEvent.target()) {
-			if (!targetEvent.suffix().equals("")) {
+		for (OutputEvent output : ioEvent.output()) {
+			if (!output.suffix().equals("")) {
 				isSuffix = true;
-				suffix = targetEvent.suffix();
+				suffix = output.suffix();
 			}
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.put(targetEvent.value(), targetEvent.topic());
-				}else {
-					result.put(targetEvent.key(), targetEvent.topic());
+			if (!StringUtils.isBlank(output.key() + output.value())) {
+				if (!StringUtils.isBlank(output.value())) {
+					result.put(output.value(), output.topic());
+				} else {
+					result.put(output.key(), output.topic());
 				}
 			}
 		}
-		for (TargetEvent targetEvent : ioEvent.gatewayTarget().target()) {
-			if (!StringUtils.isBlank(targetEvent.key() + targetEvent.value())) {
-				if (!StringUtils.isBlank(targetEvent.value())) {
-					result.put(targetEvent.value(), targetEvent.topic());
-				}else {
-					result.put(targetEvent.key(), targetEvent.topic());
+		for (OutputEvent output : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(output.key() + output.value())) {
+				if (!StringUtils.isBlank(output.value())) {
+					result.put(output.value(), output.topic());
+				} else {
+					result.put(output.key(), output.topic());
 				}
 			}
 		}
 		if (isSuffix) {
-			for (SourceEvent sourceEvent : ioEvent.source()) {
-				if (!StringUtils.isBlank(sourceEvent.key() + sourceEvent.value())) {
-					if (!StringUtils.isBlank(sourceEvent.value())) {
-						result.put(sourceEvent.value() + suffix, sourceEvent.topic());
+			for (InputEvent input : ioEvent.input()) {
+				if (!StringUtils.isBlank(input.key() + input.value())) {
+					if (!StringUtils.isBlank(input.value())) {
+						result.put(input.value() + suffix, input.topic());
 					} else {
-						result.put(sourceEvent.key() + suffix, sourceEvent.topic());
+						result.put(input.key() + suffix, input.topic());
 					}
 
 				}
@@ -202,9 +202,10 @@ public class IOEventBpmnPart {
 
 	@Override
 	public String toString() {
-		return "IOEventBpmnPart [id=" + id + ", ClassName=" + ClassName + ", MethodName=" + MethodName + ", stepName="
-				+ stepName + ", workflow=" + workflow + ", ioEventType=" + ioEventType + ", sourceEvent=" + sourceEvent
-				+ ", targetEvent=" + targetEvent + "]";
+		return "IOEventBpmnPart [id=" + id + ", apiKey=" + apiKey + ", ioAppName=" + ioAppName
+				+ ", methodQualifiedName=" + methodQualifiedName + ", stepName=" + stepName + ", workflow=" + workflow
+				+ ", ioEventType=" + ioEventType + ", ioeventGatway=" + ioeventGatway + ", inputEvent=" + inputEvent
+				+ ", outputEvent=" + outputEvent + ", processCount=" + processCount + "]";
 	}
 
 }

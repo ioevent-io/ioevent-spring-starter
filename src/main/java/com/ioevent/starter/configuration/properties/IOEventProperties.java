@@ -27,6 +27,7 @@ public class IOEventProperties {
 	private Boolean auto_create_topic = true;
 	private String topic_replication="1" ;
 	private String api_key = "";
+	private int topic_partition=1;
 	public String getPrefix() {
 		return prefix;
 	}
@@ -70,6 +71,14 @@ public class IOEventProperties {
 
 	public String getApikey() {
 		return api_key;
+	}
+
+	public int getTopic_partition() {
+		return topic_partition;
+	}
+
+	public void setTopic_partition(int topic_partition) {
+		this.topic_partition = topic_partition;
 	}
 
 	public void setApikey(String api_key) {

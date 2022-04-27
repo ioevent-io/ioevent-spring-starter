@@ -39,14 +39,14 @@ public class IOEventParrallelListener {
 	@Autowired
 	private IOEventService ioEventService;
 
-	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "${ioevent.group_id}")
+	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
 	public void consumeParallelEvent(String s)
 			throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		Gson gson = new Gson();
 		IOEventParallelEventInformation ioeventParallelEventInformation = gson.fromJson(s,
 				IOEventParallelEventInformation.class);
-		if ((ioeventParallelEventInformation != null) && (sameList(ioeventParallelEventInformation.getSourceRequired(),
-				ioeventParallelEventInformation.getTargetsArrived()))) {
+		if ((ioeventParallelEventInformation != null) && (sameList(ioeventParallelEventInformation.getInputRequired(),
+				ioeventParallelEventInformation.getInputsArrived()))) {
 
 			try {
 				Object beanmObject = ctx.getApplicationContext()
@@ -60,7 +60,9 @@ public class IOEventParrallelListener {
 									.toString(),
 							ioeventParallelEventInformation.getHeaders().get(IOEventHeaders.PROCESS_NAME.toString())
 									.toString(),
-							ioeventParallelEventInformation.getTargetsArrived().toString(), watch);
+							ioeventParallelEventInformation.getInputsArrived().toString(), watch,
+							Long.valueOf(ioeventParallelEventInformation.getHeaders()
+									.get(IOEventHeaders.START_INSTANCE_TIME.toString()).toString()));
 					IOEventContextHolder.setContext(ioeventRecordInfo);
 
 					invokeTargetMethod(ioeventParallelEventInformation.getMethod(), beanmObject,
@@ -72,8 +74,8 @@ public class IOEventParrallelListener {
 			}
 
 		} else {
-			log.info("Parallel Event Source Not Completed, target arrived : "
-					+ ioeventParallelEventInformation.getTargetsArrived());
+			log.info("Parallel Event Input Not Completed, output arrived : "
+					+ ioeventParallelEventInformation.getInputsArrived());
 		}
 
 	}
@@ -86,30 +88,36 @@ public class IOEventParrallelListener {
 			for (Method met : beanmObject.getClass().getDeclaredMethods()) {
 				if (met.getName().equals(methodName)) {
 					Method method = met;
-					
+
 					if (met.getParameterCount() == 1) {
 						for (Listener listener : listeners) {
 							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
-									.filter(x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())&&x.getMethod().getName().equals(parallelEventInformation.getMethod())))
+									.filter(x -> (x.getBean().getClass().getName()
+											.equals(parallelEventInformation.getClassName())
+											&& x.getMethod().getName().equals(parallelEventInformation.getMethod())))
 									.findFirst();
 							if (pair.isPresent()) {
-								method=pair.get().getMethod();
+								method = pair.get().getMethod();
 							}
 						}
-						//recordsHandler.invokeWithOneParameter(method, beanmObject, parallelEventInformation.getValue());
-						Object[] params = 	recordsHandler.prepareParallelParameters(method, parallelEventInformation);
+						// recordsHandler.invokeWithOneParameter(method, beanmObject,
+						// parallelEventInformation.getValue());
+						Object[] params = recordsHandler.prepareParallelParameters(method, parallelEventInformation);
 						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
 					} else {
 						for (Listener listener : listeners) {
 							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
-									.filter(x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())&&x.getMethod().getName().equals(parallelEventInformation.getMethod())))
+									.filter(x -> (x.getBean().getClass().getName()
+											.equals(parallelEventInformation.getClassName())
+											&& x.getMethod().getName().equals(parallelEventInformation.getMethod())))
 									.findFirst();
 							if (pair.isPresent()) {
-								method=pair.get().getMethod();
+								method = pair.get().getMethod();
 							}
 						}
-						Object[] params = 	recordsHandler.prepareParallelParameters(method, parallelEventInformation);
-						//recordsHandler.prepareParameters(method, parallelEventInformation.getValue(),parallelEventInformation.getHeaders());
+						Object[] params = recordsHandler.prepareParallelParameters(method, parallelEventInformation);
+						// recordsHandler.prepareParameters(method,
+						// parallelEventInformation.getValue(),parallelEventInformation.getHeaders());
 						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
 					}
 
