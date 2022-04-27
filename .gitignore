@@ -21,6 +21,7 @@ target/
 
 #Eclipse
 .*
+bin/
 
 ### NetBeans ###
 /nbproject/private/
