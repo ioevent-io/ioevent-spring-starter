@@ -53,7 +53,7 @@ public class IOEvenImplicitTaskAspect {
 	@Autowired
 	private IOEventService ioEventService;
 
-	private static final String END_PREFIX = "end-from-";
+	private static final String END_PREFIX = "end_Event";
 	private static final String START_PREFIX = "start-to-";
 
 	/**
@@ -122,13 +122,13 @@ public class IOEvenImplicitTaskAspect {
 				ioeventRecordInfo.setWorkFlowName(
 						ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 				Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
-						ioeventRecordInfo.getWorkFlowName(), ioeventRecordInfo.getId(), END_PREFIX + ioEvent.key(), "",
+						ioeventRecordInfo.getWorkFlowName(), ioeventRecordInfo.getId(), END_PREFIX , "",
 						eventLogger.getTimestamp(eventLogger.getStartTime()),ioeventRecordInfo.getInstanceStartTime(), ioEventType, headers);
 
 				kafkaTemplate.send(message);
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfo, response,
-						END_PREFIX + ioEvent.key(), ioEventType, watch);
-				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX + ioEvent.key());
+						END_PREFIX , ioEventType, watch);
+				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX );
 				createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
 
 			} else if (!ioEventService.getOutputs(ioEvent).isEmpty()) {
@@ -153,7 +153,7 @@ public class IOEvenImplicitTaskAspect {
 				watch.start("IOEvent annotation Implicit TASK Aspect");
 				Map<String, Object> headers = ioEventService.prepareHeaders(null, response.getHeaders());
 				Message<Object> message = this.buildMessage(ioEvent, ioFlow, response, ioFlow.name(),
-						ioeventRecordInfoInput.getId(), END_PREFIX + ioEvent.key(), "",
+						ioeventRecordInfoInput.getId(), END_PREFIX , "",
 						eventLogger.getTimestamp(eventLogger.getStartTime()),
 						ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
 
@@ -161,8 +161,8 @@ public class IOEvenImplicitTaskAspect {
 				ioeventRecordInfoInput.setWorkFlowName(ioFlow.name());
 				ioeventRecordInfoInput.setOutputConsumedName(START_PREFIX + ioEvent.key());
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfoInput, response,
-						END_PREFIX + ioEvent.key(), ioEventType, watch);
-				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX + ioEvent.key());
+						END_PREFIX /*+ ioEvent.key()*/, ioEventType, watch);
+				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX );
 				createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
 			}
 
@@ -210,7 +210,7 @@ public class IOEvenImplicitTaskAspect {
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		List<String> inputEvents = ioEventService.getInputNames(ioEvent);
 		if (ioEventType.equals(IOEventType.END)) {
-			inputEvents = Arrays.asList(END_PREFIX + ioEvent.key());
+			inputEvents = Arrays.asList(END_PREFIX );
 
 		} else if (inputEvents.isEmpty()) {
 			inputEvents.add(START_PREFIX + ioEvent.key());
