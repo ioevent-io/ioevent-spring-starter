@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -11,9 +12,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -34,22 +33,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KafkaConfig {
 
-	@Autowired
-	private KafkaProperties kafkaProperties;
 
+	@Value("${spring.kafka.bootstrap-servers}")
+	private String kafkaBootstrapServer;
 	@Value("${spring.kafka.sasl.jaas.config:NONE}")
 	private String SASL_JAAS_CONFIG;
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
 	private String PLAIN;
-	@Value("${spring.kafka.security.protocol:NONE}")
+	@Value("${spring.kafka.security.protocol:}")
 	private String SASL_SSL;
-	@Value("${spring.kafka.security.status:disable}")
-	private String security;
-	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent2}")
+	
+	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent7}")
 	private String stateDir;
 	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
 	private String kafkaGroup_id;
-	@Value("${ioevent.topicReplication:1}")
+	@Value("${spring.kafka.streams.replication-factor:1}")
 	private String topicReplication;
 
 	/**
@@ -61,12 +59,12 @@ public class KafkaConfig {
 	public AdminClient AdminClient() {
 		Properties properties = new Properties();
 
-		properties.put("bootstrap.servers", kafkaProperties.getBootstrapServers().get(0));
+		properties.put("bootstrap.servers", kafkaBootstrapServer);
 		properties.put("connections.max.idle.ms", 10000);
 		properties.put("request.timeout.ms", 20000);
 		properties.put("retry.backoff.ms", 500);
 
-		if (security.equals("enable")) {
+		if (!StringUtils.isBlank(SASL_SSL)) {
 			properties.put("security.protocol", SASL_SSL);
 			properties.put("sasl.mechanism", PLAIN);
 			properties.put("sasl.jaas.config", SASL_JAAS_CONFIG);
@@ -84,7 +82,7 @@ public class KafkaConfig {
 	public KafkaStreamsConfiguration kStreamsConfigs() {
 		Map<String, Object> props = new HashMap<>();
 		props.put(StreamsConfig.APPLICATION_ID_CONFIG, kafkaGroup_id + "_Stream");
-		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
+		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServer);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
@@ -93,7 +91,7 @@ public class KafkaConfig {
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 		props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
-		if (security.equals("enable")) {
+		if (!StringUtils.isBlank(SASL_SSL)) {
 			props.put("security.protocol", SASL_SSL);
 			props.put("sasl.mechanism", PLAIN);
 			props.put("sasl.jaas.config", SASL_JAAS_CONFIG);
@@ -111,11 +109,11 @@ public class KafkaConfig {
 	public ProducerFactory<String, Object> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
 
-		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
+		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServer);
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 		
-		if (security.equals("enable")) {
+		if (!StringUtils.isBlank(SASL_SSL)) {
 			config.put("security.protocol", SASL_SSL);
 			config.put("sasl.mechanism", PLAIN);
 			config.put("sasl.jaas.config", SASL_JAAS_CONFIG);
@@ -142,13 +140,13 @@ public class KafkaConfig {
 	public ConsumerFactory<String, String> userConsumerFactory() {
 		Map<String, Object> config = new HashMap<>();
 
-		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
+		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServer);
 		config.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroup_id);
 		config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 10);
 
-		if (security.equals("enable")) {
+		if (!StringUtils.isBlank(SASL_SSL)) {
 			config.put("security.protocol", SASL_SSL);
 			config.put("sasl.mechanism", PLAIN);
 			config.put("sasl.jaas.config", SASL_JAAS_CONFIG);

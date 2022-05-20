@@ -9,6 +9,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
@@ -34,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Primary
 @Configuration
 public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostProcessor, IOEventPostProcessors {
+
+	@Value("${spring.kafka.streams.replication-factor:1}")
+	private String replicationFactor;
 
 	@Autowired
 	private IOEventProperties iOEventProperties;
@@ -67,7 +71,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			e.printStackTrace();
 			SpringApplication.exit(context);
 		}
-		return bean; 
+		return bean;
 	}
 
 	/**
@@ -82,13 +86,17 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic("resultTopic", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic("ioevent-apps", "", iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic("ParallelEventTopic", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic("resultTopic", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic("ioevent-apps", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
 
 			if (iOEventProperties.getTopic_names() != null) {
-				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
-						iOEventProperties.getPrefix(), iOEventProperties.getTopicReplication(),iOEventProperties.getTopic_partition()));
+				iOEventProperties.getTopic_names().stream()
+						.forEach(x -> ((TopicServices) bean).createTopic(x, iOEventProperties.getPrefix(),
+								replicationFactor, iOEventProperties.getTopic_partition()));
 				log.info("topics created");
 			}
 
@@ -130,8 +138,10 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 
 								// TopicBuilder.name(ioeventProperties.getPrefix()+
 								// topicName).partitions(1).replicas((short) 1).build();
-								client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + topicName,
-										iOEventProperties.getTopic_partition(), Short.valueOf(iOEventProperties.getTopicReplication()))));
+								client.createTopics(
+										Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + topicName,
+												iOEventProperties.getTopic_partition(),
+												Short.valueOf(replicationFactor))));
 
 							} else
 								throw new Exception(
@@ -160,8 +170,9 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			if (!topicExist(ioFlow.topic())) {
 				if (iOEventProperties.getAuto_create_topic()) {
 					log.info("creating topic : " + ioFlow.topic());
-					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(), iOEventProperties.getTopic_partition(),
-							Short.valueOf(iOEventProperties.getTopicReplication()))));
+					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(),
+							iOEventProperties.getTopic_partition(),
+							Short.valueOf(replicationFactor))));
 				}
 			}
 		}
