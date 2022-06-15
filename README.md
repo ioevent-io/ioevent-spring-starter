@@ -1,39 +1,51 @@
-# README #
+
+![Logo](https://www.codeonce.fr/assets/img/codeonce/icon.png)
+
+#### _IOEvent, an open source microservice framework, created for developers and enterprises for Event-Driven microservices communication and visualization based on the choreography saga._
+---
+[IOEvent](https://dnrillbtq5f8k.cloudfront.net/)
+
+---
+
+## What's IOEvent ?
+---
+
+IOEvent is essentially a new framework for choreographing microservices. It aims to help microservices applications to link the microservices that make up the complete application with simple and easy lines of code without going further into the configuration of the "brorker" technology and without using an orchestrator like the central workflow engines.
+
+This Framework ensures the transfer of information and communication asynchronously without waiting for a response or worrying about what happens next. Each service observes its environment. Developers will be able to connect its microservices in a short time ensuring the performance of its application thanks to the fast transfer of information between microservices, in addition allowing it to set up a monitoring of execution by process and a "dashboard" of monitoring of execution in BPM.
 
 
-### Grizzly Wave Starter ###
+## Features
+---
 
-this framework uses the Event Streams to establish connection and exchange messages between microservices using annotation
+👩‍💻 **Linking Microservices -** IOEvent allows to link between microservices using simple code that defines the Input and Output of each event by attaching it to any object type.
+
+⚡️ **Simple Configurations -** IOEvent provides a default framework configuration for the technologies used by the framework, as well as simple configuration options to customize the configuration of my application.
+
+🧠 **Execution Tracking -** IOEvent allows to track the process execution information (number of instances, time spent per instance in a microservice).
+
+💬 **Process Supervising -** IOEvent provides a dashboard to display the process diagram created by the microservices with the link created between the microservices and display the current instances in each microservice with all the information about them.
 
 
-### How do I get set up? ###
 
-1.Run the docker-compose that containes the Kafka broker, Kafka HQ and MongoDB
 
-2.Open the starter project in  your editor then add Grizzly wave dependency to your own project pom.xml file :
+## Getting started
+---
+You can start using IOEvent by following this steps:
 
-		<dependency>
-			<groupId>com.grizzly-wave</groupId>
-			<artifactId>grizzly-wave-starter</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+**1.**
 
-3.Add @EnableGrizzlyWave Annotation in your main class
+**2.**
 
-4.set your own properties in application.properties specifying your :
+**3.**
 
-*  Kafka Properties :  spring.kafka.bootstrap-servers: (ex: 192.168.99.100:9092 )
+**4.**
 
-* Eureka Client Properties : eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/
+**5.**
 
-* Grizzly Wave properties : 
+**6.**
 
-							grizzly-wave.topic_names: MyTopic //to create your own topic manually 
+## Documentation
+---
+All documentation can be found on [IOEvent](https://d2wab6xn4w2e46.cloudfront.net/) 📚
 
-   							grizzly-wave.prefix: MyOrganization // prefix for the topics (default "Wave-")
-							
-    						grizzly-wave.auto_create_topic: false // to disable topics auto creation
-
-5.use the annotaion @WaveWorkFlow(name = "MyWorkFLow") on classes which implemenst methods with (@WaveInit , @WaveTransition , @WaveEnd) annotations
-
-6.finally you can start creating your Saga using our annotations (@WaveInit , @WaveTransition , @WaveEnd).
