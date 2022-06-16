@@ -1,3 +1,21 @@
+/*
+ * Copyright © 2021 CodeOnce Software (https://www.codeonce.fr/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
@@ -121,7 +139,7 @@ public class IOEventConfiguration {
 				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
 
 	}
-
+	@ConditionalOnMissingBean
 	@Bean
 	public IOEventParrallelListener IOEventParrallelListener() {
 		return new IOEventParrallelListener();
@@ -142,7 +160,7 @@ public class IOEventConfiguration {
 	public TopicServices TopicServices() {
 		return new TopicServices();
 	}
-
+	@ConditionalOnMissingBean
 	@Bean
 	public RecordsHandler recordsHandler() {
 		return new RecordsHandler();
@@ -164,12 +182,14 @@ public class IOEventConfiguration {
 		return executor;
 	}
 
+	@ConditionalOnMissingBean
 	@Bean
 	public IOEventTopicBeanPostProcessor IOEventTopicBeanPostProcessor() {
 		return new IOEventTopicBeanPostProcessor();
 	}
 
-	@Bean
+	@ConditionalOnMissingBean
+@Bean
 	public IOEventBpmnPostProcessor IOEventBpmnPostProcessor() {
 		return new IOEventBpmnPostProcessor();
 	}
@@ -180,17 +200,20 @@ public class IOEventConfiguration {
 		return new IOEventStartAspect();
 	}
 
-	@Bean
+	@ConditionalOnMissingBean
+@Bean
 	public IOEventTransitionAspect IOEventTransitionAspect() {
 		return new IOEventTransitionAspect();
 	}
 
-	@Bean
+	@ConditionalOnMissingBean
+@Bean
 	public IOEventEndAspect IOEventEndAspect() {
 		return new IOEventEndAspect();
 	}
 
-	@Bean
+	@ConditionalOnMissingBean
+@Bean
 	public IOEvenImplicitTaskAspect IOEvenImplicitTaskAspect() {
 		return new IOEvenImplicitTaskAspect();
 	}
@@ -217,7 +240,8 @@ public class IOEventConfiguration {
 		return new ArrayList<>();
 	}
 
-	@Bean
+	@ConditionalOnMissingBean
+@Bean
 	public IOEventService IOEventService() {
 		return new IOEventService();
 	}

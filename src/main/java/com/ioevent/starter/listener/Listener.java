@@ -1,4 +1,23 @@
+/*
+ * Copyright © 2021 CodeOnce Software (https://www.codeonce.fr/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.ioevent.starter.listener;
+
+
+
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -30,23 +49,23 @@ public class Listener {
 	private Object bean;
 	private Method method;
 	private String topic;
-	private List<BeanMethodPair> beanMethodPairs=new ArrayList<BeanMethodPair>();
-	
+	private List<BeanMethodPair> beanMethodPairs = new ArrayList<BeanMethodPair>();
 
-	
-
-	/** listener constructor 
-	 * @param ioEvent 
-	 * @param topicName */
-	public Listener(final Consumer<String, String> consumer,final RecordsHandler recordsHandler, Object bean,
+	/**
+	 * listener constructor
+	 * 
+	 * @param ioEvent
+	 * @param topicName
+	 */
+	public Listener(final Consumer<String, String> consumer, final RecordsHandler recordsHandler, Object bean,
 			Method method, IOEvent ioEvent, String topicName) {
 		this.consumer = consumer;
 		this.recordsHandler = recordsHandler;
 		this.bean = bean;
 		this.method = method;
-		this.topic=topicName;
-		this.beanMethodPairs.add(new BeanMethodPair(bean, method,ioEvent));
-		
+		this.topic = topicName;
+		this.beanMethodPairs.add(new BeanMethodPair(bean, method, ioEvent));
+
 	}
 
 	/**
@@ -57,9 +76,9 @@ public class Listener {
 		try {
 			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
 			while (keepConsuming) {
-				 ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(10));
-				 if (!consumerRecords.isEmpty()) {
-						recordsHandler.process(consumerRecords, this.beanMethodPairs);
+				ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(10));
+				if (!consumerRecords.isEmpty()) {
+					recordsHandler.process(consumerRecords, this.beanMethodPairs);
 				}
 
 			}
@@ -87,6 +106,7 @@ public class Listener {
 	public void setMethod(Method method) {
 		this.method = method;
 	}
+
 	public String getTopic() {
 		return topic;
 	}
@@ -94,7 +114,7 @@ public class Listener {
 	public void setTopic(String topic) {
 		this.topic = topic;
 	}
-	
+
 	public List<BeanMethodPair> getBeanMethodPairs() {
 		return beanMethodPairs;
 	}
@@ -102,17 +122,19 @@ public class Listener {
 	public void setBeanMethodPairs(List<BeanMethodPair> beanMethodPairs) {
 		this.beanMethodPairs = beanMethodPairs;
 	}
+
 	public void addBeanMethod(BeanMethodPair beanMethod) {
-		boolean valid=true;
+		boolean valid = true;
 		for (BeanMethodPair beanMethodPair : beanMethodPairs) {
-			if ((beanMethod.getBean().equals(beanMethodPair.getBean())&&beanMethod.getMethod().equals(beanMethodPair.getMethod()))) {
-				valid=false;
+			if ((beanMethod.getBean().equals(beanMethodPair.getBean())
+					&& beanMethod.getMethod().equals(beanMethodPair.getMethod()))) {
+				valid = false;
 			}
 		}
 		if (valid) {
 			this.beanMethodPairs.add(beanMethod);
 
 		}
-		
+
 	}
 }
