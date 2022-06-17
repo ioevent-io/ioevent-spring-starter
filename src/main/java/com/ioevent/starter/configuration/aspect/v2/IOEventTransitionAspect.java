@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.configuration.aspect.v2;
-
-
-
-
-
 
 import java.text.ParseException;
 import java.util.Map;
@@ -82,6 +74,8 @@ public class IOEventTransitionAspect {
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
+	 * @throws ParseException
+	 * @throws JsonProcessingException
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
@@ -125,9 +119,9 @@ public class IOEventTransitionAspect {
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
-	 * @param ioflow            for ioflow annotation which include general
+	 * @param ioFlow            for ioflow annotation which include general
 	 *                          information,
-	 * @param returnObject      for the returned object,
+	 * @param response
 	 * @param outputs           for the list of outputs of the event separated by
 	 *                          ",",
 	 * @param ioeventRecordInfo for the record information from the consumed event,
@@ -135,7 +129,7 @@ public class IOEventTransitionAspect {
 	 * @return string format list of outputs of the event separated by "," ,
 	 */
 	public String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
-			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) throws ParseException {
+			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) {
 
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
@@ -166,7 +160,7 @@ public class IOEventTransitionAspect {
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
-	 * @param ioflow            for ioflow annotation which include general
+	 * @param ioFlow            for ioflow annotation which include general
 	 *                          information,
 	 * @param returnObject      for the returned object,
 	 * @param outputs           for the list of outputs of the event separated by
@@ -175,7 +169,7 @@ public class IOEventTransitionAspect {
 	 * @return string format list of outputs of the event separated by "," ,
 	 */
 	public String exclusiveEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String outputs,
-			IOEventRecordInfo ioeventRecordInfo) throws ParseException {
+			IOEventRecordInfo ioeventRecordInfo) {
 
 		IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
@@ -199,9 +193,9 @@ public class IOEventTransitionAspect {
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
-	 * @param ioflow            for ioflow annotation which include general
+	 * @param ioFlow            for ioflow annotation which include general
 	 *                          information,
-	 * @param returnObject      for the returned object,
+	 * @param response
 	 * @param outputs           for the list of outputs of the event separated by
 	 *                          ",",
 	 * @param ioeventRecordInfo for the record information from the consumed event,
@@ -232,6 +226,7 @@ public class IOEventTransitionAspect {
 	 * @param watch             for capturing time,
 	 * @param payload           for the payload of the event,
 	 * @param ioEventType       for the event type,
+	 * @throws JsonProcessingException
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEventRecordInfo ioeventRecordInfo,
 			IOEvent ioEvent, String output, StopWatch watch, Object payload, IOEventType ioEventType)
@@ -248,15 +243,17 @@ public class IOEventTransitionAspect {
 	 * Method that build the event message of simple Transition task to be send in
 	 * kafka topic,
 	 * 
-	 * @param ioEvent         for ioevent annotation which include task information,
-	 * @param ioflow          for ioflow annotation which include general
-	 *                        information,
-	 * @param payload         for the payload of the event,
-	 * @param processName     for the process name
-	 * @param uuid            for the correlation_id,
-	 * @param outputEventName for the output Event where the event will send ,
-	 * @param outputTopic     for the name of the output topic ,
-	 * @param startTime       for the start time of the event,
+	 * @param ioEvent           for ioevent annotation which include task
+	 *                          information,
+	 * @param ioFlow            for ioflow annotation which include general
+	 *                          information,
+	 * @param response          for the response which include the payload of the
+	 *                          event
+	 * @param outputEvent       for the output Event where the event will send
+	 * @param ioeventRecordInfo
+	 * @param startTime         for the start time of the event,
+	 * @param ioEventType       for the ioevent type
+	 * @param headers           for message headers
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
@@ -284,15 +281,16 @@ public class IOEventTransitionAspect {
 	 * Method that build the event message of Parallel task to be send in kafka
 	 * topic,
 	 * 
-	 * @param ioEvent         for ioevent annotation which include task information,
-	 * @param ioflow          for ioflow annotation which include general
-	 *                        information,
-	 * @param payload         for the payload of the event,
-	 * @param processName     for the process name
-	 * @param uuid            for the correlation_id,
-	 * @param outputEventName for the output Event where the event will send ,
-	 * @param outputTopic     for the name of the output topic ,
-	 * @param startTime       for the start time of the event,
+	 * @param ioEvent           for ioevent annotation which include task
+	 *                          information,
+	 * @param ioFlow            for ioflow annotation which include general
+	 *                          information,
+	 * @param response          for the response which include the payload of the
+	 *                          event
+	 * @param outputEvent       for the output Event where the event will send
+	 * @param ioeventRecordInfo
+	 * @param startTime         for the start time of the event,
+	 * @param headers           for message headers
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, IOFlow ioFlow,
@@ -320,15 +318,16 @@ public class IOEventTransitionAspect {
 	 * Method that build the event message of Exclusive task to be send in kafka
 	 * topic,
 	 * 
-	 * @param ioEvent         for ioevent annotation which include task information,
-	 * @param ioflow          for ioflow annotation which include general
-	 *                        information,
-	 * @param payload         for the payload of the event,
-	 * @param processName     for the process name
-	 * @param uuid            for the correlation_id,
-	 * @param outputEventName for the output Event where the event will send ,
-	 * @param outputTopic     for the name of the output topic ,
-	 * @param startTime       for the start time of the event,
+	 * @param ioEvent           for ioevent annotation which include task
+	 *                          information,
+	 * @param ioFlow            for ioflow annotation which include general
+	 *                          information,
+	 * @param response          for the response which include the payload of the
+	 *                          event
+	 * @param outputEvent       for the output Event where the event will send
+	 * @param ioeventRecordInfo
+	 * @param startTime         for the start time of the event,
+	 * @param headers           for message headers
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, IOFlow ioFlow,
@@ -356,21 +355,24 @@ public class IOEventTransitionAspect {
 	 * Method that build the event message of add suffix task to be send in kafka
 	 * topic,
 	 * 
-	 * @param ioEvent         for ioevent annotation which include task information,
-	 * @param ioflow          for ioflow annotation which include general
-	 *                        information,
-	 * @param payload         for the payload of the event,
-	 * @param processName     for the process name
-	 * @param uuid            for the correlation_id,
-	 * @param outputEventName for the output Event where the event will send ,
-	 * @param outputTopic     for the name of the output topic ,
-	 * @param startTime       for the start time of the event,
+	 * @param ioEvent           for ioevent annotation which include task
+	 *                          information,
+	 * @param ioFlow            for ioflow annotation which include general
+	 *                          information,
+	 * @param response          for the response which include the payload of the
+	 *                          event
+	 * @param outputEvent       for the output Event where the event will send
+	 * @param ioeventRecordInfo
+	 * @param startTime         for the start time of the event,
+	 * @param ioEventType       for the ioevent type
+	 * @param headers           for message headers
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildSuffixMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
 			Map<String, Object> headers) {
-		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName()).topic();
+		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName())
+				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 

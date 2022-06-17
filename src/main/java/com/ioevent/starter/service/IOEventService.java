@@ -384,7 +384,7 @@ public class IOEventService {
 	 * method returns input event of @IOEvent by name,
 	 * 
 	 * @param ioEvent    for the IOEvent annotation,
-	 * @param InputName for the Input event name
+	 * @param inputName for the Input event name
 	 * @return InputEvent ,
 	 */
 	public InputEvent getInputEventByName(IOEvent ioEvent, String inputName) {
@@ -483,7 +483,7 @@ public class IOEventService {
 	 * method returns ApiKey from @IOFlow and IOEventProperties ,
 	 * 
 	 * @param ioFlow         for the IOFlow annotation,
-	 * @param IOEventProperties for the IOEvent custom properties value ,
+	 * @param iOEventProperties for the IOEvent custom properties value ,
 	 * @return String of ApiKey ,
 	 */
 	public String getApiKey(IOEventProperties iOEventProperties, IOFlow ioFlow) {
@@ -498,7 +498,7 @@ public class IOEventService {
 	/**
 	 * method returns Output Key from OutputEvent ,
 	 * 
-	 * @param OutputEvent for the OutputEvent annotation,
+	 * @param outputEvent for the OutputEvent annotation,
 	 * @return String of Output Key ,
 	 */
 	public String getOutputKey(OutputEvent outputEvent) {
@@ -563,10 +563,10 @@ public class IOEventService {
 	 * method returns map of headers by merging the consumed headers with the new
 	 * headers created in method,
 	 * 
-	 * @param headersConsumed for the List<Header> consumed from the event ,
-	 * @param newHeaders      a Map<String, Object> for the new headers declared in
+	 * @param headersConsumed for the List of Header consumed from the event ,
+	 * @param newHeaders      a Map of String,Object for the new headers declared in
 	 *                        method
-	 * @return Map<String, Object> ,
+	 * @return Map of String,Object 
 	 */
 	public Map<String, Object> prepareHeaders(List<Header> headersConsumed, Map<String, Object> newHeaders) {
 		Map<String, Object> result = new HashMap<>();

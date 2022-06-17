@@ -225,7 +225,6 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	 * 
 	 * @param bean     for the bean Object,
 	 * @param beanName for the bean name,
-	 * @return bean Object,
 	 */
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {

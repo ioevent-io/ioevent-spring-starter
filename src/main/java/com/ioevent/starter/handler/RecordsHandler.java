@@ -92,7 +92,6 @@ public class RecordsHandler {
 	 * @throws InvocationTargetException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
-	 * @throws
 	 * @throws BeansException
 	 **/
 	public void invokeWithOneParameter(Method method, Object bean, Object args) throws BeansException,

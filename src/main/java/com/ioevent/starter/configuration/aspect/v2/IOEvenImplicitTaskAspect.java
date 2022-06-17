@@ -123,6 +123,8 @@ public class IOEvenImplicitTaskAspect {
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
+	 * @throws ParseException 
+	 * @throws JsonProcessingException 
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
@@ -215,7 +217,7 @@ public class IOEvenImplicitTaskAspect {
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
-	 * @param ioflow            for ioflow annotation which include general
+	 * @param ioFlow            for ioflow annotation which include general
 	 *                          information,
 	 * @param payload           for the payload of the event,
 	 * @param processName       for the process name
@@ -224,6 +226,8 @@ public class IOEvenImplicitTaskAspect {
 	 * @param outputTopic       for the name of the output topic ,
 	 * @param startTime         for the start time of the event,
 	 * @param instanceStartTime
+	 * @param ioEventType 
+	 * @param headers 
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String processName,
@@ -276,12 +280,13 @@ public class IOEvenImplicitTaskAspect {
 	 * Method that display logs after task completed ,
 	 * 
 	 * @param eventLogger for the log info dto display,
-	 * @param uuid        for the correlation_id,
 	 * @param ioEvent     for ioevent annotation which include task information,
-	 * @param ioflow      for ioflow annotation which include general information,
+	 * @param ioEventRecordInfo 
 	 * @param payload     for the payload of the event,
+	 * @param outputName 
 	 * @param ioEventType for the IOEvent Type,
 	 * @param watch       for capturing time,
+	 * @throws JsonProcessingException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent,
 			IOEventRecordInfo ioEventRecordInfo, IOResponse<Object> payload, String outputName, IOEventType ioEventType,
@@ -303,6 +308,7 @@ public class IOEvenImplicitTaskAspect {
 	 * @param payload           for the payload of the event,
 	 * @param watch             for capturing time,
 	 * @param ioeventRecordInfo for the record information from the consumed event,
+	 * @throws JsonProcessingException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, IOResponse<Object> payload,
 			StopWatch watch, IOEventRecordInfo ioeventRecordInfo) throws JsonProcessingException {
@@ -321,11 +327,11 @@ public class IOEvenImplicitTaskAspect {
 	 * @param eventLogger for the log info dto display,
 	 * @param uuid        for the correlation_id,
 	 * @param ioEvent     for ioevent annotation which include task information,
-	 * @param processName for the process name
+	 * @param processName for the process name,
 	 * @param output      for the output where the event will send ,
-	 * @param startTime   for the start time of the even
 	 * @param payload     for the payload of the event,
 	 * @param watch       for capturing time,
+	 * @throws JsonProcessingException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String uuid, IOEvent ioEvent, String processName,
 			String output, IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException {
