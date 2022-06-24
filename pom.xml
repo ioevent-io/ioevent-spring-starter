@@ -19,7 +19,7 @@
 	</parent>
 	<groupId>io.ioevent</groupId>
 	<artifactId>ioevent-spring-boot-starter</artifactId>
-	<version>1.0.0-beta</version>
+	<version>1.0.0</version>
 	<name>ioevent-spring-boot-starter</name>
 	<description>IOEvent is a new framework for choreographing microservices</description>
 	<properties>
