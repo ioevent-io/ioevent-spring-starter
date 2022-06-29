@@ -19,7 +19,7 @@
 	</parent>
 	<groupId>io.ioevent</groupId>
 	<artifactId>ioevent-spring-boot-starter</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>ioevent-spring-boot-starter</name>
 	<description>IOEvent is a new framework for choreographing microservices</description>
 	<properties>
@@ -210,25 +210,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.5.1</version>
-				<executions>
-					<execution>
-						<id>default-deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<serverId>nexus</serverId>
-					<nexusUrl>http://35.180.222.231:8081</nexusUrl>
-					<skipStaging>true</skipStaging>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.3</version>
@@ -297,12 +278,4 @@
 	</developers>
 
 
-
-
-	<distributionManagement>
-		<repository>
-			<id>grizzly-wave-starter-community</id>
-			<url>http://35.180.222.231:8081/nexus/content/repositories/grizzly-wave-starter-community/</url>
-		</repository>
-	</distributionManagement>
 </project>
