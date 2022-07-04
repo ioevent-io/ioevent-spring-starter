@@ -19,9 +19,10 @@
 	</parent>
 	<groupId>io.ioevent</groupId>
 	<artifactId>ioevent-spring-boot-starter</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>ioevent-spring-boot-starter</name>
-	<description>IOEvent is a new framework for choreographing microservices</description>
+	<description>IOEvent is an Event-Driven 
+		microservices framework  </description>
 	<properties>
 		<java.version>11</java.version>
 		<spring-cloud.version>2021.0.0</spring-cloud.version>
@@ -135,9 +136,6 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-javadoc-plugin</artifactId>
 					<version>3.3.1</version>
-			<!-- 	 <configuration>
-            <additionalJOption>-Xdoclint:none</additionalJOption>
-        </configuration> -->	
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -146,9 +144,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>${maven-deploy-plugin.version}</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>com.mycila</groupId>
@@ -161,7 +156,8 @@
 					</properties>
 					<licenseSets>
 						<licenseSet>
-							<header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+							<header>com/mycila/maven/plugin/license/templates/APACHE-2.txt
+							</header>
 							<excludes>
 								<exclude>**/README</exclude>
 								<exclude>src/test/resources/**</exclude>
@@ -240,7 +236,20 @@
 				</configuration>
 			</plugin>
 
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 		</plugins>
 	</build>
@@ -266,16 +275,34 @@
 		<name>CodeOnce Software</name>
 		<url>https://www.codeonce.fr/</url>
 	</organization>
-	<url>https://www.codeonce.fr/</url>
+	<url>http://www.ioevent.io</url>
 	<inceptionYear>2021</inceptionYear>
 	<developers>
 		<developer>
 			<id>ioevent.io</id>
-			<name>ioevent Community</name>
+			<name>ioevent Team</name>
 			<organization>CodeOnce Software</organization>
 			<organizationUrl>https://www.codeonce.fr/</organizationUrl>
 		</developer>
 	</developers>
+
+	<scm>
+		<url>https://github.com/ioevent-io/ioevent-spring-starter/tree/master</url>
+		<connection>scm:git:git://github.com:ioevent-io/ioevent-spring-starter.git</connection>
+		<developerConnection>scm:git:ssh://github.com:ioevent-io/ioevent-spring-starter.git</developerConnection>
+	</scm>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<name>Sonatype Nexus Snapshots</name>
+			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus-staging</id>
+			<name>Nexus Release Repository</name>
+			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
 
 
 </project>
