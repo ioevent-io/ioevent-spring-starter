@@ -82,10 +82,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		try {
 
 			this.process(bean, beanName);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} catch (Throwable e) {
-			e.printStackTrace();
+		} catch (Exception e ) {
+			log.error(e.getMessage());
 		}
 		return bean;
 	}
@@ -106,9 +104,10 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * 
 	 * @param bean     for the bean,
 	 * @param beanName for the bean name,
+	 * @throws Exception 
 	 **/
 	@Override
-	public void process(Object bean, String beanName) throws Throwable {
+	public void process(Object bean, String beanName) throws Exception  {
 		IOFlow ioFlow = bean.getClass().getAnnotation(IOFlow.class);
 		addApikey(apiKeys, ioFlow, iOEventProperties);
 		for (Method method : bean.getClass().getMethods()) {

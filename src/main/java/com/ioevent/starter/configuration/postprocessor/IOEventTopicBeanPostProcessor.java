@@ -88,11 +88,9 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		try {
 			this.process(bean, beanName);
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-			// log.er
+		
 		} catch (Exception e) {
-			e.printStackTrace();
+		 	log.error(e.getMessage());
 			SpringApplication.exit(context);
 		}
 		return bean;
