@@ -67,9 +67,10 @@ public class KafkaConfig {
 	@Value("${spring.kafka.security.protocol:}")
 	private String SASL_SSL;
 	
-	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent7}")
+	@Value("${spring.kafka.state.dir:/tmp/var/lib/kafka-streams-newconfluent8}")
 	private String stateDir;
-	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
+	
+	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:${spring.application.name:ioevent_default_groupid}}}'}")
 	private String kafkaGroup_id;
 	@Value("${spring.kafka.streams.replication-factor:1}")
 	private String topicReplication;
@@ -105,6 +106,7 @@ public class KafkaConfig {
 	@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
 	public KafkaStreamsConfiguration kStreamsConfigs() {
 		Map<String, Object> props = new HashMap<>();
+		kafkaGroup_id = kafkaGroup_id.replaceAll("\\s+","");
 		props.put(StreamsConfig.APPLICATION_ID_CONFIG, kafkaGroup_id + "_Stream");
 		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServer);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());

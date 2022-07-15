@@ -108,9 +108,9 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic", "", replicationFactor,
+			((TopicServices) bean).createTopic("ioevent-parallel-gateway-events", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic("resultTopic", "", replicationFactor,
+			((TopicServices) bean).createTopic("ioevent-parallel-gateway-aggregation", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
 			((TopicServices) bean).createTopic("ioevent-apps", "", replicationFactor,
 					iOEventProperties.getTopic_partition());

@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
+import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.listener.Listener;
@@ -54,7 +55,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Value("${spring.application.name}")
 	private String appName;
-	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
+	@Value("#{'${spring.kafka.consumer.group-id:${ioevent.group_id:${spring.application.name:ioevent_default_groupid}}}'}")
 	private String kafkaGroupid;
 	@Autowired
 	private IOEventProperties iOEventProperties;
@@ -115,9 +116,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 
 			for (IOEvent ioEvent : ioEvents) {
-
-				if (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
-
+				if (needListener(ioEvent)) {
+					
 					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
 							synchronized (method) {
@@ -146,6 +146,18 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 			}
 		}
+	}
+
+	public boolean needListener(IOEvent ioEvent) {
+		if ((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))&&(ioEvent.input().length!=0)) {
+			for (InputEvent input : ioEvent.input()) {
+				if (!StringUtils.isBlank(input.key()+input.value())) {
+					return true;
+				}
+			}
+	
+		}		
+		return false;
 	}
 
 	public void addApikey(Set<String> apiKeys, IOFlow ioFlow, IOEventProperties iOEventProperties) {

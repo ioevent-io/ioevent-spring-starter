@@ -38,7 +38,6 @@ public @interface IOEvent {
 	
 	String key() default "";
 	
-	boolean async() default false;
 	
 	String topic() default "";
 
