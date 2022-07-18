@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * @IOPayload annotation binds a method parameter to the payload of a the
+ *            received event. It can be used also in the parallel input gateway
+ *            to bind between method parameters and inputs payloads using input
+ *            index.
+ *
+ */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOPayload {
 	String value() default "";
+
 	int index() default 0;
 }

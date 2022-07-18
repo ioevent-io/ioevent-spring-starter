@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,7 +22,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * GatewayOutputEvent annotation allows us to specify the outputs of the task,
+ * @GatewayOutputEvent annotation allowsto determine what path is taken through
+ *                     a process that controls the flow of converging Sequence
+ *                     Flows.a single Gateway could have multiple output flows.
+ * @GatewayOutputEvent can be divided into two types, the Exclusive Gateway and
+ *                     the Parallel Gateway: for the parallel we set the value
+ *                     of parallel to true and define the list of output
+ *                     branches @OutputEvent where to produce the event
+ *                     simultaneously , for the exclusive we set the value of
+ *                     exclusive to true and define the list of @OutputEvent
+ *                     where the method will produce the event to the output
+ *                     with the same key of the IOResponse output key .
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)

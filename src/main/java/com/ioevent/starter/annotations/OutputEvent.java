@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,12 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * OutputEvent annotation allows us to specify/define a output event ,
+ * @OutputEvent annotation is used to produce an event which includes a key of
+ *              the output and a topic where the event will be produced ( if the
+ *              topic is not mentioned the event will be sent to the generic
+ *              topic specified in the @IOEvent or @IFlow annotation ).
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OutputEvent {
-	
+
 	String value() default "";
 
 	String key() default "";

@@ -45,7 +45,7 @@ public class IOEventProperties {
 
 	private List<String> topic_names;
 
-	private String prefix = "IOEvent-";
+	private String prefix = "";
 	
 	private String group_id= "ioevent";
 	private Boolean auto_create_topic = true;

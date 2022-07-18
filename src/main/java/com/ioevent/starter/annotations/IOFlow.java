@@ -14,27 +14,32 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
+/**
+ * @IOFlow annotation uses to specify the classes that contains @IOEvent methods
+ * , @IOFlow classes are processed by BeanPostProcessors to extract
+ * information from @IOEvent method , in @IOFlow we can specify the key
+ * or the name of the flow where the class methods are part of ,name of
+ * generic topic where the @IOEvent methods will send event if the topic
+ * wasn’t specified in the @IOEvent annotation and apiKey which will be
+ * attached to the events of the class methods
+ *
+ */
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOFlow {
 
 	String name() default "";
+
 	String key() default "";
+
 	String topic() default "";
+
 	String apiKey() default "";
 }

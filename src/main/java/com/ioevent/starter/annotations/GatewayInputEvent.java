@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,7 +22,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * GatewayInputEvent annotation allows us to specify the inputs of the task,
+ * GatewayInputEvent annotation allows to determine what path is taken through a
+ * process that controls the flow of converging Sequence Flows.a single Gateway
+ * could have multiple @InputEvent. ,the Parallel Gateway wait until all
+ * inputEvents to arrive so he can join them and run his method.
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
