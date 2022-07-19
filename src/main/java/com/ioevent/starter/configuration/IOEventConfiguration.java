@@ -230,6 +230,10 @@ public class IOEventConfiguration {
 	public List<IOEventBpmnPart> iobpmnlist() {
 		return new LinkedList<>();
 	}
+	@Bean("ioTopics")
+	public Set<String> ioTopics() {
+		return new HashSet<>();
+	}
 	
 	@Bean("apiKeys")
 	public Set<String> apiKeys() {

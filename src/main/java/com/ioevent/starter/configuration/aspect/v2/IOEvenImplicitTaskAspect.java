@@ -80,8 +80,7 @@ public class IOEvenImplicitTaskAspect {
 	 * @param ioEvent   for ioevent annotation which include task information,
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
-	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent)
-			throws ParseException, JsonProcessingException {
+	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) throws ParseException {
 
 		if (ioEventService.isImplicitTask(ioEvent) && ioEventService.getInputs(ioEvent).isEmpty()) {
 
@@ -96,14 +95,14 @@ public class IOEvenImplicitTaskAspect {
 			watch.start("IOEvent annotation Implicit Start");
 			String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 			String outputKey = START_PREFIX + ioEvent.key();
-			List<String> topics = ioEventService.getOutputEventTopics(ioEvent, ioFlow);
-		/*	Message<Object> message = this.buildImplicitStartMessage(ioEvent, ioFlow, response, processName,
-					uuid.toString(), outputKey, topics.isEmpty() ? "" : topics.get(0),
-					eventLogger.getTimestamp(eventLogger.getStartTime()));
+			// List<String> topics = ioEventService.getOutputEventTopics(ioEvent, ioFlow);
+			Message<Object> message = this.buildImplicitStartMessage(ioFlow, response, processName, uuid.toString(),
+					outputKey, eventLogger.getTimestamp(eventLogger.getStartTime()));
 			kafkaTemplate.send(message);
-			prepareAndDisplayEventLogger(eventLogger, uuid.toString(), ioEvent, processName, outputKey, response,
-					watch);
-*/
+			// prepareAndDisplayEventLogger(eventLogger, uuid.toString(), ioEvent,
+			// processName, outputKey, response,
+			// watch);
+
 		}
 
 	}
@@ -150,7 +149,7 @@ public class IOEvenImplicitTaskAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfo, response, END_PREFIX, ioEventType,
 						watch);
 				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX);
-				//createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
+				createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
 
 			} else if (!ioEventService.getOutputs(ioEvent).isEmpty()) {
 
@@ -179,14 +178,13 @@ public class IOEvenImplicitTaskAspect {
 						ioeventRecordInfoInput.getId(), END_PREFIX, "",
 						eventLogger.getTimestamp(eventLogger.getStartTime()),
 						ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
-				System.out.println(watch.prettyPrint());
 				kafkaTemplate.send(message);
 				ioeventRecordInfoInput.setWorkFlowName(ioFlow.name());
 				ioeventRecordInfoInput.setOutputConsumedName(START_PREFIX + ioEvent.key());
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfoInput, response,
 						END_PREFIX /* + ioEvent.key() */, ioEventType, watch);
 				ioeventRecordInfoInput.setOutputConsumedName(END_PREFIX);
-				//createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
+				createImpliciteEndEvent(ioEvent, ioFlow, ioeventRecordInfoInput, response, eventLogger);
 			}
 
 		}
@@ -200,12 +198,13 @@ public class IOEvenImplicitTaskAspect {
 		watch.start("IOEvent annotation Implicit End");
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				response.getHeaders());
-		Message<Object> message = this.buildMessage(ioEvent, ioFlow, response, ioeventRecordInfo.getWorkFlowName(),
-				ioeventRecordInfo.getId(), "END", "", eventLogger.getTimestamp(eventLogger.getStartTime()),
-				ioeventRecordInfo.getInstanceStartTime(), IOEventType.END, headers);
+		Message<Object> message = this.buildEndMessage( ioFlow, response, ioeventRecordInfo.getWorkFlowName(),
+				ioeventRecordInfo.getId(), eventLogger.getTimestamp(eventLogger.getStartTime()),
+				ioeventRecordInfo.getInstanceStartTime(), headers);
 
 		kafkaTemplate.send(message);
-		prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch, ioeventRecordInfo);
+		// prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch,
+		// ioeventRecordInfo);
 	}
 
 	/**
@@ -257,13 +256,11 @@ public class IOEvenImplicitTaskAspect {
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), isEndImplicit).build();
 	}
 
-	public Message<Object> buildImplicitStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload,
-			String processName, String uuid, String outputEventName, String outputTopic, Long startTime) {
-		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputTopic);
+	public Message<Object> buildImplicitStartMessage(IOFlow ioFlow, IOResponse<Object> payload, String processName,
+			String uuid, String outputEventName, Long startTime) {
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(payload.getBody())
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
+		return MessageBuilder.withPayload(payload.getBody()).setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "START-EVENT")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
@@ -272,8 +269,31 @@ public class IOEvenImplicitTaskAspect {
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
-				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime).build();
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime)
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 
+	}
+
+	public Message<Object> buildEndMessage(IOFlow ioFlow, IOResponse<Object> payload,
+			String processName, String uuid, Long startTime,
+			Long instanceStartTime, Map<String, Object> headers) {
+
+		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		
+		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic").setHeader(KafkaHeaders.MESSAGE_KEY, uuid)
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.STEP_NAME.toString(),"END-EVENT")
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(),IOEventType.END.toString())
+				.setHeader(IOEventHeaders.INPUT.toString(), Arrays.asList(END_PREFIX))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "END")
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
+				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), instanceStartTime)
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
 	/**
