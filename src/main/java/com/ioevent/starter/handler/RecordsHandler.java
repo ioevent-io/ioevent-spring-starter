@@ -161,7 +161,7 @@ public class RecordsHandler {
 			IOEventParallelEventInformation parallelEventInfo) {
 
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
 								+ parallelEventInfo.getInputRequired())

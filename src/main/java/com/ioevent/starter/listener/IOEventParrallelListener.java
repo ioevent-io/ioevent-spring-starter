@@ -63,7 +63,7 @@ public class IOEventParrallelListener {
 	@Autowired
 	private IOEventService ioEventService;
 	
-	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "#{'${spring.kafka.consumer.group-id:${ioevent.group_id:${spring.application.name:ioevent_default_groupid}}}'}")
+	@KafkaListener(topics = "ioevent-parallel-gateway-aggregation", containerFactory = "userKafkaListenerFactory", groupId = "#{'${spring.kafka.consumer.group-id:${ioevent.group_id:${spring.application.name:ioevent_default_groupid}}}'}")
 	public void consumeParallelEvent(String s)
 			throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		Gson gson = new Gson();

@@ -97,7 +97,7 @@ public class IOEventConfiguration {
 	private String appName;
 
 	/**
-	 * method for processing parallel events from the ParallelEventTopic using kafka stream,
+	 * method for processing parallel events from the ioevent-parallel-gateway-events topic using kafka stream,
 	 * 
 	 * @param builder type of StreamsBuilder,
 	 */
@@ -107,7 +107,7 @@ public class IOEventConfiguration {
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
-				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
+				.stream("ioevent-parallel-gateway-events", Consumed.with(Serdes.String(), Serdes.String()))
 				.map(KeyValue::new).filter((k, v) -> {
 					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
 					return appName.equals(value.getHeaders().get("AppName"));
@@ -136,7 +136,7 @@ public class IOEventConfiguration {
 					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
-				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
+				}).toStream().to("ioevent-parallel-gateway-aggregation", Produced.with(Serdes.String(), Serdes.String()));
 
 	}
 	@ConditionalOnMissingBean
