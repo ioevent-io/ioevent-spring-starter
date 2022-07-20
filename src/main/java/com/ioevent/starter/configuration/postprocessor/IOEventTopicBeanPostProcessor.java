@@ -114,7 +114,8 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
 						iOEventProperties.getPrefix(), replicationFactor, iOEventProperties.getTopic_partition()));
 				log.info("topics created");
-				ioTopics.addAll(iOEventProperties.getTopic_names());
+				iOEventProperties.getTopic_names().stream()
+						.forEach(x -> ioTopics.add(iOEventProperties.getPrefix() + x));
 			}
 
 		}
@@ -147,7 +148,8 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
-					ioTopics.addAll(ioEventService.getTopics(ioEvent));
+					ioEventService.getTopics(ioEvent).stream()
+							.forEach(x -> ioTopics.add(iOEventProperties.getPrefix() + x));
 					for (String topicName : ioEventService.getTopics(ioEvent)) {
 						if (!topicExist(topicName)) {
 
