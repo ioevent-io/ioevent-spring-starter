@@ -149,8 +149,13 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	public boolean needListener(IOEvent ioEvent) {
-		if ((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))&&(ioEvent.input().length!=0)) {
+		if (((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))&&(ioEvent.input().length!=0)) || (ioEvent.gatewayInput().input().length!=0)) {
 			for (InputEvent input : ioEvent.input()) {
+				if (!StringUtils.isBlank(input.key()+input.value())) {
+					return true;
+				}
+			}
+			for (InputEvent input : ioEvent.gatewayInput().input()) {
 				if (!StringUtils.isBlank(input.key()+input.value())) {
 					return true;
 				}
