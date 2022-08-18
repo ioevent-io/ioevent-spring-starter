@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Import;
 import com.ioevent.starter.configuration.IOEventConfiguration;
 
 /**
- * @EnableIOEvent annotation allows us to enable the configuration class from the
+ * EnableIOEvent annotation allows us to enable the configuration class from the
  * starter in any application that use our starter, a single @EnableIOEvent
  * annotation used on the "application class" will enable IOEventConfiguration
  * by loading all the beans of IOEventConfiguration class

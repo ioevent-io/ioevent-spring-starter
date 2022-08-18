@@ -208,7 +208,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public boolean topicExist(String topic) throws InterruptedException, ExecutionException {
 		if ((client.listTopics().names().get().stream()
 				.anyMatch(topicName -> topicName.equalsIgnoreCase(iOEventProperties.getPrefix() + topic)))) {
-			log.info("topic : " + iOEventProperties.getPrefix() + topic + "alreay exist");
+			
 			return true;
 		} else {
 			return false;

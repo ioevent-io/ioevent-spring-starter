@@ -129,7 +129,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 													iOEventProperties.getPrefix() + topicName,
 													kafkaGroupid, Thread.currentThread());
 										} catch (Throwable e) {
-											log.error("Listener failed   !!!");
+											log.error("Listener creation failed   !!!");
 										}
 									}
 								};

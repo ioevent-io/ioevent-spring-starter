@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @IOPayload annotation binds a method parameter to the payload of a the
+ * IOPayload annotation binds a method parameter to the payload of a the
  *            received event. It can be used also in the parallel input gateway
  *            to bind between method parameters and inputs payloads using input
  *            index.

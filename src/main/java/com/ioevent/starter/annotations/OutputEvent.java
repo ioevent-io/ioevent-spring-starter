@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @OutputEvent annotation is used to produce an event which includes a key of
+ * OutputEvent annotation is used to produce an event which includes a key of
  *              the output and a topic where the event will be produced ( if the
  *              topic is not mentioned the event will be sent to the generic
  *              topic specified in the @IOEvent or @IFlow annotation ).

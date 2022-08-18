@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @InputEvent create a Listener which receive events from the topic ( if the
+ * InputEvent create a Listener which receive events from the topic ( if the
  *             topic is not mentioned it will listen to the generic topic
  *             specified in the @IOEvent or @IFlow annotation ), and while the
  *             listener consumes an event it will verify if the output key of

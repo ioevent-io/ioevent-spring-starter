@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @EndEvent annotation define the finishing point of a process which includes a
+ * EndEvent annotation define the finishing point of a process which includes a
  *           key where we specify the name of the flow.
  * 
  *           ,

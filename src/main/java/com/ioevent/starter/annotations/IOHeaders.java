@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @IOHeaders annotation indicates that a method parameter should be bound to
+ * IOHeaders annotation indicates that a method parameter should be bound to
  *            the headers of the event. The annotated parameter must be
  *            assignable to Map with String keys and Object values.
  *

@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @IOFlow annotation uses to specify the classes that contains @IOEvent methods
+ * IOFlow annotation uses to specify the classes that contains @IOEvent methods
  * , @IOFlow classes are processed by BeanPostProcessors to extract
  * information from @IOEvent method , in @IOFlow we can specify the key
  * or the name of the flow where the class methods are part of ,name of

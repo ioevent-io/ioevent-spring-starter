@@ -19,7 +19,7 @@
 	</parent>
 	<groupId>io.ioevent</groupId>
 	<artifactId>ioevent-spring-boot-starter</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>ioevent-spring-boot-starter</name>
 	<description>IOEvent is an Event-Driven 
 		microservices framework  </description>
@@ -192,6 +192,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+                <failOnError>false</failOnError>
+            </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

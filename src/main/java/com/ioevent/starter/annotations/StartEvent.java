@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @StartEvent annotation define the starting point of a process which includes
+ * StartEvent annotation define the starting point of a process which includes
  *             a key where we specify the name of the flow.
  **/
 @Target({ ElementType.METHOD })
