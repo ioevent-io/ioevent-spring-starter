@@ -188,6 +188,9 @@ public class RecordsHandler {
 		for (int i = 0; i < parameterTypes.length; i++) {
 			if (param.get(i) == null) {
 				paramList.add(parseConsumedValue(consumerValue, parameterTypes[i]));
+			}else if (param.get(i).equals("no such header exist")) {
+				paramList.add(null);
+
 			} else {
 				paramList.add(param.get(i));
 			}
@@ -206,6 +209,9 @@ public class RecordsHandler {
 				String payloadInputName = parallelEventConsumed.getInputRequired().get(0);
 				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 						parameterTypes[i]));
+			}else if (param.get(i).equals("no such header exist")) {
+				paramList.add(null);
+
 			} else {
 				paramList.add(param.get(i));
 			}
