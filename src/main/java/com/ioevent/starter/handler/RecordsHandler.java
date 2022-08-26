@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.handler;
-
-
-
-
-
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,6 +41,7 @@ import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ioevent.starter.annotations.IOHeader;
 import com.ioevent.starter.annotations.IOHeaders;
 import com.ioevent.starter.annotations.IOPayload;
 import com.ioevent.starter.configuration.context.AppContext;
@@ -161,7 +155,7 @@ public class RecordsHandler {
 			IOEventParallelEventInformation parallelEventInfo) {
 
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
 								+ parallelEventInfo.getInputRequired())
@@ -175,34 +169,33 @@ public class RecordsHandler {
 			throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			JsonProcessingException {
 
-		if (pair.getMethod().getParameterCount() == 1) {
-			this.invokeWithOneParameter(pair.getMethod(), pair.getBean(), consumerValue);
-		} else if (pair.getMethod().getParameterCount() == 2) {
-			Map<String, Object> headersMap = ioeventRecordInfo.getHeaderList().stream()
-					.collect(Collectors.toMap(Header::key, header -> new String(header.value())));
-			Object[] params = prepareParameters(pair.getMethod(), consumerValue, headersMap);
-			this.invokeWithtwoParameter(pair.getMethod(), pair.getBean(), params);
-		} else {
-			log.error("the method " + pair.getMethod().getName() + " must had one or two parameters");
-		}
+		
+		Map<String, Object> headersMap = ioeventRecordInfo.getHeaderList().stream()
+				.collect(Collectors.toMap(Header::key, header -> new String(header.value())));
+		Object[] params = prepareParameters(pair.getMethod(), consumerValue, headersMap);
+		this.invokeWithtwoParameter(pair.getMethod(), pair.getBean(), params);
+		
 	}
 
 	public Object[] prepareParameters(Method method, String consumerValue, Map<String, Object> headersMap)
 			throws JsonProcessingException {
 		Class[] parameterTypes = method.getParameterTypes();
 		List<Object> paramList = new ArrayList<>();
-		int payloadIndex = getIOPayloadIndex(method);
 
-		int headerIndex = getIOHeadersIndex(method);
-		if ((headerIndex >= 0) && (payloadIndex < 0)) {
-			paramList.add(parseConsumedValue(consumerValue, parameterTypes[(headerIndex + 1) % 2]));
-		} else {
-			paramList.add(parseConsumedValue(consumerValue, parameterTypes[getIOPayloadIndex(method)]));
-		}
-		if (headerIndex >= 0) {
-			paramList.add(headerIndex, headersMap);
+		List<Integer> headerIndexlist = getIOHeaderIndexList(method);
+		Map<Integer, Object> param = getParamMap(method, consumerValue, headersMap);
+		
+		for (int i = 0; i < parameterTypes.length; i++) {
+			if (param.get(i) == null) {
+				paramList.add(parseConsumedValue(consumerValue, parameterTypes[i]));
+			}else if (param.get(i).equals("no such header exist")) {
+				paramList.add(null);
 
+			} else {
+				paramList.add(param.get(i));
+			}
 		}
+		
 		return paramList.toArray();
 	}
 
@@ -210,22 +203,52 @@ public class RecordsHandler {
 			throws JsonProcessingException {
 		Class[] parameterTypes = method.getParameterTypes();
 		List<Object> paramList = new ArrayList<>();
-		List<Integer> payloadIndex = getIOPayloadIndexlist(method);
-		for (int i = 0; i < payloadIndex.size(); i++) {
-			if (payloadIndex.get(i) >= 0) {
-				String payloadInputName = parallelEventConsumed.getInputRequired().get(payloadIndex.get(i));
-				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
-						parameterTypes[i]));
-			} else if (payloadIndex.get(i) == -1) {
-				paramList.add(parallelEventConsumed.getHeaders());
-			} else {
+		Map<Integer, Object> param = getParallelParamMap(method,parallelEventConsumed);
+		for (int i = 0; i < parameterTypes.length; i++) {
+			if (param.get(i) == null) {
 				String payloadInputName = parallelEventConsumed.getInputRequired().get(0);
 				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 						parameterTypes[i]));
+			}else if (param.get(i).equals("no such header exist")) {
+				paramList.add(null);
+
+			} else {
+				paramList.add(param.get(i));
 			}
 		}
-
 		return paramList.toArray();
+	}
+
+	private Map<Integer, Object> getParallelParamMap(Method method,
+			IOEventParallelEventInformation parallelEventConsumed) throws JsonProcessingException {
+		Class[] parameterTypes = method.getParameterTypes();
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		Map<Integer, Object> paramMap = new HashMap<>();
+		for (int i = 0; i < parameterAnnotations.length; i++) {
+			Annotation[] annotations = parameterAnnotations[i];
+			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
+				for (Annotation annotation : annotations) {
+					IOPayload	ioPayload=(IOPayload) annotation;
+					String payloadInputName = parallelEventConsumed.getInputRequired().get(ioPayload.index());
+					paramMap.put(i,parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
+							parameterTypes[i]));
+				}	
+			}
+			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
+				for (Annotation annotation : annotations) {
+					IOHeader ioHeader = (IOHeader) annotation;
+					paramMap.put(i,
+							parallelEventConsumed.getHeaders().get(ioHeader.value()) != null
+									? parseConsumedValue(parallelEventConsumed.getHeaders().get(ioHeader.value()), parameterTypes[i])
+									: "no such header exist");
+				}
+
+			}
+			if (Arrays.asList(annotations).stream().filter(IOHeaders.class::isInstance).count() != 0) {
+				paramMap.put(i, parallelEventConsumed.getHeaders());
+			}
+		}
+		return paramMap;
 	}
 
 	private List<Integer> getIOPayloadIndexlist(Method method) {
@@ -277,6 +300,46 @@ public class RecordsHandler {
 			parameterIndex++;
 		}
 		return -1;
+	}
+
+	public List<Integer> getIOHeaderIndexList(Method method) {
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		List<Integer> parameterIndexList = new ArrayList<>();
+		for (int i = 0; i < parameterAnnotations.length; i++) {
+			Annotation[] annotations = parameterAnnotations[i];
+			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
+				parameterIndexList.add(i);
+			}
+		}
+		return parameterIndexList;
+	}
+
+	public Map<Integer, Object> getParamMap(Method method, String consumerValue, Map<String, Object> headersMap)
+			throws JsonProcessingException {
+		Class[] parameterTypes = method.getParameterTypes();
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		Map<Integer, Object> paramMap = new HashMap<>();
+		for (int i = 0; i < parameterAnnotations.length; i++) {
+			Annotation[] annotations = parameterAnnotations[i];
+			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
+				paramMap.put(i, parseConsumedValue(consumerValue, parameterTypes[i]));
+			}
+			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
+				for (Annotation annotation : annotations) {
+					IOHeader ioHeader = (IOHeader) annotation;
+					paramMap.put(i,
+							headersMap.get(ioHeader.value()) != null
+									? parseConsumedValue(headersMap.get(ioHeader.value()), parameterTypes[i])
+									: "no such header exist");
+				}
+
+			}
+			if (Arrays.asList(annotations).stream().filter(IOHeaders.class::isInstance).count() != 0) {
+				paramMap.put(i, headersMap);
+			}
+		}
+		return paramMap;
+
 	}
 
 	public List<String> parseStringToArray(String s) {

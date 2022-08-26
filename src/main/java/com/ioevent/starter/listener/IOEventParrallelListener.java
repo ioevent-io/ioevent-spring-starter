@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.listener;
-
-
-
-
-
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -63,7 +55,7 @@ public class IOEventParrallelListener {
 	@Autowired
 	private IOEventService ioEventService;
 
-	@KafkaListener(topics = "resultTopic", containerFactory = "userKafkaListenerFactory", groupId = "#{'${spring.kafka.consumer.group-id:${ioevent.group_id:ioevent}}'}")
+	@KafkaListener(topics = "ioevent-parallel-gateway-aggregation", containerFactory = "userKafkaListenerFactory", groupId = "#{'${spring.kafka.consumer.group-id:${ioevent.group_id:${spring.application.name:ioevent_default_groupid}}}'}")
 	public void consumeParallelEvent(String s)
 			throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		Gson gson = new Gson();
@@ -86,7 +78,7 @@ public class IOEventParrallelListener {
 									.toString(),
 							ioeventParallelEventInformation.getInputsArrived().toString(), watch,
 							Long.valueOf(ioeventParallelEventInformation.getHeaders()
-									.get(IOEventHeaders.START_INSTANCE_TIME.toString()).toString()));
+									.get(IOEventHeaders.START_INSTANCE_TIME.toString()).toString()),null);
 					IOEventContextHolder.setContext(ioeventRecordInfo);
 
 					invokeTargetMethod(ioeventParallelEventInformation.getMethod(), beanmObject,
@@ -113,37 +105,17 @@ public class IOEventParrallelListener {
 				if (met.getName().equals(methodName)) {
 					Method method = met;
 
-					if (met.getParameterCount() == 1) {
-						for (Listener listener : listeners) {
-							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
-									.filter(x -> (x.getBean().getClass().getName()
-											.equals(parallelEventInformation.getClassName())
-											&& x.getMethod().getName().equals(parallelEventInformation.getMethod())))
-									.findFirst();
-							if (pair.isPresent()) {
-								method = pair.get().getMethod();
-							}
+					for (Listener listener : listeners) {
+						Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream().filter(
+								x -> (x.getBean().getClass().getName().equals(parallelEventInformation.getClassName())
+										&& x.getMethod().getName().equals(parallelEventInformation.getMethod())))
+								.findFirst();
+						if (pair.isPresent()) {
+							method = pair.get().getMethod();
 						}
-						// recordsHandler.invokeWithOneParameter(method, beanmObject,
-						// parallelEventInformation.getValue());
-						Object[] params = recordsHandler.prepareParallelParameters(method, parallelEventInformation);
-						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
-					} else {
-						for (Listener listener : listeners) {
-							Optional<BeanMethodPair> pair = listener.getBeanMethodPairs().stream()
-									.filter(x -> (x.getBean().getClass().getName()
-											.equals(parallelEventInformation.getClassName())
-											&& x.getMethod().getName().equals(parallelEventInformation.getMethod())))
-									.findFirst();
-							if (pair.isPresent()) {
-								method = pair.get().getMethod();
-							}
-						}
-						Object[] params = recordsHandler.prepareParallelParameters(method, parallelEventInformation);
-						// recordsHandler.prepareParameters(method,
-						// parallelEventInformation.getValue(),parallelEventInformation.getHeaders());
-						recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
 					}
+					Object[] params = recordsHandler.prepareParallelParameters(method, parallelEventInformation);
+					recordsHandler.invokeWithtwoParameter(method, beanmObject, params);
 
 				}
 			}

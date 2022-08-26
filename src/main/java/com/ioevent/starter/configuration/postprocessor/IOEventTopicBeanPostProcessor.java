@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.configuration.postprocessor;
-
-
-
-
-
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -71,7 +64,8 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 
 	@Autowired
 	private AdminClient client;
-
+	@Autowired
+	private Set<String> ioTopics;
 	@Autowired
 	private IOEventService ioEventService;
 
@@ -88,9 +82,9 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		try {
 			this.process(bean, beanName);
-		
+
 		} catch (Exception e) {
-		 	log.error(e.getMessage());
+			log.error(e.getMessage());
 			SpringApplication.exit(context);
 		}
 		return bean;
@@ -108,18 +102,20 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 
 		if (bean instanceof TopicServices) {
-			((TopicServices) bean).createTopic("ParallelEventTopic", "", replicationFactor,
+			((TopicServices) bean).createTopic("ioevent-parallel-gateway-events", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic("resultTopic", "", replicationFactor,
+			((TopicServices) bean).createTopic("ioevent-parallel-gateway-aggregation", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
 			((TopicServices) bean).createTopic("ioevent-apps", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-
+			((TopicServices) bean).createTopic("ioevent-implicit-topic", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
 			if (iOEventProperties.getTopic_names() != null) {
-				iOEventProperties.getTopic_names().stream()
-						.forEach(x -> ((TopicServices) bean).createTopic(x, iOEventProperties.getPrefix(),
-								replicationFactor, iOEventProperties.getTopic_partition()));
+				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
+						iOEventProperties.getPrefix(), replicationFactor, iOEventProperties.getTopic_partition()));
 				log.info("topics created");
+				iOEventProperties.getTopic_names().stream()
+						.forEach(x -> ioTopics.add(iOEventProperties.getPrefix() + x));
 			}
 
 		}
@@ -152,6 +148,8 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 			if (ioEvents.length != 0) {
 				for (IOEvent ioEvent : ioEvents) {
+					ioEventService.getTopics(ioEvent).stream()
+							.forEach(x -> ioTopics.add(iOEventProperties.getPrefix() + x));
 					for (String topicName : ioEventService.getTopics(ioEvent)) {
 						if (!topicExist(topicName)) {
 
@@ -160,10 +158,9 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 
 								// TopicBuilder.name(ioeventProperties.getPrefix()+
 								// topicName).partitions(1).replicas((short) 1).build();
-								client.createTopics(
-										Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + topicName,
-												iOEventProperties.getTopic_partition(),
-												Short.valueOf(replicationFactor))));
+								client.createTopics(Arrays.asList(new NewTopic(
+										iOEventProperties.getPrefix() + topicName,
+										iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
 
 							} else
 								throw new Exception(
@@ -189,12 +186,12 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	private void createIOFlowTopic(IOFlow ioFlow)
 			throws NumberFormatException, InterruptedException, ExecutionException {
 		if (!StringUtils.isBlank(ioFlow.topic())) {
+			ioTopics.add(ioFlow.topic());
 			if (!topicExist(ioFlow.topic())) {
 				if (iOEventProperties.getAuto_create_topic()) {
 					log.info("creating topic : " + ioFlow.topic());
 					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(),
-							iOEventProperties.getTopic_partition(),
-							Short.valueOf(replicationFactor))));
+							iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
 				}
 			}
 		}
@@ -211,7 +208,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	public boolean topicExist(String topic) throws InterruptedException, ExecutionException {
 		if ((client.listTopics().names().get().stream()
 				.anyMatch(topicName -> topicName.equalsIgnoreCase(iOEventProperties.getPrefix() + topic)))) {
-			log.info("topic : " + iOEventProperties.getPrefix() + topic + "alreay exist");
+			
 			return true;
 		} else {
 			return false;

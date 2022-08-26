@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * IOHeaders annotation indicates that a method parameter should be bound to
+ *            the headers of the event. The annotated parameter must be
+ *            assignable to Map with String keys and Object values.
+ *
+ */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOHeaders {
