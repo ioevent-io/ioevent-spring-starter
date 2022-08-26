@@ -43,29 +43,34 @@ public class IOEventRecordInfo {
 	private StopWatch watch;
 	private Long instanceStartTime;
 	private Long startTime = System.currentTimeMillis();
+	private String lastEventEndTime ;
 
 	public IOEventRecordInfo() {
 	}
 
 	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, StopWatch watch,
-			Long instanceStartTime) {
+			Long instanceStartTime,String lastEventEndTime) {
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.outputConsumedName = outputConsumedName;
 		this.watch = watch;
 		this.instanceStartTime = instanceStartTime;
+		this.lastEventEndTime = lastEventEndTime;
 	}
 
 	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, List<Header> headerList,
-			Long instanceStartTime) {
+			Long instanceStartTime,String lastEventEndTime) {
 		super();
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.outputConsumedName = outputConsumedName;
 		this.headerList = headerList;
 		this.instanceStartTime = instanceStartTime;
+		this.lastEventEndTime = lastEventEndTime;
 
 	}
+
+	
 
 	public String getId() {
 		return id;
@@ -122,5 +127,11 @@ public class IOEventRecordInfo {
 	public void setStartTime(Long startTime) {
 		this.startTime = startTime;
 	}
+	public String getLastEventEndTime() {
+		return lastEventEndTime;
+	}
 
+	public void setLastEventEndTime(String lastEventEndTime) {
+		this.lastEventEndTime = lastEventEndTime;
+	}
 }
