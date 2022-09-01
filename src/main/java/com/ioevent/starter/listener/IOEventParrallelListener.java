@@ -68,6 +68,7 @@ public class IOEventParrallelListener {
 				Object beanmObject = ctx.getApplicationContext()
 						.getBean(Class.forName(ioeventParallelEventInformation.getClassName()));
 				if (beanmObject != null) {
+					new Thread(() -> {
 					StopWatch watch = new StopWatch();
 					watch.start((String) ioeventParallelEventInformation.getHeaders()
 							.get(IOEventHeaders.CORRELATION_ID.toString()));
@@ -81,9 +82,13 @@ public class IOEventParrallelListener {
 									.get(IOEventHeaders.START_INSTANCE_TIME.toString()).toString()),null);
 					IOEventContextHolder.setContext(ioeventRecordInfo);
 
-					invokeTargetMethod(ioeventParallelEventInformation.getMethod(), beanmObject,
-							ioeventParallelEventInformation);
-
+					try {
+						invokeTargetMethod(ioeventParallelEventInformation.getMethod(), beanmObject,
+								ioeventParallelEventInformation);
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+					}).start();
 				}
 			} catch (Throwable e) {
 				log.error("error while invoking method ");

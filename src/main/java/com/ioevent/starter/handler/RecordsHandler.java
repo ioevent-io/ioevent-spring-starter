@@ -110,29 +110,33 @@ public class RecordsHandler {
 	 **/
 
 	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) {
-
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
-			IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+			String outputConsumed = this.getIOEventHeaders(consumerRecord).getOutputConsumedName();
 			for (BeanMethodPair pair : beanMethodPairs) {
 
 				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
 
-					if (InputName.equals(ioeventRecordInfo.getOutputConsumedName())) {
-						IOEventContextHolder.setContext(ioeventRecordInfo);
-						if (pair.getIoEvent().gatewayInput().parallel()) {
+					if (InputName.equals(outputConsumed)) {
+						new Thread(() -> {
 
-							parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
+							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+							IOEventContextHolder.setContext(ioeventRecordInfo);
+							if (pair.getIoEvent().gatewayInput().parallel()) {
 
-						} else {
+								parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
 
-							try {
-								simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
-							} catch (BeansException | IllegalAccessException | IllegalArgumentException
-									| InvocationTargetException | JsonProcessingException e) {
-								log.error("error while invoking method");
+							} else {
+
+								try {
+									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
+								} catch (BeansException | IllegalAccessException | IllegalArgumentException
+										| InvocationTargetException | JsonProcessingException e) {
+									log.error("error while invoking method");
+								}
 							}
-						}
+						}).start();
+					
 
 					}
 				}
