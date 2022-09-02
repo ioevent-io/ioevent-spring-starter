@@ -72,5 +72,9 @@ public @interface IOEvent {
 	 * End Event
 	 */
 	EndEvent endEvent() default @EndEvent();
-
+	
+	/**
+	 * Error Event
+	 */
+	ExceptionEvent exception() default @ExceptionEvent();
 }
