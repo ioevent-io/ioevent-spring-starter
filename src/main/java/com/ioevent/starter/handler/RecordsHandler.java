@@ -119,6 +119,7 @@ public class RecordsHandler {
 				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
 
 					if (InputName.equals(ioeventRecordInfo.getOutputConsumedName())) {
+						ioeventRecordInfo.setBody(consumerRecord.value());
 						IOEventContextHolder.setContext(ioeventRecordInfo);
 						if (pair.getIoEvent().gatewayInput().parallel()) {
 
