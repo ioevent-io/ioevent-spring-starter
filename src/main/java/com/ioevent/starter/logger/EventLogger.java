@@ -42,7 +42,7 @@ public class EventLogger {
 	private String startTime;
 	private String endTime;
 	private Long duration;
-
+	private String errorType;
 	public EventLogger() {
 		super();
 	}
@@ -143,7 +143,15 @@ public class EventLogger {
 	public void setEndTime(String endTime) {
 		this.endTime = endTime;
 	}
-
+	
+	public void setErrorType(String errorType) {
+		this.errorType=errorType;
+	}
+	
+	public String getErrorType() {
+		return errorType;
+	}
+	
 	public Long getDuration() {
 		return duration;
 	}

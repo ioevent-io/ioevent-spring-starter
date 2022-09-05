@@ -64,33 +64,24 @@ public class IOExceptionHandlingAspect {
 	public void throwingExceptionAspect(JoinPoint joinPoint, IOEvent ioEvent, Throwable throwable)
 			throws ParseException, JsonProcessingException {
 		//Error Boundry Event
-		if(ioEvent.exception().exception().length!=0 && hasTobeHandled(ioEvent.exception().exception(), throwable)) {
-				
+		if(ioEvent.exception().exception().length!=0 && hasTobeHandled(ioEvent.exception().exception(), throwable)) {		
 		//Capture annotation information to complete the workflow 
 		IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
-		
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		StopWatch watch = ioeventRecordInfo.getWatch();
-
 		IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-		
 		ioeventRecordInfo.setWorkFlowName(
 				ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
-		
 		IOEventType ioEventType = IOEventType.ERROR_BOUNDRY;
-		
+		eventLogger.setErrorType(throwable.getClass().getCanonicalName());
 		String output = "";
 		IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
-		
 		output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 		prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(), ioEventType);
-
 		}
 		//Error End Event
-		else {
-			if(ioEvent.endEvent().
-			
+		else {			
 			log.info("Exception caught : "+throwable.getMessage());
 		}
 	}
@@ -122,7 +113,6 @@ public class IOExceptionHandlingAspect {
 		message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 				ioeventRecordInfo.getStartTime(), ioEventType, headers, throwable);
 		kafkaTemplate.send(message);
-
 		output += ioEventService.getOutputKey(outputEvent) + ",";
 	
 		return output;		
@@ -155,7 +145,7 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
-				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getCause().toString())
+				.setHeader(IOEventHeaders.ERROR_TYPE.toString(),throwable.getClass().getCanonicalName())
 				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage()).build();
 	}
 	
