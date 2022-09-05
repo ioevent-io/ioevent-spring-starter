@@ -50,9 +50,11 @@ public class IOEventBpmnPart {
 	private String workflow;
 	private IOEventType ioEventType;
 	private IOEventGatwayInformation ioeventGatway;
+	private IOEventExceptionInformation ioeventException;
 	private Map<String, String> inputEvent;
 	private Map<String, String> outputEvent;
 	private int processCount = 0;
+	
 
 	public IOEventBpmnPart() {
 	}
@@ -67,6 +69,7 @@ public class IOEventBpmnPart {
 		this.methodQualifiedName = methodName;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
+		this.ioeventException = new IOEventExceptionInformation(ioEvent);
 		this.inputEvent = this.addInput(ioEvent);
 		this.outputEvent = this.addOutput(ioEvent);
 	}
@@ -230,6 +233,14 @@ public class IOEventBpmnPart {
 				+ ", methodQualifiedName=" + methodQualifiedName + ", stepName=" + stepName + ", workflow=" + workflow
 				+ ", ioEventType=" + ioEventType + ", ioeventGatway=" + ioeventGatway + ", inputEvent=" + inputEvent
 				+ ", outputEvent=" + outputEvent + ", processCount=" + processCount + "]";
+	}
+
+	public IOEventExceptionInformation getIoeventException() {
+		return ioeventException;
+	}
+
+	public void setIoeventException(IOEventExceptionInformation ioeventException) {
+		this.ioeventException = ioeventException;
 	}
 
 }
