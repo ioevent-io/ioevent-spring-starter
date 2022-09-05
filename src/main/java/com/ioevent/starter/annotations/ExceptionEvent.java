@@ -15,5 +15,5 @@ public @interface ExceptionEvent {
 
 	OutputEvent output() default @OutputEvent();
 
-	ErrorEndEvent endEvent() default @ErrorEndEvent();
+	EndEvent endEvent() default @EndEvent();
 }
