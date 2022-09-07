@@ -358,7 +358,9 @@ public class RecordsHandler {
 	public IOEventRecordInfo getIOEventHeaders(ConsumerRecord<String, String> consumerRecord) {
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo();
 		ioeventRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream()
-				.filter(header -> !header.key().equals("spring_json_header_types")).collect(Collectors.toList()));
+				.filter(header -> !header.key().equals("spring_json_header_types"))
+				.filter(header -> !header.key().equals("ERROR_TYPE") && !header.key().equals("ERROR_MESSAGE") )
+				.collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
 			if (header.key().equals(IOEventHeaders.OUTPUT_EVENT.toString())) {
@@ -371,7 +373,6 @@ public class RecordsHandler {
 			} else if (header.key().equals(IOEventHeaders.START_INSTANCE_TIME.toString())) {
 				ioeventRecordInfo.setInstanceStartTime(Long.valueOf(new String(header.value())));
 			}
-
 		});
 		ioeventRecordInfo.setWatch(watch);
 		return ioeventRecordInfo;
