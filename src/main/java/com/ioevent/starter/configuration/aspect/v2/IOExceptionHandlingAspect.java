@@ -54,7 +54,6 @@ public class IOExceptionHandlingAspect {
 	/**
 	 * Method AfterThrowing advice is executed after a join point does not complete
 	 * normally and end up throwing an exception.
-	 * 
 	 * @param joinPoint for the join point during the execution of the program,
 	 * @param ioEvent   for ioevent annotation which include task information,
 	 * @param throwable for throwed exception during the execution,
@@ -64,7 +63,7 @@ public class IOExceptionHandlingAspect {
 	@AfterThrowing(value = "@annotation(anno)", argNames = "jp, anno,ex", throwing = "ex")
 	public void throwingExceptionAspect(JoinPoint joinPoint, IOEvent ioEvent, Throwable throwable)
 			throws ParseException, JsonProcessingException {
-		// Error Boundry Event
+		
 		if (ioEvent.exception().exception().length != 0 && hasTobeHandled(ioEvent.exception().exception(), throwable)) {
 			// Capture annotation information to complete the workflow
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
@@ -80,23 +79,37 @@ public class IOExceptionHandlingAspect {
 			IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
 			
 			if (!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
-				ioEventType = IOEventType.END;
+				// Error End Event
+				ioEventType = IOEventType.ERROR_END;
 				output = endEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			} else {
+				// Error Boundry Event
 				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			}
 			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(),
 					ioEventType);
 		}
-		// Error End Event
+		// Error with no handling
 		else {
-				log.info("Error with no handling ");
+				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
+				EventLogger eventLogger = new EventLogger();
+				eventLogger.startEventLog();
+				StopWatch watch = ioeventRecordInfo.getWatch();
+				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
+				ioeventRecordInfo.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
+				IOEventType ioEventType = IOEventType.UNHANDLED_ERROR;
+				eventLogger.setErrorType(throwable.getClass().getCanonicalName());
+				IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
+				String output ="";
+				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
+				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(), ioEventType);
+				//log.info("Error with no handling ");
 		}
 	}
 
 	private String endEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String output,
 			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType, Throwable throwable) {
-		output = "END";
+		output = "ERROR END";
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				payload.getHeaders());
 		Message<Object> message = this.buildEndEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
@@ -142,15 +155,15 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
-				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.ERROR_END.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime()).setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
-				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
-				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
+//				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
+//				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
 				.build();
 	}
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
@@ -174,7 +187,8 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
 				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
-				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage()).build();
+				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
+				.build();
 	}
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEventRecordInfo ioeventRecordInfo,

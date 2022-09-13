@@ -163,7 +163,7 @@ public class IOEventBpmnPart {
 	}
 
 	public Map<String, String> addInput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		for (InputEvent input : ioEvent.input()) {
 			if (!StringUtils.isBlank(input.key() + input.value())) {
 				if (!StringUtils.isBlank(input.value())) {
@@ -171,7 +171,6 @@ public class IOEventBpmnPart {
 				} else {
 					result.put(input.key(), input.topic());
 				}
-
 			}
 		}
 		for (InputEvent input : ioEvent.gatewayInput().input()) {
@@ -187,7 +186,10 @@ public class IOEventBpmnPart {
 	}
 
 	public Map<String, String> addOutput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
+		if(!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
+			result.put(ioEvent.exception().endEvent().value(), ioEvent.topic());
+		}
 		boolean isSuffix = false;
 		String suffix = "";
 		for (OutputEvent output : ioEvent.output()) {
@@ -224,6 +226,7 @@ public class IOEventBpmnPart {
 				}
 			}
 		}
+		
 		return result;
 	}
 

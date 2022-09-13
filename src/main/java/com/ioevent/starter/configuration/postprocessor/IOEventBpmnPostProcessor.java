@@ -25,11 +25,13 @@ package com.ioevent.starter.configuration.postprocessor;
 
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.common.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -40,6 +42,9 @@ import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
+import com.ioevent.starter.domain.IOEventExceptionInformation;
+import com.ioevent.starter.domain.IOEventGatwayInformation;
+import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
 import com.ioevent.starter.service.IOEventService;
@@ -211,6 +216,31 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			String methodName) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		
+		//create end and add it to bpmn list
+		if(!Utils.isBlank(ioEvent.exception().endEvent().value())) {
+			IOEventBpmnPart errorEnd = new IOEventBpmnPart();
+			errorEnd.setApiKey(apiKey);
+			errorEnd.setId("ErrorEnd_"+partID);
+			errorEnd.setMethodQualifiedName("ErrorEnd of "+methodName);
+			errorEnd.setStepName(ioEvent.exception().endEvent().value());
+			errorEnd.setWorkflow(processName);
+			errorEnd.setIoEventType(IOEventType.ERROR_END);
+			errorEnd.setIoAppName(apiKey);
+			
+			HashMap<String, String> input = new HashMap<>();
+			input.put(ioEvent.exception().endEvent().value(), ioEvent.topic());
+			errorEnd.setInputEvent(input);
+			
+			errorEnd.setIoeventGatway(new IOEventGatwayInformation());
+			errorEnd.setIoeventException(new IOEventExceptionInformation());
+			
+			errorEnd.setOutputEvent(new HashMap<>());
+			
+			iobpmnlist.add(errorEnd);
+		}
+
+
 		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
 				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName);
 

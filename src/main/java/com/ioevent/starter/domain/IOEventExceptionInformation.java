@@ -13,6 +13,7 @@ public class IOEventExceptionInformation {
 
 	public IOEventExceptionInformation() {
 		super();
+		this.errorBoundryEvent = false;
 	}
 
 	public IOEventExceptionInformation(Boolean errorBoundryEvent, Map<String, String> outputEvent) {
