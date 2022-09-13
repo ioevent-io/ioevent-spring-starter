@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
@@ -162,8 +163,6 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime()).setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
-//				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
-//				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
 				.build();
 	}
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
@@ -188,6 +187,8 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
 				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
 				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
+				.setHeader(IOEventHeaders.ERROR_TRACE.toString(), ExceptionUtils.getRootCauseStackTrace(throwable))
+
 				.build();
 	}
 
