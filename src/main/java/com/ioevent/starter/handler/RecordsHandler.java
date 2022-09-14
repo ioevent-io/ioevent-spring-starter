@@ -359,7 +359,9 @@ public class RecordsHandler {
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo();
 		ioeventRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream()
 				.filter(header -> !header.key().equals("spring_json_header_types"))
-				.filter(header -> !header.key().equals("ERROR_TYPE") && !header.key().equals("ERROR_MESSAGE") )
+				.filter(header -> !header.key().equals(IOEventHeaders.ERROR_TYPE.toString()) 
+						&& !header.key().equals(IOEventHeaders.ERROR_MESSAGE.toString()) 
+						&& !header.key().equals(IOEventHeaders.ERROR_TRACE.toString()) )
 				.collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {

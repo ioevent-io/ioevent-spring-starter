@@ -1,6 +1,7 @@
 package com.ioevent.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -163,6 +164,9 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime()).setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
+				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
+				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
+				.setHeader(IOEventHeaders.ERROR_TRACE.toString(), Arrays.toString(ExceptionUtils.getRootCauseStackTrace(throwable)))
 				.build();
 	}
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
@@ -187,7 +191,7 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false)
 				.setHeader(IOEventHeaders.ERROR_TYPE.toString(), throwable.getClass().getCanonicalName())
 				.setHeader(IOEventHeaders.ERROR_MESSAGE.toString(), throwable.getMessage())
-				.setHeader(IOEventHeaders.ERROR_TRACE.toString(), ExceptionUtils.getRootCauseStackTrace(throwable))
+				.setHeader(IOEventHeaders.ERROR_TRACE.toString(), Arrays.toString(ExceptionUtils.getRootCauseStackTrace(throwable)))
 
 				.build();
 	}
