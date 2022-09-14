@@ -226,7 +226,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			errorEnd.setStepName(ioEvent.exception().endEvent().value());
 			errorEnd.setWorkflow(processName);
 			errorEnd.setIoEventType(IOEventType.ERROR_END);
-			errorEnd.setIoAppName(apiKey);
+			errorEnd.setIoAppName(appName);
 			
 			HashMap<String, String> input = new HashMap<>();
 			input.put(ioEvent.exception().endEvent().value(), ioEvent.topic());

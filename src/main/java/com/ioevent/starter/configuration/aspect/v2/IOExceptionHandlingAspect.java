@@ -65,47 +65,35 @@ public class IOExceptionHandlingAspect {
 	@AfterThrowing(value = "@annotation(anno)", argNames = "jp, anno,ex", throwing = "ex")
 	public void throwingExceptionAspect(JoinPoint joinPoint, IOEvent ioEvent, Throwable throwable)
 			throws ParseException, JsonProcessingException {
+		IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
+		EventLogger eventLogger = new EventLogger();
+		eventLogger.startEventLog();
+		StopWatch watch = ioeventRecordInfo.getWatch();
+		IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
+		ioeventRecordInfo.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 		
-		if (ioEvent.exception().exception().length != 0 && hasTobeHandled(ioEvent.exception().exception(), throwable)) {
-			// Capture annotation information to complete the workflow
-			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
-			EventLogger eventLogger = new EventLogger();
-			eventLogger.startEventLog();
-			StopWatch watch = ioeventRecordInfo.getWatch();
-			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-			ioeventRecordInfo.setWorkFlowName(
-					ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
+		if (ioEvent.exception().exception().length != 0 && hasTobeHandled(ioEvent.exception().exception(), throwable)) {			
 			IOEventType ioEventType = IOEventType.ERROR_BOUNDRY;
 			eventLogger.setErrorType(throwable.getClass().getCanonicalName());
 			String output = "";
 			IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
 			
 			if (!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
-				// Error End Event
 				ioEventType = IOEventType.ERROR_END;
 				output = endEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			} else {
-				// Error Boundry Event
 				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			}
 			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(),
 					ioEventType);
 		}
-		// Error with no handling
 		else {
-				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
-				EventLogger eventLogger = new EventLogger();
-				eventLogger.startEventLog();
-				StopWatch watch = ioeventRecordInfo.getWatch();
-				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-				ioeventRecordInfo.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 				IOEventType ioEventType = IOEventType.UNHANDLED_ERROR;
 				eventLogger.setErrorType(throwable.getClass().getCanonicalName());
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
 				String output ="";
 				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(), ioEventType);
-				//log.info("Error with no handling ");
 		}
 	}
 
@@ -144,7 +132,11 @@ public class IOExceptionHandlingAspect {
 		message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 				ioeventRecordInfo.getStartTime(), ioEventType, headers, throwable);
 		kafkaTemplate.send(message);
-		output += ioEventService.getOutputKey(outputEvent) + ",";
+		if(ioEventType.equals(IOEventType.UNHANDLED_ERROR)) {
+			output += "IOEvent_Unhandled_Exception";
+		}else {
+			output += ioEventService.getOutputKey(outputEvent) + ",";
+		}
 		return output;
 	}
 	public Message<Object> buildEndEventMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload,
@@ -174,7 +166,11 @@ public class IOExceptionHandlingAspect {
 			Map<String, Object> headers, Throwable throwable) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-
+		String nextOutput = ioEventService.getOutputKey(outputEvent);
+		if(ioEventType.equals(IOEventType.UNHANDLED_ERROR)) {
+			nextOutput = "IOEvent_Unhandled_Exception";
+		}
+		
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
@@ -182,7 +178,7 @@ public class IOExceptionHandlingAspect {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
-				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), nextOutput)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
