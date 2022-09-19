@@ -233,7 +233,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			errorEnd.setInputEvent(input);
 			
 			errorEnd.setIoeventGatway(new IOEventGatwayInformation());
-			errorEnd.setIoeventException(new IOEventExceptionInformation());
+			IOEventExceptionInformation ioEventException = new IOEventExceptionInformation();
+			if(!StringUtils.isBlank(ioEvent.exception().exception().toString())) {
+				ioEventException.setErrorType(ioEvent.exception().exception().toString());
+			}
+			errorEnd.setIoeventException(ioEventException);
 			
 			errorEnd.setOutputEvent(new HashMap<>());
 			

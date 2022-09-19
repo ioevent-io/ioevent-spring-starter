@@ -1,5 +1,6 @@
 package com.ioevent.starter.domain;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,10 +11,12 @@ import com.ioevent.starter.annotations.IOEvent;
 public class IOEventExceptionInformation {
 	private Boolean errorBoundryEvent;
 	private Map<String, String> outputEvent = new HashMap<>();
+	private String errorType;
 
 	public IOEventExceptionInformation() {
 		super();
 		this.errorBoundryEvent = false;
+		this.errorType="";
 	}
 
 	public IOEventExceptionInformation(Boolean errorBoundryEvent, Map<String, String> outputEvent) {
@@ -23,7 +26,14 @@ public class IOEventExceptionInformation {
 	}
 
 	public IOEventExceptionInformation(IOEvent ioEvent) {
-		this.errorBoundryEvent = StringUtils.isBlank(ioEvent.exception().endEvent().value() );
+		
+		this.errorBoundryEvent = !ioEvent.exception().output().key().isEmpty() ;
+		
+		if(!StringUtils.isBlank(Arrays.toString(ioEvent.exception().exception()))) {
+			this.errorType = Arrays.toString(ioEvent.exception().exception());
+		}else {
+			this.errorType = "";
+		}
 		if (StringUtils.isBlank(ioEvent.exception().endEvent().value()+ioEvent.exception().endEvent().key()) &&
 				!StringUtils.isBlank(ioEvent.exception().output().value()+ioEvent.exception().output().key())
 				) {
@@ -56,5 +66,13 @@ public class IOEventExceptionInformation {
 	public String toString() {
 		return "IOEventExceptionInformation [errorBoundryEvent=" + errorBoundryEvent + ", outputEvent=" + outputEvent
 				+ "]";
+	}
+
+	public String getErrorType() {
+		return errorType;
+	}
+
+	public void setErrorType(String errorType) {
+		this.errorType = errorType;
 	}
 }
