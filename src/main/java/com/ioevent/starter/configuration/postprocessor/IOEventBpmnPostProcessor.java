@@ -25,6 +25,7 @@ package com.ioevent.starter.configuration.postprocessor;
 
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -235,7 +236,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			errorEnd.setIoeventGatway(new IOEventGatwayInformation());
 			IOEventExceptionInformation ioEventException = new IOEventExceptionInformation();
 			if(!StringUtils.isBlank(ioEvent.exception().exception().toString())) {
-				ioEventException.setErrorType(ioEvent.exception().exception().toString());
+				ioEventException.setErrorType(Arrays.toString(ioEvent.exception().exception()));
 			}
 			errorEnd.setIoeventException(ioEventException);
 			
