@@ -57,6 +57,7 @@ import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
+import com.ioevent.starter.configuration.aspect.v2.IOExceptionHandlingAspect;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProcessor;
@@ -204,7 +205,13 @@ public class IOEventConfiguration {
 @Bean
 	public IOEventTransitionAspect IOEventTransitionAspect() {
 		return new IOEventTransitionAspect();
+	}	
+	@ConditionalOnMissingBean
+@Bean
+	public IOExceptionHandlingAspect IOExceptionHandlingAspect() {
+		return new IOExceptionHandlingAspect();
 	}
+	
 
 	@ConditionalOnMissingBean
 @Bean

@@ -34,17 +34,15 @@ import org.springframework.util.StopWatch;
  */
 public class IOEventRecordInfo {
 	private String id;
-
 	private String workFlowName;
-
 	private String outputConsumedName;
 	private List<Header> headerList;
-
 	private StopWatch watch;
 	private Long instanceStartTime;
 	private Long startTime = System.currentTimeMillis();
 	private String lastEventEndTime ;
-
+	private String body;
+	
 	public IOEventRecordInfo() {
 	}
 
@@ -70,7 +68,13 @@ public class IOEventRecordInfo {
 
 	}
 
+	public String getBody() {
+		return body;
+	}
 	
+	public void setBody(String body) {
+		this.body = body;
+	}
 
 	public String getId() {
 		return id;
