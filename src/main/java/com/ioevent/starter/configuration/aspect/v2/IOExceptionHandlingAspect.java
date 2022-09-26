@@ -65,6 +65,7 @@ public class IOExceptionHandlingAspect {
 	@AfterThrowing(value = "@annotation(anno)", argNames = "jp, anno,ex", throwing = "ex")
 	public void throwingExceptionAspect(JoinPoint joinPoint, IOEvent ioEvent, Throwable throwable)
 			throws ParseException, JsonProcessingException {
+		throwable.printStackTrace();
 		IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
