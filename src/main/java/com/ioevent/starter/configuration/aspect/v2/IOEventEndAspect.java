@@ -24,6 +24,7 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.aspectj.lang.JoinPoint;
@@ -129,7 +130,7 @@ public class IOEventEndAspect {
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
+				.setHeader(IOEventHeaders.INPUT.toString(), Arrays.asList(ioeventRecordInfo.getOutputConsumedName()))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
