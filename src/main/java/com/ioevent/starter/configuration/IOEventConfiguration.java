@@ -142,23 +142,23 @@ public class IOEventConfiguration {
 	}
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventParrallelListener IOEventParrallelListener() {
+	public IOEventParrallelListener ioEventParrallelListener() {
 		return new IOEventParrallelListener();
 	}
 
 	@Bean
-	public com.ioevent.starter.configuration.context.AppContext AppContext() {
+	public com.ioevent.starter.configuration.context.AppContext appContext() {
 		return new com.ioevent.starter.configuration.context.AppContext();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventProperties IOEventProperties() {
+	public IOEventProperties ioEventProperties() {
 		return new IOEventProperties();
 	}
 
 	@Bean
-	public TopicServices TopicServices() {
+	public TopicServices topicServices() {
 		return new TopicServices();
 	}
 	@ConditionalOnMissingBean
@@ -168,7 +168,7 @@ public class IOEventConfiguration {
 	}
 
 	@Bean
-	public ListenerCreator ListenerCreator() {
+	public ListenerCreator listenerCreator() {
 		return new ListenerCreator();
 	}
 
@@ -185,49 +185,49 @@ public class IOEventConfiguration {
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventTopicBeanPostProcessor IOEventTopicBeanPostProcessor() {
+	public IOEventTopicBeanPostProcessor ioEventTopicBeanPostProcessor() {
 		return new IOEventTopicBeanPostProcessor();
 	}
 
 	@ConditionalOnMissingBean
 @Bean
-	public IOEventBpmnPostProcessor IOEventBpmnPostProcessor() {
+	public IOEventBpmnPostProcessor ioEventBpmnPostProcessor() {
 		return new IOEventBpmnPostProcessor();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventStartAspect IOEventStartAspect() {
+	public IOEventStartAspect ioEventStartAspect() {
 		return new IOEventStartAspect();
 	}
 
 	@ConditionalOnMissingBean
 @Bean
-	public IOEventTransitionAspect IOEventTransitionAspect() {
+	public IOEventTransitionAspect ioEventTransitionAspect() {
 		return new IOEventTransitionAspect();
 	}	
 	@ConditionalOnMissingBean
-@Bean
-	public IOExceptionHandlingAspect IOExceptionHandlingAspect() {
+	@Bean
+	public IOExceptionHandlingAspect ioExceptionHandlingAspect() {
 		return new IOExceptionHandlingAspect();
 	}
 	
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEventEndAspect IOEventEndAspect() {
+	@Bean
+	public IOEventEndAspect ioEventEndAspect() {
 		return new IOEventEndAspect();
 	}
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEvenImplicitTaskAspect IOEvenImplicitTaskAspect() {
+	@Bean
+	public IOEvenImplicitTaskAspect ioEvenImplicitTaskAspect() {
 		return new IOEvenImplicitTaskAspect();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventController IOEventController() {
+	public IOEventController ioEventController() {
 		return new IOEventController();
 	}
 
@@ -252,8 +252,8 @@ public class IOEventConfiguration {
 	}
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEventService IOEventService() {
+	@Bean
+	public IOEventService ioEventService() {
 		return new IOEventService();
 	}
 	@Bean

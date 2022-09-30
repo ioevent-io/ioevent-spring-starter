@@ -218,7 +218,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		
-		//create end and add it to bpmn list
 		if(!Utils.isBlank(ioEvent.exception().endEvent().value())) {
 			IOEventBpmnPart errorEnd = new IOEventBpmnPart();
 			errorEnd.setApiKey(apiKey);
@@ -244,7 +243,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			
 			iobpmnlist.add(errorEnd);
 		}
-
 
 		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
 				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName);

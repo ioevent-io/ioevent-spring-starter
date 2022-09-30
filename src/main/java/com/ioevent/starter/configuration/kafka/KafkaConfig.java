@@ -81,7 +81,7 @@ public class KafkaConfig {
 	 * @return AdminClient Object,
 	 **/
 	@Bean
-	public AdminClient AdminClient() {
+	public AdminClient adminClient() {
 		Properties properties = new Properties();
 
 		properties.put("bootstrap.servers", kafkaBootstrapServer);
