@@ -188,7 +188,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 		if (!StringUtils.isBlank(ioFlow.topic())) {
 			ioTopics.add(ioFlow.topic());
 			if (!topicExist(ioFlow.topic())) {
-				if (iOEventProperties.getAuto_create_topic()) {
+				if (Boolean.TRUE.equals(iOEventProperties.getAuto_create_topic())) {
 					log.info("creating topic : " + ioFlow.topic());
 					client.createTopics(Arrays.asList(new NewTopic(iOEventProperties.getPrefix() + ioFlow.topic(),
 							iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
@@ -223,6 +223,6 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	 */
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-
-	}
+   // Execute After Bean Destruction
+ }
 }

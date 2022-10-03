@@ -36,7 +36,9 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -58,10 +60,21 @@ import lombok.extern.slf4j.Slf4j;
 public class KafkaConfig {
 
 
+	@Value("${spring.kafka.group-id:default-admin-group}")
+	private String kafkaGroupId;
+	@Value("${spring.kafka.sasl.jaas.username:}")
+	private String saslJaasUsername;
+	@Value("${spring.kafka.sasl.jaas.password:}")
+	private String saslJaasPassword;
+	@Value("${spring.kafka.sasl.mechanism:PLAIN}")
+	private String plain;
+	@Value("${spring.kafka.security.protocol:SASL_SSL}")
+	private String saslSsl;
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String kafkaBootstrapServer;
-	@Value("${spring.kafka.sasl.jaas.config:NONE}")
-	private String SASL_JAAS_CONFIG;
+	@Autowired
+	private KafkaProperties kafkaProperties;
+	
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
 	private String PLAIN;
 	@Value("${spring.kafka.security.protocol:}")
@@ -81,7 +94,7 @@ public class KafkaConfig {
 	 * @return AdminClient Object,
 	 **/
 	@Bean
-	public AdminClient AdminClient() {
+	public AdminClient adminClient() {
 		Properties properties = new Properties();
 
 		properties.put("bootstrap.servers", kafkaBootstrapServer);
@@ -89,12 +102,14 @@ public class KafkaConfig {
 		properties.put("request.timeout.ms", 20000);
 		properties.put("retry.backoff.ms", 500);
 
-		if (!StringUtils.isBlank(SASL_SSL)) {
-			properties.put("security.protocol", SASL_SSL);
-			properties.put("sasl.mechanism", PLAIN);
-			properties.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		if (!StringUtils.isBlank(saslJaasUsername)) {
+			String saslJaasConfig = String.format(
+					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
+					saslJaasUsername, saslJaasPassword);
+			properties.put("security.protocol", saslSsl);
+			properties.put("sasl.mechanism", plain);
+			properties.put("sasl.jaas.config", saslJaasConfig);
 		}
-
 		return AdminClient.create(properties);
 	}
 
@@ -117,12 +132,14 @@ public class KafkaConfig {
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 		props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
-		if (!StringUtils.isBlank(SASL_SSL)) {
-			props.put("security.protocol", SASL_SSL);
-			props.put("sasl.mechanism", PLAIN);
-			props.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		if (!StringUtils.isBlank(saslJaasUsername)) {
+			String saslJaasConfig = String.format(
+					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
+					saslJaasUsername, saslJaasPassword);
+			props.put("security.protocol", saslSsl);
+			props.put("sasl.mechanism", plain);
+			props.put("sasl.jaas.config", saslJaasConfig);
 		}
-
 		return new KafkaStreamsConfiguration(props);
 	}
 
@@ -139,10 +156,13 @@ public class KafkaConfig {
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 		
-		if (!StringUtils.isBlank(SASL_SSL)) {
-			config.put("security.protocol", SASL_SSL);
-			config.put("sasl.mechanism", PLAIN);
-			config.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		if (!StringUtils.isBlank(saslJaasUsername)) {
+			String saslJaasConfig = String.format(
+					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
+					saslJaasUsername, saslJaasPassword);
+			config.put("security.protocol", saslSsl);
+			config.put("sasl.mechanism", plain);
+			config.put("sasl.jaas.config", saslJaasConfig);
 		}
 		return new DefaultKafkaProducerFactory<>(config);
 	}
@@ -172,11 +192,15 @@ public class KafkaConfig {
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 10);
 
-		if (!StringUtils.isBlank(SASL_SSL)) {
-			config.put("security.protocol", SASL_SSL);
-			config.put("sasl.mechanism", PLAIN);
-			config.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		if (!StringUtils.isBlank(saslJaasUsername)) {
+			String saslJaasConfig = String.format(
+					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
+					saslJaasUsername, saslJaasPassword);
+			config.put("security.protocol", saslSsl);
+			config.put("sasl.mechanism", plain);
+			config.put("sasl.jaas.config", saslJaasConfig);
 		}
+		
 		return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new StringDeserializer());
 	}
 
@@ -196,5 +220,4 @@ public class KafkaConfig {
 		factory.setConsumerFactory(userConsumerFactory());
 		return factory;
 	}
-
 }
