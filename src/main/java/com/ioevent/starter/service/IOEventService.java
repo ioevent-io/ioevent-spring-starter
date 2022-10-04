@@ -70,13 +70,13 @@ public class IOEventService {
 
 	/**
 	 * This is a kafka producer which send parallel events info to
-	 * ParallelEventTopic topic
+	 * ioevent-parallel-gateway-events topic
 	 * 
 	 * @param parallelEventInfo for the parallel event information,
 	 */
 	public void sendParallelEventInfo(IOEventParallelEventInformation parallelEventInfo) {
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic").setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()))
 				.build();
 
@@ -453,6 +453,7 @@ public class IOEventService {
 			return ioEvent.endEvent().key();
 
 		} else if (!Objects.isNull(ioFlow)) {
+			
 			return ioFlow.name();
 		}
 		return "";

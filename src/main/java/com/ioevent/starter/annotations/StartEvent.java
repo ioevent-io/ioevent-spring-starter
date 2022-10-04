@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 /**
- * StartEvent annotation allows us to specify that the task is an start task,
+ * StartEvent annotation define the starting point of a process which includes
+ *             a key where we specify the name of the flow.
  **/
-@Target({ ElementType.METHOD}) 
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface StartEvent {
-	
+
 	String value() default "";
-	
+
 	String key() default "";
 
 }

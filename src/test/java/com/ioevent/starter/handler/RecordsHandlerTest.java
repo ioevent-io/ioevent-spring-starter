@@ -114,7 +114,7 @@ class RecordsHandlerTest {
 		consumerRecord.headers().add("another header", "value".getBytes());
 
 		IOEventRecordInfo ioeventRecordInfoCreated = recordsHandler.getIOEventHeaders(consumerRecord);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("id", "workflow name", "output name", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("id", "workflow name", "output name", new StopWatch(),1000L,null);
 		assertEquals(ioeventRecordInfo.getId(), ioeventRecordInfoCreated.getId());
 		assertEquals(ioeventRecordInfo.getOutputConsumedName(), ioeventRecordInfoCreated.getOutputConsumedName());
 		assertEquals(ioeventRecordInfo.getWorkFlowName(), ioeventRecordInfoCreated.getWorkFlowName());
@@ -126,7 +126,7 @@ class RecordsHandlerTest {
 		Method method = this.getClass().getMethod("init", null);
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L,null);
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
 		consumerRecord.headers().add(IOEventHeaders.OUTPUT_EVENT.toString(), "output name".getBytes());
@@ -141,7 +141,7 @@ class RecordsHandlerTest {
 		Message messageResult = recordsHandler.sendParallelInfo(parallelEventInfo);
 
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic")
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events")
 				.setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString() + parallelEventInfo.getInputRequired())
 				.build();
@@ -155,7 +155,7 @@ class RecordsHandlerTest {
 		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		when(ioEventService.getInputNames(Mockito.any())).thenReturn(Arrays.asList("Output 1", "Output 2"));
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L,null);
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
 				TimestampType.LOG_APPEND_TIME, null, 0, 0, null, null, new RecordHeaders());
 		consumerRecord.headers().add(IOEventHeaders.OUTPUT_EVENT.toString(), "output name".getBytes());

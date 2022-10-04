@@ -58,8 +58,8 @@ import com.ioevent.starter.annotations.GatewayOutputEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.InputEvent;
-import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.annotations.OutputEvent;
+import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
@@ -171,7 +171,7 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Method method = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
 		Message messageResult = transitionAspect.buildTransitionTaskMessage(ioEvent, null, ioEventResponse,
 				ioEvent.output()[0], ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
@@ -204,7 +204,7 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		when(ioEventService.getInputEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.input()[0]);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "previous targe", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "previous targe", new StopWatch(),1000L,null);
 		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent, null, ioEventResponse, ioEvent.output()[0],
 				ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
@@ -237,7 +237,7 @@ class IOEventTransitionAspectTest {
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
 		Message messageResult = transitionAspect.buildTransitionGatewayParallelMessage(ioEvent, null, ioEventResponse,
 				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
@@ -269,7 +269,7 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Method method = this.getClass().getMethod("exclusiveTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output2");		
 		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent, null, ioEventResponse,
 				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
@@ -304,7 +304,7 @@ class IOEventTransitionAspectTest {
 		watch.start("IOEvent annotation Task Aspect");
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "output", watch,1000L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "output", watch,1000L,null);
 
 		transitionAspect.prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, "output", watch, "payload",
 				IOEventType.TASK);
@@ -327,7 +327,7 @@ class IOEventTransitionAspectTest {
 		when(ioEventService.getInputEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.input()[0]);
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
-				new StopWatch(),1000L);
+				new StopWatch(),1000L,null);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
@@ -356,7 +356,7 @@ class IOEventTransitionAspectTest {
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output1");
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[1])).thenReturn("Output2");
 		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
-				new StopWatch(),1000L);
+				new StopWatch(),1000L,null);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
@@ -378,7 +378,7 @@ class IOEventTransitionAspectTest {
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output1");		
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[1])).thenReturn("Output2");
 		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
-				new StopWatch(),1000L);
+				new StopWatch(),1000L,null);
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();

@@ -138,7 +138,8 @@ public class IOEventStartAspect {
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
-				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime).build();
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime).setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime).setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 
 	}
 
