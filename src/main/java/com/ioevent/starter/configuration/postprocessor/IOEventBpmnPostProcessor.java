@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -218,7 +217,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		
-		if(!Utils.isBlank(ioEvent.exception().endEvent().value())) {
+		if(!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
 			IOEventBpmnPart errorEnd = new IOEventBpmnPart();
 			errorEnd.setApiKey(apiKey);
 			errorEnd.setId("ErrorEnd_"+partID);

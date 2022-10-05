@@ -3,7 +3,7 @@
 
 #### _IOEvent, an open source microservice framework, created for developers and enterprises for Event-Driven microservices communication and visualization based on the choreography saga._
 ---
-[IOEvent](https://dnrillbtq5f8k.cloudfront.net/)
+[IOEvent](https://www.ioevent.io/)
 
 ---
 
@@ -165,5 +165,5 @@ Now you can start implementing IOEvent methods!! 🛠 😄
 
 ## Documentation
 ---
-All documentation can be found on [IOEvent](https://d2wab6xn4w2e46.cloudfront.net/) 📚
+All documentation can be found on [IOEvent](https://doc.ioevent.io/) 📚
 
