@@ -533,7 +533,13 @@ public class IOEventService {
 				if (ioPayloadIndex >= 0) {
 					return new IOResponse<>(null, joinPoint.getArgs()[ioPayloadIndex]);
 				}
-				return new IOResponse<>(null, joinPoint.getArgs()[0]);
+				try {
+					return new IOResponse<>(null, joinPoint.getArgs()[0]);
+				} catch (Exception argException) {
+					return new IOResponse<>(null, "");
+
+				}
+				
 
 			}
 			return new IOResponse<>(null, returnObject);
