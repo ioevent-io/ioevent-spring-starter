@@ -51,6 +51,15 @@ public class IOEventProperties {
 	private Boolean auto_create_topic = true;
 	private String topic_replication="1" ;
 	private String api_key = "";
+	private Long heartBeat = 30000L ;
+	public Long getHeartBeat() {
+		return heartBeat;
+	}
+
+	public void setHeartBeat(Long heartBeat) {
+		this.heartBeat = heartBeat;
+	}
+
 	private int topic_partition=1;
 	public String getPrefix() {
 		return prefix;

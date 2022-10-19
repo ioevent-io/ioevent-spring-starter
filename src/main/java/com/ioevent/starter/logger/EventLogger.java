@@ -30,6 +30,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.springframework.kafka.support.KafkaNull;
+
 /**class event logger used to log ioevent Annotation aspect */
 public class EventLogger {
 	private String correlationId;
@@ -190,6 +192,11 @@ public class EventLogger {
 		this.inputEvent=string;
 		this.outputEvent=outputEvent;
 		this.eventType=eventType;
-		this.payload=payload;
+		if (payload.equals(KafkaNull.INSTANCE)) {
+			this.payload=null;
+		}
+		else {
+			this.payload=payload;
+		}
 	}
 }
