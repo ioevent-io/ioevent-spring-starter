@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.KafkaNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StopWatch;
@@ -88,7 +89,7 @@ public class IOEvenImplicitTaskAspect {
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
-			IOResponse<Object> response = new IOResponse<>(null, "", null);
+			IOResponse<Object> response = new IOResponse<>(null, KafkaNull.INSTANCE, null);
 			StopWatch watch = new StopWatch();
 			UUID uuid = UUID.randomUUID();
 			watch.start("IOEvent annotation Implicit Start");
