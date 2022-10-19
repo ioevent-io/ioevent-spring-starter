@@ -175,7 +175,7 @@ public class IOEventTransitionAspect {
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				ioEventResponse.getHeaders());
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-			if (ioEventResponse.getString().equals(ioEventService.getOutputKey(outputEvent))) {
+			if (ioEventResponse.getKey().equals(ioEventService.getOutputKey(outputEvent))) {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow, ioEventResponse,
 						outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers);
 				kafkaTemplate.send(message);
@@ -274,7 +274,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.build();
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
 	/**
@@ -311,7 +312,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.build();
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
 	/**
@@ -348,7 +350,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.build();
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
 	/**
@@ -389,6 +392,7 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.build();
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 }

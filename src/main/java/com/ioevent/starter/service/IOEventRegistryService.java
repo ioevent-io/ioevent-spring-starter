@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.service;
-
-
-
-
-
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -30,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
@@ -61,7 +54,8 @@ public class IOEventRegistryService implements ApplicationListener<WebServerInit
 
 	@Value("${spring.application.name}")
 	private String appName;
-
+	@Autowired
+	private Set<String> ioTopics;
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 	@Autowired
@@ -75,18 +69,18 @@ public class IOEventRegistryService implements ApplicationListener<WebServerInit
 				.setHeader("IO-APP-NAME", appName).setHeader("APIKEYS", apiKeys)
 				.setHeader("INSTANCE-ID", instanceId.toString())
 				.setHeader("IO-APP-HOST", InetAddress.getLocalHost().getHostAddress()).setHeader("IO-APP-PORT", port)
-				.setHeader("TOPICS", topicServices.getAllTopic()).setHeader("ACTION", RegistryAction.CLOSE.toString())
+				.setHeader("TOPICS", ioTopics.stream().collect(Collectors.toList())).setHeader("ACTION", RegistryAction.CLOSE.toString())
 				.build();
 		kafkaTemplate.send(message);
 	}
 
-	@Scheduled(fixedRate = 6000)
+	@Scheduled(fixedRate = 30000)
 	public void registryHeartBeat() throws InterruptedException, ExecutionException, UnknownHostException {
 		Message<List<IOEventBpmnPart>> message = MessageBuilder.withPayload(iobpmnlist)
 				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.MESSAGE_KEY, appName)
 				.setHeader("IO-APP-NAME", appName).setHeader("INSTANCE-ID", instanceId.toString())
 				.setHeader("IO-APP-HOST", InetAddress.getLocalHost().getHostAddress()).setHeader("IO-APP-PORT", port)
-				.setHeader("APIKEYS", apiKeys).setHeader("TOPICS", topicServices.getAllTopic())
+				.setHeader("APIKEYS", apiKeys).setHeader("TOPICS", ioTopics.stream().collect(Collectors.toList()))
 				.setHeader("ACTION", RegistryAction.REGISTER.toString()).build();
 		kafkaTemplate.send(message);
 

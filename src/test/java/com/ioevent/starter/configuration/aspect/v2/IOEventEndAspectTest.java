@@ -125,7 +125,7 @@ class IOEventEndAspectTest {
 		
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Map<String, Object> headersMap=new HashMap<>();
-		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L);
+		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L,null);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")

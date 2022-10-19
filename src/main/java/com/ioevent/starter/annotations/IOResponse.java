@@ -39,13 +39,13 @@ import lombok.Data;
 @AllArgsConstructor
 public class IOResponse<T> {
 
-	private String string;
+	private String key;
 	private T body;
 	private Map<String, Object> headers = new HashMap<>();
 
-	public IOResponse(String string, T body) {
+	public IOResponse(String key, T body) {
 		this.body = body;
-		this.string = string;
+		this.key = key;
 
 	}
 	public IOResponse(T body,Map<String, Object> headers) {

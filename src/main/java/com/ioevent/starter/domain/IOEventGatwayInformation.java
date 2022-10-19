@@ -40,12 +40,12 @@ import com.ioevent.starter.annotations.OutputEvent;
  **/
 public class IOEventGatwayInformation {
 
-	private Boolean exclusiveInput;
-	private Boolean parallelInput;
-	private Boolean exclusiveOutput;
-	private Boolean parallelOutput;
-	private Map<String, String> inputEvent;
-	private Map<String, String> outputEvent;
+	private Boolean exclusiveInput = true;
+	private Boolean parallelInput = false;
+	private Boolean exclusiveOutput = true;
+	private Boolean parallelOutput = false ;
+	private Map<String, String> inputEvent = new HashMap<>();
+	private Map<String, String> outputEvent  = new HashMap<>();
 
 	public IOEventGatwayInformation() {
 	}

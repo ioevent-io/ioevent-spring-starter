@@ -57,6 +57,7 @@ import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
+import com.ioevent.starter.configuration.aspect.v2.IOExceptionHandlingAspect;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProcessor;
@@ -97,7 +98,7 @@ public class IOEventConfiguration {
 	private String appName;
 
 	/**
-	 * method for processing parallel events from the ParallelEventTopic using kafka stream,
+	 * method for processing parallel events from the ioevent-parallel-gateway-events topic using kafka stream,
 	 * 
 	 * @param builder type of StreamsBuilder,
 	 */
@@ -107,7 +108,7 @@ public class IOEventConfiguration {
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
-				.stream("ParallelEventTopic", Consumed.with(Serdes.String(), Serdes.String()))
+				.stream("ioevent-parallel-gateway-events", Consumed.with(Serdes.String(), Serdes.String()))
 				.map(KeyValue::new).filter((k, v) -> {
 					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
 					return appName.equals(value.getHeaders().get("AppName"));
@@ -136,28 +137,28 @@ public class IOEventConfiguration {
 					updatedValue.setPayloadMap(updatedPayload);
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
-				}).toStream().to("resultTopic", Produced.with(Serdes.String(), Serdes.String()));
+				}).toStream().to("ioevent-parallel-gateway-aggregation", Produced.with(Serdes.String(), Serdes.String()));
 
 	}
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventParrallelListener IOEventParrallelListener() {
+	public IOEventParrallelListener ioEventParrallelListener() {
 		return new IOEventParrallelListener();
 	}
 
 	@Bean
-	public com.ioevent.starter.configuration.context.AppContext AppContext() {
+	public com.ioevent.starter.configuration.context.AppContext appContext() {
 		return new com.ioevent.starter.configuration.context.AppContext();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventProperties IOEventProperties() {
+	public IOEventProperties ioEventProperties() {
 		return new IOEventProperties();
 	}
 
 	@Bean
-	public TopicServices TopicServices() {
+	public TopicServices topicServices() {
 		return new TopicServices();
 	}
 	@ConditionalOnMissingBean
@@ -167,7 +168,7 @@ public class IOEventConfiguration {
 	}
 
 	@Bean
-	public ListenerCreator ListenerCreator() {
+	public ListenerCreator listenerCreator() {
 		return new ListenerCreator();
 	}
 
@@ -184,43 +185,49 @@ public class IOEventConfiguration {
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventTopicBeanPostProcessor IOEventTopicBeanPostProcessor() {
+	public IOEventTopicBeanPostProcessor ioEventTopicBeanPostProcessor() {
 		return new IOEventTopicBeanPostProcessor();
 	}
 
 	@ConditionalOnMissingBean
 @Bean
-	public IOEventBpmnPostProcessor IOEventBpmnPostProcessor() {
+	public IOEventBpmnPostProcessor ioEventBpmnPostProcessor() {
 		return new IOEventBpmnPostProcessor();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventStartAspect IOEventStartAspect() {
+	public IOEventStartAspect ioEventStartAspect() {
 		return new IOEventStartAspect();
 	}
 
 	@ConditionalOnMissingBean
 @Bean
-	public IOEventTransitionAspect IOEventTransitionAspect() {
+	public IOEventTransitionAspect ioEventTransitionAspect() {
 		return new IOEventTransitionAspect();
+	}	
+	@ConditionalOnMissingBean
+	@Bean
+	public IOExceptionHandlingAspect ioExceptionHandlingAspect() {
+		return new IOExceptionHandlingAspect();
 	}
+	
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEventEndAspect IOEventEndAspect() {
+	@Bean
+	public IOEventEndAspect ioEventEndAspect() {
 		return new IOEventEndAspect();
 	}
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEvenImplicitTaskAspect IOEvenImplicitTaskAspect() {
+	@Bean
+	public IOEvenImplicitTaskAspect ioEvenImplicitTaskAspect() {
 		return new IOEvenImplicitTaskAspect();
 	}
 
 	@ConditionalOnMissingBean
 	@Bean
-	public IOEventController IOEventController() {
+	public IOEventController ioEventController() {
 		return new IOEventController();
 	}
 
@@ -229,6 +236,10 @@ public class IOEventConfiguration {
 	@Bean("iobpmnlist")
 	public List<IOEventBpmnPart> iobpmnlist() {
 		return new LinkedList<>();
+	}
+	@Bean("ioTopics")
+	public Set<String> ioTopics() {
+		return new HashSet<>();
 	}
 	
 	@Bean("apiKeys")
@@ -241,8 +252,8 @@ public class IOEventConfiguration {
 	}
 
 	@ConditionalOnMissingBean
-@Bean
-	public IOEventService IOEventService() {
+	@Bean
+	public IOEventService ioEventService() {
 		return new IOEventService();
 	}
 	@Bean

@@ -45,12 +45,21 @@ public class IOEventProperties {
 
 	private List<String> topic_names;
 
-	private String prefix = "IOEvent-";
+	private String prefix = "";
 	
 	private String group_id= "ioevent";
 	private Boolean auto_create_topic = true;
 	private String topic_replication="1" ;
 	private String api_key = "";
+	private Long heartBeat = 30000L ;
+	public Long getHeartBeat() {
+		return heartBeat;
+	}
+
+	public void setHeartBeat(Long heartBeat) {
+		this.heartBeat = heartBeat;
+	}
+
 	private int topic_partition=1;
 	public String getPrefix() {
 		return prefix;

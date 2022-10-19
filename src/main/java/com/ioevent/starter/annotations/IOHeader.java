@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.ioevent.starter.annotations;
 
 import java.lang.annotation.ElementType;
@@ -22,21 +21,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * GatewayInputEvent annotation allows to determine what path is taken through a
- * process that controls the flow of converging Sequence Flows.a single Gateway
- * could have multiple @InputEvent. ,the Parallel Gateway wait until all
- * inputEvents to arrive so he can join them and run his method.
- **/
-@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+ * IOHeaders annotation indicates that a method parameter should be bound to the
+ * header of the event with the same name as the annotaion value .
+ *
+ */
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GatewayInputEvent {
-
-	boolean parallel() default false;
-
-	boolean exclusive() default true;
-
-	InputEvent[] input() default {};
-
-	String topic() default "";
-
+public @interface IOHeader {
+	String value() default "";
 }

@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,7 +22,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * InputEvent annotation allows us to specify/define a Input event ,
+ * InputEvent create a Listener which receive events from the topic ( if the
+ *             topic is not mentioned it will listen to the generic topic
+ *             specified in the @IOEvent or @IFlow annotation ), and while the
+ *             listener consumes an event it will verify if the output key of
+ *             the received event is equal to the @InputEvent key in order to
+ *             invoke the specific method.
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)

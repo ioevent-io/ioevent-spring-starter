@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,50 +22,59 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * IOEvent annotation allows us to define an io event/task ,
+ * Annotation that marks a method of IOEvent, in @IOEvent we can specify the key
+ * or the name of the task, name of generic topic where the @IOEvent methods
+ * will receive and send an event if the topic wasn’t specified in
+ * the @InputEvent and @OutputEvent annotation, it also specify input as list
+ * of @InputEvent from where the annotation will receive events and output as
+ * list of @OutputEvent where the annotation will send events, it can define the
+ * method as Gateway using @GatewayOutputEvent and @GatewayInputEvent, finally
+ * he can declare start/end method explicitly using @StartEvent and @EndEvent or
+ * declare start/end method implicitly if you don’t mention any input/output.
  **/
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD}) 
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOEvent {
-	
-	
+
 	String key() default "";
-	
-	boolean async() default false;
-	
+
 	String topic() default "";
 
-    /**
-     * 
-     * Input event
-     */
-    InputEvent[] input() default @InputEvent();
-    
-    /**
-     * 
-     * Input event
-     */
-    GatewayInputEvent gatewayInput() default @GatewayInputEvent();
-    
-    /**
-     * Output Event
-     */
-    OutputEvent[] output() default @OutputEvent();
-    
-    /**
-     * Gateway Output Event
-     */
-    
-    GatewayOutputEvent gatewayOutput() default @GatewayOutputEvent();
-    
-    /**
-     * Start Event
-     */
-    StartEvent startEvent() default @StartEvent();
-    
-    /**
-     * End Event
-     */
-    EndEvent endEvent() default @EndEvent();
+	/**
+	 * 
+	 * Input event
+	 */
+	InputEvent[] input() default @InputEvent();
 
+	/**
+	 * 
+	 * Input event
+	 */
+	GatewayInputEvent gatewayInput() default @GatewayInputEvent();
+
+	/**
+	 * Output Event
+	 */
+	OutputEvent[] output() default @OutputEvent();
+
+	/**
+	 * Gateway Output Event
+	 */
+
+	GatewayOutputEvent gatewayOutput() default @GatewayOutputEvent();
+
+	/**
+	 * Start Event
+	 */
+	StartEvent startEvent() default @StartEvent();
+
+	/**
+	 * End Event
+	 */
+	EndEvent endEvent() default @EndEvent();
+	
+	/**
+	 * Error Event
+	 */
+	ExceptionEvent exception() default @ExceptionEvent();
 }

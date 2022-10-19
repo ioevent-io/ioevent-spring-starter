@@ -33,6 +33,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.handler.RecordsHandler;
@@ -54,8 +55,16 @@ public class ListenerCreator {
 
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String kafkaBootstrapServer;
-	@Value("${spring.kafka.sasl.jaas.config:NONE}")
-	private String SASL_JAAS_CONFIG;
+	@Value("${spring.kafka.sasl.jaas.username:}")
+	private String saslJaasUsername;
+	@Value("${spring.kafka.sasl.jaas.password:}")
+	private String saslJaasPassword;
+	@Value("${spring.kafka.sasl.mechanism:PLAIN}")
+	private String plain;
+	@Value("${spring.kafka.security.protocol:SASL_SSL}")
+	private String saslSsl;
+	@Autowired
+	private KafkaProperties kafkaProperties;
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
 	private String PLAIN;
 	@Value("${spring.kafka.security.protocol:}")
@@ -76,12 +85,15 @@ public class ListenerCreator {
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
-
-		if (!StringUtils.isBlank(SASL_SSL)) {
-			props.put("security.protocol", SASL_SSL);
-			props.put("sasl.mechanism", PLAIN);
-			props.put("sasl.jaas.config", SASL_JAAS_CONFIG);
+		if (!StringUtils.isBlank(saslJaasUsername)) {
+			String saslJaasConfig = String.format(
+					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
+					saslJaasUsername, saslJaasPassword);
+			props.put("security.protocol", saslSsl);
+			props.put("sasl.mechanism", plain);
+			props.put("sasl.jaas.config", saslJaasConfig);
 		}
+		
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method, ioEvent, topicName);
 		listeners.add(consumerApplication);

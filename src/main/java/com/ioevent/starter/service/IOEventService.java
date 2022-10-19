@@ -41,6 +41,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.KafkaNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -70,13 +71,13 @@ public class IOEventService {
 
 	/**
 	 * This is a kafka producer which send parallel events info to
-	 * ParallelEventTopic topic
+	 * ioevent-parallel-gateway-events topic
 	 * 
 	 * @param parallelEventInfo for the parallel event information,
 	 */
 	public void sendParallelEventInfo(IOEventParallelEventInformation parallelEventInfo) {
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ParallelEventTopic").setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.MESSAGE_KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()))
 				.build();
 
@@ -453,6 +454,7 @@ public class IOEventService {
 			return ioEvent.endEvent().key();
 
 		} else if (!Objects.isNull(ioFlow)) {
+			
 			return ioFlow.name();
 		}
 		return "";
@@ -530,14 +532,27 @@ public class IOEventService {
 				MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 				int ioPayloadIndex = getIOPayloadIndex(signature.getMethod());
 				if (ioPayloadIndex >= 0) {
-					return new IOResponse<>(null, joinPoint.getArgs()[ioPayloadIndex]);
+					return new IOResponse<>(null,isNullpayload(joinPoint.getArgs()[ioPayloadIndex]));
 				}
-				return new IOResponse<>(null, joinPoint.getArgs()[0]);
+				try {
+					return new IOResponse<>(null, isNullpayload(joinPoint.getArgs()[0]));
+				} catch (Exception argException) {
+					return new IOResponse<>(null, KafkaNull.INSTANCE);
+
+				}
+				
 
 			}
 			return new IOResponse<>(null, returnObject);
 
 		}
+	}
+
+	private Object isNullpayload(Object object) {
+		if (object==null) {
+			return KafkaNull.INSTANCE ;
+		}
+		return object;
 	}
 
 	/**

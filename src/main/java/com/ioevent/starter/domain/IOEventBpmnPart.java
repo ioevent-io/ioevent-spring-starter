@@ -50,9 +50,11 @@ public class IOEventBpmnPart {
 	private String workflow;
 	private IOEventType ioEventType;
 	private IOEventGatwayInformation ioeventGatway;
+	private IOEventExceptionInformation ioeventException;
 	private Map<String, String> inputEvent;
 	private Map<String, String> outputEvent;
 	private int processCount = 0;
+	
 
 	public IOEventBpmnPart() {
 	}
@@ -67,6 +69,7 @@ public class IOEventBpmnPart {
 		this.methodQualifiedName = methodName;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
+		this.ioeventException = new IOEventExceptionInformation(ioEvent);
 		this.inputEvent = this.addInput(ioEvent);
 		this.outputEvent = this.addOutput(ioEvent);
 	}
@@ -160,7 +163,7 @@ public class IOEventBpmnPart {
 	}
 
 	public Map<String, String> addInput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		for (InputEvent input : ioEvent.input()) {
 			if (!StringUtils.isBlank(input.key() + input.value())) {
 				if (!StringUtils.isBlank(input.value())) {
@@ -168,7 +171,6 @@ public class IOEventBpmnPart {
 				} else {
 					result.put(input.key(), input.topic());
 				}
-
 			}
 		}
 		for (InputEvent input : ioEvent.gatewayInput().input()) {
@@ -184,7 +186,10 @@ public class IOEventBpmnPart {
 	}
 
 	public Map<String, String> addOutput(IOEvent ioEvent) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
+		if(!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
+			result.put(ioEvent.exception().endEvent().value(), ioEvent.topic());
+		}
 		boolean isSuffix = false;
 		String suffix = "";
 		for (OutputEvent output : ioEvent.output()) {
@@ -221,6 +226,7 @@ public class IOEventBpmnPart {
 				}
 			}
 		}
+		
 		return result;
 	}
 
@@ -230,6 +236,14 @@ public class IOEventBpmnPart {
 				+ ", methodQualifiedName=" + methodQualifiedName + ", stepName=" + stepName + ", workflow=" + workflow
 				+ ", ioEventType=" + ioEventType + ", ioeventGatway=" + ioeventGatway + ", inputEvent=" + inputEvent
 				+ ", outputEvent=" + outputEvent + ", processCount=" + processCount + "]";
+	}
+
+	public IOEventExceptionInformation getIoeventException() {
+		return ioeventException;
+	}
+
+	public void setIoeventException(IOEventExceptionInformation ioeventException) {
+		this.ioeventException = ioeventException;
 	}
 
 }
