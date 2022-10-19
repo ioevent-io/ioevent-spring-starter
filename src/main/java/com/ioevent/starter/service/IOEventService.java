@@ -41,6 +41,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.KafkaNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -531,12 +532,12 @@ public class IOEventService {
 				MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 				int ioPayloadIndex = getIOPayloadIndex(signature.getMethod());
 				if (ioPayloadIndex >= 0) {
-					return new IOResponse<>(null, joinPoint.getArgs()[ioPayloadIndex]);
+					return new IOResponse<>(null,isNullpayload(joinPoint.getArgs()[ioPayloadIndex]));
 				}
 				try {
-					return new IOResponse<>(null, joinPoint.getArgs()[0]);
+					return new IOResponse<>(null, isNullpayload(joinPoint.getArgs()[0]));
 				} catch (Exception argException) {
-					return new IOResponse<>(null, "");
+					return new IOResponse<>(null, KafkaNull.INSTANCE);
 
 				}
 				
@@ -545,6 +546,13 @@ public class IOEventService {
 			return new IOResponse<>(null, returnObject);
 
 		}
+	}
+
+	private Object isNullpayload(Object object) {
+		if (object==null) {
+			return KafkaNull.INSTANCE ;
+		}
+		return object;
 	}
 
 	/**

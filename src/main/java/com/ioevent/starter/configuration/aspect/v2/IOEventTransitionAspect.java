@@ -175,7 +175,7 @@ public class IOEventTransitionAspect {
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				ioEventResponse.getHeaders());
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-			if (ioEventResponse.getString().equals(ioEventService.getOutputKey(outputEvent))) {
+			if (ioEventResponse.getKey().equals(ioEventService.getOutputKey(outputEvent))) {
 				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow, ioEventResponse,
 						outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers);
 				kafkaTemplate.send(message);
