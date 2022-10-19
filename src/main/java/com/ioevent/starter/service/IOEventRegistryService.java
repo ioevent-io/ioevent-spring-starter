@@ -74,7 +74,7 @@ public class IOEventRegistryService implements ApplicationListener<WebServerInit
 		kafkaTemplate.send(message);
 	}
 
-	@Scheduled(fixedRate = 6000)
+	@Scheduled(fixedRate = 30000)
 	public void registryHeartBeat() throws InterruptedException, ExecutionException, UnknownHostException {
 		Message<List<IOEventBpmnPart>> message = MessageBuilder.withPayload(iobpmnlist)
 				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.MESSAGE_KEY, appName)
