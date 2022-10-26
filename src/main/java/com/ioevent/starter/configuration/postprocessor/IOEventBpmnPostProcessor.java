@@ -153,7 +153,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		try {
 			gatewayValidation(ioEvent, method);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);
 			System.exit(0);
 
@@ -162,7 +162,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	public void gatewayValidation(IOEvent ioEvent, Method method) {
-		if (ioEvent.gatewayOutput().output().length != 0) {
+		if (ioEvent.gatewayOutput().output().length != 0 && ioEvent.gatewayOutput().exclusive() && !ioEvent.gatewayOutput().parallel()) {
 			if (!method.getReturnType().equals(IOResponse.class)) {
 				throw new IllegalArgumentException(
 						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
