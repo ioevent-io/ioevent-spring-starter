@@ -41,6 +41,8 @@ public class IOResponse<T> {
 
 	private String key;
 	private T body;
+	
+	@Builder.Default 
 	private Map<String, Object> headers = new HashMap<>();
 
 	public IOResponse(String key, T body) {

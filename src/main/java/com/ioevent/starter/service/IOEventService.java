@@ -585,10 +585,13 @@ public class IOEventService {
 	 */
 	public Map<String, Object> prepareHeaders(List<Header> headersConsumed, Map<String, Object> newHeaders) {
 		Map<String, Object> result = new HashMap<>();
+		log.info(null);
 		if (headersConsumed != null) {
 			result = headersConsumed.stream().collect(Collectors.toMap(Header::key, h -> new String(h.value())));
 		}
-		result.putAll(newHeaders);
+		if (newHeaders!=null) {
+			result.putAll(newHeaders);
+		}
 		return result;
 	}
 }
