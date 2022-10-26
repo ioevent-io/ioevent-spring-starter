@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
 package com.ioevent.starter.annotations;
-
-
-
-
-
-
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,16 +31,40 @@ import lombok.Data;
 @AllArgsConstructor
 public class IOResponse<T> {
 
+	/**
+	 * key of the IOResponse where the method will produce the event to the output
+	 * that has the same key
+	 */
 	private String key;
+	/**
+	 * the body or payload to send in the event.
+	 */
 	private T body;
+	/**
+	 * Map of header key and headerValue that represent a custom headers to be added
+	 * to event headers
+	 */
 	private Map<String, Object> headers = new HashMap<>();
 
+	/**
+	 * create IOResponse with key and body
+	 * 
+	 * @param key
+	 * @param body
+	 */
 	public IOResponse(String key, T body) {
 		this.body = body;
 		this.key = key;
 
 	}
-	public IOResponse(T body,Map<String, Object> headers) {
+
+	/**
+	 * create IOResponse with body and custom headers
+	 * 
+	 * @param body
+	 * @param headers
+	 */
+	public IOResponse(T body, Map<String, Object> headers) {
 		this.body = body;
 		this.headers = headers;
 

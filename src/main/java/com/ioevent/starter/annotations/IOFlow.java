@@ -57,7 +57,7 @@ public @interface IOFlow {
 	 * Note:API key is a unique identifier used to authenticate projects and allow
 	 * to share them between IOEvent Cockpit users who owns the API key.
 	 * 
-	 * @return apiKey
+	 * @return  apiKey string
 	 */
 	String apiKey() default "";
 }

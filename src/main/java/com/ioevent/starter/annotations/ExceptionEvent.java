@@ -32,7 +32,7 @@ public @interface ExceptionEvent {
 	 * exceptions is an array of classes or interfaces that extends Throwable and
 	 * predicted to be occurred in the task method
 	 * 
-	 * @return
+	 * @return array of classes or interfaces that extends Throwable
 	 */
 	Class<? extends Throwable>[] exception() default {};
 
@@ -50,7 +50,7 @@ public @interface ExceptionEvent {
 	 * An @EndEvent annotation define the finishing point of a process with error
 	 * which includes a value where we specify the path name to the error end .
 	 * 
-	 * @return @EndEvent
+	 * @return an EndEvent object
 	 */
 	EndEvent endEvent() default @EndEvent();
 }

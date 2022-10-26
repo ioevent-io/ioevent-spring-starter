@@ -380,6 +380,7 @@ class IOEventTransitionAspectTest {
 		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.gatewayOutput().output()));
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output1");		
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[1])).thenReturn("Output2");
+		when(ioEventService.validExclusiveOutput(ioEvent, new IOResponse<>("Output2", "payload"))).thenReturn(true);
 		IOEventRecordInfo ioeventRecordInfoForSuffix = new IOEventRecordInfo("1155", "process name", "previous output",
 				new StopWatch(),1000L,null);
 		StopWatch watch = new StopWatch();

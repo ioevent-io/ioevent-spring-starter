@@ -70,7 +70,7 @@ public @interface IOEvent {
 	 * until receiving all input branches @InputEvent to execute the ioevent method
 	 * and send the event to the @OutputEvent.
 	 * 
-	 * @return @GatewayInputEvent
+	 * @return a GatewayInputEvent object
 	 */
 	GatewayInputEvent gatewayInput() default @GatewayInputEvent();
 
@@ -95,12 +95,12 @@ public @interface IOEvent {
 	 * will produce the event to the output with the same key of the IOResponse
 	 * output key. In IOResponse we specify the output key and the body to be send
 	 * to the event.
-	 * 
+	 * <p>
 	 * In case of Parallel gateway : it models a fork into multiple paths of
 	 * execution ,we set the value of parallel to true and define the list of output
 	 * branches @OutputEvent where to produce the event simultaneously.
 	 * 
-	 * @return @GatewayOutputEvent
+	 * @return a GatewayOutputEvent object
 	 */
 
 	GatewayOutputEvent gatewayOutput() default @GatewayOutputEvent();
@@ -110,7 +110,7 @@ public @interface IOEvent {
 	 * includes a key where we specify the name of the flow.
 	 * 
 	 * 
-	 * @return @StartEvent
+	 * @return a StartEvent object
 	 */
 	StartEvent startEvent() default @StartEvent();
 
@@ -118,7 +118,7 @@ public @interface IOEvent {
 	 * An @EndEvent annotation define the finishing point of a process which
 	 * includes a key where we specify the name of the flow.
 	 * 
-	 * @return @EndEvent
+	 * @return an EndEvent object
 	 */
 	EndEvent endEvent() default @EndEvent();
 
@@ -128,13 +128,13 @@ public @interface IOEvent {
 	 * We can choose to end the flow with end error, inside the @ExceptionEvent we
 	 * specify the list of exceptions predicted to be throwed by the task and we add
 	 * the @EndEvent which define the end of the flow with an error.
-	 * 
+	 * <p>
 	 * Or Create a boundary event to send the error to the handling task : inside
 	 * the @ExceptionEvent we specify the list of exceptions predicted to be
 	 * occurred in the task and declare the output which is an @OutputEvent where
 	 * the payload would be sent to the handling method associated to the output.
 	 * 
-	 * @return @ExceptionEvent
+	 * @return an ExceptionEvent object
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
 }
