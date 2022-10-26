@@ -31,12 +31,39 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface GatewayInputEvent {
 
+	/**
+	 * If true the gateway type is parallel
+	 * 
+	 * @return Whether it's an parallel gateway
+	 */
 	boolean parallel() default false;
 
+	/**
+	 * If true the gateway type is exclusive
+	 * 
+	 * @return Whether it's an exclusive gateway
+	 */
 	boolean exclusive() default true;
 
+	/**
+	 * 
+	 * Array of @InputEvent ,specify input as array of @InputEvent which create a
+	 * Listener for each input and receive events from the topic ( if the topic is
+	 * not mentioned it will listen to the generic topic specified in the @IOEvent
+	 * or @IFlow annotation ), and while the listener consumes an event it will
+	 * verify if the output key of the received event is equal to the @InputEvent
+	 * key in order to invoke the specific method.
+	 * 
+	 * @return Array of @InputEvent
+	 */
 	InputEvent[] input() default {};
 
+	/**
+	 * The topic name from where to consume events that can invoke the method or
+	 * produce event into it after running this ioevent method
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
 }

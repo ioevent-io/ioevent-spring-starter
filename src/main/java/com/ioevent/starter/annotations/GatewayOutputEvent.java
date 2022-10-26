@@ -22,28 +22,50 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * GatewayOutputEvent annotation allowsto determine what path is taken through
- *                     a process that controls the flow of converging Sequence
- *                     Flows.a single Gateway could have multiple output flows.
- * GatewayOutputEvent can be divided into two types, the Exclusive Gateway and
- *                     the Parallel Gateway: for the parallel we set the value
- *                     of parallel to true and define the list of output
- *                     branches @OutputEvent where to produce the event
- *                     simultaneously , for the exclusive we set the value of
- *                     exclusive to true and define the list of @OutputEvent
- *                     where the method will produce the event to the output
- *                     with the same key of the IOResponse output key .
+ * GatewayOutputEvent annotation allowsto determine what path is taken through a
+ * process that controls the flow of converging Sequence Flows.a single Gateway
+ * could have multiple output flows. GatewayOutputEvent can be divided into two
+ * types, the Exclusive Gateway and the Parallel Gateway: for the parallel we
+ * set the value of parallel to true and define the list of output
+ * branches @OutputEvent where to produce the event simultaneously , for the
+ * exclusive we set the value of exclusive to true and define the list
+ * of @OutputEvent where the method will produce the event to the output with
+ * the same key of the IOResponse output key .
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface GatewayOutputEvent {
 
+	/**
+	 * If true the gateway type is parallel
+	 * 
+	 * @return Whether it's an parallel gateway
+	 */
 	boolean parallel() default false;
 
+	/**
+	 * If true the gateway type is exclusive
+	 * 
+	 * @return Whether it's an exclusive gateway
+	 */
 	boolean exclusive() default true;
 
+	/**
+	 * Array of @OutputEvent annotation is used to produce an event which includes a
+	 * key of the output and a topic where the event will be produced ( if the topic
+	 * is not mentioned the event will be sent to the generic topic specified in
+	 * the @IOEvent or @IFlow annotation ).
+	 * 
+	 * @return Array of @OutputEvent
+	 */
 	OutputEvent[] output() default {};
 
+	/**
+	 * The topic name from where to consume events that can invoke the method or
+	 * produce event into it after running this ioevent method
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
 }

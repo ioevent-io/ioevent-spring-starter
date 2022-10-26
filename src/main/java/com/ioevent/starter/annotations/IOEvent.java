@@ -36,45 +36,105 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOEvent {
 
+	/**
+	 * 
+	 * The key of ioevent task define the task name
+	 * 
+	 * @return the ioevent task key
+	 */
 	String key() default "";
 
+	/**
+	 * The topic name for ioevent task from where to consume events that can invoke
+	 * the method or produce event into it after running this ioevent method
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
 	/**
 	 * 
-	 * Input event
+	 * Array of @InputEvent ,specify input as array of @InputEvent which create a
+	 * Listener for each input and receive events from the topic ( if the topic is
+	 * not mentioned it will listen to the generic topic specified in the @IOEvent
+	 * or @IFlow annotation ), and while the listener consumes an event it will
+	 * verify if the output key of the received event is equal to the @InputEvent
+	 * key in order to invoke the specific method.
+	 * 
+	 * @return Array of @InputEvent
 	 */
 	InputEvent[] input() default @InputEvent();
 
 	/**
+	 * Returns a @GatewayInputEvent used to converge parallel branches, it waits
+	 * until receiving all input branches @InputEvent to execute the ioevent method
+	 * and send the event to the @OutputEvent.
 	 * 
-	 * Input event
+	 * @return @GatewayInputEvent
 	 */
 	GatewayInputEvent gatewayInput() default @GatewayInputEvent();
 
 	/**
-	 * Output Event
+	 * Array of @OutputEvent annotation is used to produce an event which includes a
+	 * key of the output and a topic where the event will be produced ( if the topic
+	 * is not mentioned the event will be sent to the generic topic specified in
+	 * the @IOEvent or @IFlow annotation ).
+	 * 
+	 * @return Array of @OutputEvent
 	 */
 	OutputEvent[] output() default @OutputEvent();
 
 	/**
-	 * Gateway Output Event
+	 * Returns a @GatewayOutputEvent used to declare either an exclusive or parallel
+	 * gateway .
+	 * <p>
+	 * In case of exclusive gateway : An exclusive gateway evaluates the state of
+	 * the business process and, based on the returned IOResponse key, it breaks the
+	 * flow into one of the two or more mutually exclusive paths. we set the value
+	 * of exclusive to true and define the list of @OutputEvent where the method
+	 * will produce the event to the output with the same key of the IOResponse
+	 * output key. In IOResponse we specify the output key and the body to be send
+	 * to the event.
+	 * 
+	 * In case of Parallel gateway : it models a fork into multiple paths of
+	 * execution ,we set the value of parallel to true and define the list of output
+	 * branches @OutputEvent where to produce the event simultaneously.
+	 * 
+	 * @return @GatewayOutputEvent
 	 */
 
 	GatewayOutputEvent gatewayOutput() default @GatewayOutputEvent();
 
 	/**
-	 * Start Event
+	 * A @StartEvent annotation define the starting point of a process which
+	 * includes a key where we specify the name of the flow.
+	 * 
+	 * 
+	 * @return @StartEvent
 	 */
 	StartEvent startEvent() default @StartEvent();
 
 	/**
-	 * End Event
+	 * An @EndEvent annotation define the finishing point of a process which
+	 * includes a key where we specify the name of the flow.
+	 * 
+	 * @return @EndEvent
 	 */
 	EndEvent endEvent() default @EndEvent();
-	
+
 	/**
-	 * Error Event
+	 * An @ExceptionEvent is an annotation that defines error handling in two ways :
+	 * <p>
+	 * We can choose to end the flow with end error, inside the @ExceptionEvent we
+	 * specify the list of exceptions predicted to be throwed by the task and we add
+	 * the @EndEvent which define the end of the flow with an error.
+	 * 
+	 * Or Create a boundary event to send the error to the handling task : inside
+	 * the @ExceptionEvent we specify the list of exceptions predicted to be
+	 * occurred in the task and declare the output which is an @OutputEvent where
+	 * the payload would be sent to the handling method associated to the output.
+	 * 
+	 * @return @ExceptionEvent
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
 }

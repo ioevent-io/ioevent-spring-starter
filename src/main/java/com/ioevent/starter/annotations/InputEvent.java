@@ -23,20 +23,33 @@ import java.lang.annotation.Target;
 
 /**
  * InputEvent create a Listener which receive events from the topic ( if the
- *             topic is not mentioned it will listen to the generic topic
- *             specified in the @IOEvent or @IFlow annotation ), and while the
- *             listener consumes an event it will verify if the output key of
- *             the received event is equal to the @InputEvent key in order to
- *             invoke the specific method.
+ * topic is not mentioned it will listen to the generic topic specified in
+ * the @IOEvent or @IFlow annotation ), and while the listener consumes an event
+ * it will verify if the output key of the received event is equal to
+ * the @InputEvent key in order to invoke the specific method.
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface InputEvent {
-
+	/**
+	 * Specify the name of the input event
+	 * 
+	 * @return the input event name
+	 */
 	String value() default "";
 
+	/**
+	 * The key of the input , which considered as input event name
+	 * 
+	 * @return the input event name
+	 */
 	String key() default "";
 
+	/**
+	 * The topic name from where to consume events that can invoke the method
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
 }

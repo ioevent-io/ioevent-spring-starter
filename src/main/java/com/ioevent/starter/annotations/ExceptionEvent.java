@@ -21,14 +21,36 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * ExceptionEvent create a Listener which receive business or technical error events from the current task 
+ * ExceptionEvent create a Listener which receive business or technical error
+ * events from the current task
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExceptionEvent {
-	Class<? extends Throwable>[] exception() default {} ;
 
+	/**
+	 * exceptions is an array of classes or interfaces that extends Throwable and
+	 * predicted to be occurred in the task method
+	 * 
+	 * @return
+	 */
+	Class<? extends Throwable>[] exception() default {};
+
+	/**
+	 * Array of @OutputEvent annotation is used to produce an event which includes a
+	 * key of the output and a topic where the event will be produced ( if the topic
+	 * is not mentioned the event will be sent to the generic topic specified in
+	 * the @IOEvent or @IFlow annotation ).
+	 * 
+	 * @return Array of @OutputEvent
+	 */
 	OutputEvent output() default @OutputEvent();
 
+	/**
+	 * An @EndEvent annotation define the finishing point of a process with error
+	 * which includes a value where we specify the path name to the error end .
+	 * 
+	 * @return @EndEvent
+	 */
 	EndEvent endEvent() default @EndEvent();
 }
