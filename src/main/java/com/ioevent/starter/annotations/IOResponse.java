@@ -44,6 +44,7 @@ public class IOResponse<T> {
 	 * Map of header key and headerValue that represent a custom headers to be added
 	 * to event headers
 	 */
+	@Builder.Default 
 	private Map<String, Object> headers = new HashMap<>();
 
 	/**

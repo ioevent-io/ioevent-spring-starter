@@ -602,7 +602,9 @@ public class IOEventService {
 		if (headersConsumed != null) {
 			result = headersConsumed.stream().collect(Collectors.toMap(Header::key, h -> new String(h.value())));
 		}
-		result.putAll(newHeaders);
+		if (newHeaders!=null) {
+			result.putAll(newHeaders);
+		}
 		return result;
 	}
 
