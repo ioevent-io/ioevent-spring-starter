@@ -23,15 +23,18 @@ import java.lang.annotation.Target;
 
 /**
  * IOPayload annotation binds a method parameter to the payload of a the
- *            received event. It can be used also in the parallel input gateway
- *            to bind between method parameters and inputs payloads using input
- *            index.
+ * received event. It can be used also in the parallel input gateway to bind
+ * between method parameters and inputs payloads using input index.
  *
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOPayload {
-	String value() default "";
 
+	/**
+	 * The index of the request payload to bind from the multiple inputs payloads .
+	 * 
+	 * @return index of payload
+	 */
 	int index() default 0;
 }

@@ -21,12 +21,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * IOHeaders annotation indicates that a method parameter should be bound to the
+ * IOHeader annotation indicates that a method parameter should be bound to the
  * header of the event with the same name as the annotaion value .
  *
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOHeader {
+	/**
+	 * The name of the request header to bind to.
+	 * 
+	 * @return name of the header desired to get
+	 */
 	String value() default "";
 }

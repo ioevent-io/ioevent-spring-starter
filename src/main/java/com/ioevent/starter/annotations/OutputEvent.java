@@ -23,20 +23,39 @@ import java.lang.annotation.Target;
 
 /**
  * OutputEvent annotation is used to produce an event which includes a key of
- *              the output and a topic where the event will be produced ( if the
- *              topic is not mentioned the event will be sent to the generic
- *              topic specified in the @IOEvent or @IFlow annotation ).
+ * the output and a topic where the event will be produced ( if the topic is not
+ * mentioned the event will be sent to the generic topic specified in
+ * the @IOEvent or @IFlow annotation ).
  **/
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OutputEvent {
-
+	/**
+	 * Specify the name of the output event
+	 * 
+	 * @return the output event name
+	 */
 	String value() default "";
 
+	/**
+	 * The key of the output , which considered as output event name
+	 * 
+	 * @return the output event name
+	 */
 	String key() default "";
 
+	/**
+	 * The topic name where to produce the event into
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
+	/**
+	 * suffix to be add to the input key consumed to make an output key 
+	 * 
+	 * @return the suffix name
+	 */
 	String suffix() default "";
 
 }
