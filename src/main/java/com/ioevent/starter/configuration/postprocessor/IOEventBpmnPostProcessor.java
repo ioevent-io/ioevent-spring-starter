@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.configuration.postprocessor;
-
-
-
-
-
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -35,10 +27,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
+import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
@@ -75,7 +70,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private Set<String> apiKeys;
 	@Autowired
 	private IOEventService ioEventService;
-
+	
 	/**
 	 * method post processor before initialization,
 	 * 
@@ -88,7 +83,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		try {
 
 			this.process(bean, beanName);
-		} catch (Exception e ) {
+		} catch (Exception e) {
 			log.error(e.getMessage());
 		}
 		return bean;
@@ -110,19 +105,19 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * 
 	 * @param bean     for the bean,
 	 * @param beanName for the bean name,
-	 * @throws Exception 
+	 * @throws Exception
 	 **/
 	@Override
-	public void process(Object bean, String beanName) throws Exception  {
+	public void process(Object bean, String beanName) throws Exception {
 		IOFlow ioFlow = bean.getClass().getAnnotation(IOFlow.class);
 		addApikey(apiKeys, ioFlow, iOEventProperties);
 		for (Method method : bean.getClass().getMethods()) {
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
-
 			for (IOEvent ioEvent : ioEvents) {
+				checkMethodValidation(ioEvent, method);
 				if (needListener(ioEvent)) {
-					
+
 					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
 							synchronized (method) {
@@ -131,8 +126,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 									public void run() {
 										try {
 											listenerCreator.createListener(bean, method, ioEvent,
-													iOEventProperties.getPrefix() + topicName,
-													kafkaGroupid, Thread.currentThread());
+													iOEventProperties.getPrefix() + topicName, kafkaGroupid,
+													Thread.currentThread());
 										} catch (Throwable e) {
 											log.error("Listener creation failed   !!!");
 										}
@@ -152,21 +147,44 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			}
 		}
 	}
+	@Autowired 
+	ApplicationContext applicationContext;
+	public void checkMethodValidation(IOEvent ioEvent, Method method) {
+		try {
+			gatewayValidation(ioEvent, method);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			SpringApplication.exit(applicationContext, () -> 0);
+			System.exit(0);
+
+		}
+
+	}
+
+	public void gatewayValidation(IOEvent ioEvent, Method method) {
+		if (ioEvent.gatewayOutput().output().length != 0) {
+			if (!method.getReturnType().equals(IOResponse.class)) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
+			}
+		}
+	}
 
 	public boolean needListener(IOEvent ioEvent) {
-		if (((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))&&(ioEvent.input().length!=0)) || (ioEvent.gatewayInput().input().length!=0)) {
+		if (((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))
+				&& (ioEvent.input().length != 0)) || (ioEvent.gatewayInput().input().length != 0)) {
 			for (InputEvent input : ioEvent.input()) {
-				if (!StringUtils.isBlank(input.key()+input.value())) {
+				if (!StringUtils.isBlank(input.key() + input.value())) {
 					return true;
 				}
 			}
 			for (InputEvent input : ioEvent.gatewayInput().input()) {
-				if (!StringUtils.isBlank(input.key()+input.value())) {
+				if (!StringUtils.isBlank(input.key() + input.value())) {
 					return true;
 				}
 			}
-	
-		}		
+
+		}
 		return false;
 	}
 
@@ -216,30 +234,30 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			String methodName) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		
-		if(!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
+
+		if (!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
 			IOEventBpmnPart errorEnd = new IOEventBpmnPart();
 			errorEnd.setApiKey(apiKey);
-			errorEnd.setId("ErrorEnd_"+partID);
-			errorEnd.setMethodQualifiedName("ErrorEnd of "+methodName);
+			errorEnd.setId("ErrorEnd_" + partID);
+			errorEnd.setMethodQualifiedName("ErrorEnd of " + methodName);
 			errorEnd.setStepName(ioEvent.exception().endEvent().value());
 			errorEnd.setWorkflow(processName);
 			errorEnd.setIoEventType(IOEventType.ERROR_END);
 			errorEnd.setIoAppName(appName);
-			
+
 			HashMap<String, String> input = new HashMap<>();
 			input.put(ioEvent.exception().endEvent().value(), ioEvent.topic());
 			errorEnd.setInputEvent(input);
-			
+
 			errorEnd.setIoeventGatway(new IOEventGatwayInformation());
 			IOEventExceptionInformation ioEventException = new IOEventExceptionInformation();
-			if(!StringUtils.isBlank(ioEvent.exception().exception().toString())) {
+			if (!StringUtils.isBlank(ioEvent.exception().exception().toString())) {
 				ioEventException.setErrorType(Arrays.toString(ioEvent.exception().exception()));
 			}
 			errorEnd.setIoeventException(ioEventException);
-			
+
 			errorEnd.setOutputEvent(new HashMap<>());
-			
+
 			iobpmnlist.add(errorEnd);
 		}
 

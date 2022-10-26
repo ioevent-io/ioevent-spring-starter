@@ -36,7 +36,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -55,7 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /** Records handler to invoke method when consuming records from topic */
 @Slf4j
-@Service
 public class RecordsHandler {
 
 	ObjectMapper mapper = new ObjectMapper();
@@ -95,8 +93,8 @@ public class RecordsHandler {
 
 	}
 
-	public void invokeWithtwoParameter(Method method, Object bean, Object[] params)
-			throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public void invokeWithtwoParameter(Method method, Object bean, Object[] params) throws IllegalAccessException, InvocationTargetException
+			 {
 		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), params);
 	}
 
@@ -130,9 +128,10 @@ public class RecordsHandler {
 
 								try {
 									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
-								} catch (BeansException | IllegalAccessException | IllegalArgumentException
+								} catch ( IllegalAccessException 
 										| InvocationTargetException | JsonProcessingException e) {
 									log.error("error while invoking method");
+									e.printStackTrace();
 								}
 							}
 						}).start();
@@ -169,9 +168,8 @@ public class RecordsHandler {
 		return message;
 	}
 
-	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo)
-			throws BeansException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-			JsonProcessingException {
+	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo) throws  IllegalAccessException, InvocationTargetException, JsonProcessingException
+			 {
 
 		
 		Map<String, Object> headersMap = ioeventRecordInfo.getHeaderList().stream()

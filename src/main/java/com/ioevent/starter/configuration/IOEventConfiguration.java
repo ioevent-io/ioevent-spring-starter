@@ -58,6 +58,7 @@ import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOExceptionHandlingAspect;
+import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
 import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProcessor;
@@ -69,6 +70,7 @@ import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.listener.IOEventParrallelListener;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
+import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventRegistryService;
 import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.TopicServices;
@@ -147,8 +149,8 @@ public class IOEventConfiguration {
 	}
 
 	@Bean
-	public com.ioevent.starter.configuration.context.AppContext appContext() {
-		return new com.ioevent.starter.configuration.context.AppContext();
+	public AppContext appContext() {
+		return new AppContext();
 	}
 
 	@ConditionalOnMissingBean
@@ -255,6 +257,11 @@ public class IOEventConfiguration {
 	@Bean
 	public IOEventService ioEventService() {
 		return new IOEventService();
+	}
+	@ConditionalOnMissingBean
+	@Bean
+	public IOEventMessageBuilderService ioeventMessageBuilderService() {
+		return new IOEventMessageBuilderService();
 	}
 	@Bean
 	public IOEventRegistryService ioeventRegistryService() {

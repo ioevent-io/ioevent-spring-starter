@@ -48,6 +48,7 @@ import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,8 @@ public class IOEvenImplicitTaskAspect {
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	private ObjectMapper mapper = new ObjectMapper();
-
+	@Autowired
+	private IOEventMessageBuilderService messageBuilderService;
 	@Autowired
 	private IOEventProperties iOEventProperties;
 	@Autowired
@@ -159,16 +161,31 @@ public class IOEvenImplicitTaskAspect {
 				// watch.start("IOEvent annotation Implicit TASK Aspect");
 				ioeventRecordInfoInput.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, ""));
 				Map<String, Object> headers = ioEventService.prepareHeaders(null, response.getHeaders());
-				for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-					String outputKey = ioEventService.getOutputKey(outputEvent);
-					Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
-							ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,
-							outputEvent.topic(), eventLogger.getTimestamp(eventLogger.getStartTime()),
-							ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
-					kafkaTemplate.send(message);
+				if (ioEvent.gatewayOutput().output().length != 0) {
 
-					output += outputKey + ",";
+					if (ioEvent.gatewayOutput().parallel()) {
+						ioEventType = IOEventType.GATEWAY_PARALLEL;
+						output = messageBuilderService.parallelEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfoInput,true);
+
+					} else if (ioEvent.gatewayOutput().exclusive()) {
+						ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
+						output = messageBuilderService.exclusiveEventSendProcess(ioEvent, ioFlow, returnObject, output, ioeventRecordInfoInput,true);
+
+					}
+				} else {
+
+					for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
+						String outputKey = ioEventService.getOutputKey(outputEvent);
+						Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
+								ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,
+								outputEvent.topic(), eventLogger.getTimestamp(eventLogger.getStartTime()),
+								ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
+						kafkaTemplate.send(message);
+
+						output += outputKey + ",";
+					}
 				}
+				
 				ioeventRecordInfoInput.setOutputConsumedName(START_PREFIX + ioEvent.key());
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfoInput, response, output,
 						ioEventType, watch);
@@ -194,7 +211,7 @@ public class IOEvenImplicitTaskAspect {
 		}
 
 	}
-
+	
 	public void createImpliciteEndEvent(IOEvent ioEvent, IOFlow ioFlow, IOEventRecordInfo ioeventRecordInfo,
 			IOResponse<Object> response, EventLogger eventLogger) throws ParseException {
 		StopWatch watch = new StopWatch();

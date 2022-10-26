@@ -66,12 +66,15 @@ import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventService;
 
 class IOEventTransitionAspectTest {
 
 	@InjectMocks
 	IOEventTransitionAspect transitionAspect = new IOEventTransitionAspect();
+	@InjectMocks
+	IOEventMessageBuilderService messageBuilderService  = new IOEventMessageBuilderService();
 	@Mock
 	IOEventService ioEventService;
 	@Mock
@@ -238,8 +241,8 @@ class IOEventTransitionAspectTest {
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
-		Message messageResult = transitionAspect.buildTransitionGatewayParallelMessage(ioEvent, null, ioEventResponse,
-				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult = messageBuilderService.buildTransitionGatewayParallelMessage(ioEvent, null, ioEventResponse,
+				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap,false);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
@@ -271,8 +274,8 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
 		when(ioEventService.getOutputKey(ioEvent.gatewayOutput().output()[0])).thenReturn("Output2");		
-		Message messageResult = transitionAspect.buildTransitionGatewayExclusiveMessage(ioEvent, null, ioEventResponse,
-				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult = messageBuilderService.buildTransitionGatewayExclusiveMessage(ioEvent, null, ioEventResponse,
+				ioEvent.gatewayOutput().output()[0], ioeventRecordInfo, (long) 123546,headersMap,false);
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
@@ -361,8 +364,8 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTaskoutput = transitionAspect.parallelEventSendProcess(ioEvent, null, ioEventResponse, "",
-				ioeventRecordInfo);
+		String simpleTaskoutput = messageBuilderService.parallelEventSendProcess(ioEvent, null, ioEventResponse, "",
+				ioeventRecordInfo,false);
 		assertEquals("Output1,Output2,", simpleTaskoutput);
 
 	}
@@ -383,8 +386,8 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTaskoutput = transitionAspect.exclusiveEventSendProcess(ioEvent, null,
-				new IOResponse<String>("Output2", "payload"), "", ioeventRecordInfo);
+		String simpleTaskoutput = messageBuilderService.exclusiveEventSendProcess(ioEvent, null,
+				new IOResponse<String>("Output2", "payload"), "", ioeventRecordInfo,false);
 		assertEquals("Output2,", simpleTaskoutput);
 
 	}
