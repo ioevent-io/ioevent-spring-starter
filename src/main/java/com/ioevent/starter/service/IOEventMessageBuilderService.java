@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.KafkaNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -118,13 +119,14 @@ public class IOEventMessageBuilderService {
 	public String exclusiveEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String outputs,
 			IOEventRecordInfo ioeventRecordInfo, boolean isImplicitStart) {
 		IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
-		if (ioEventService.validExclusiveOutput(ioEvent,ioEventResponse)) {
+		if (ioEventService.validExclusiveOutput(ioEvent, ioEventResponse)) {
 			Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 					ioEventResponse.getHeaders());
 			for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 				if (ioEventResponse.getKey().equals(ioEventService.getOutputKey(outputEvent))) {
-					Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow, ioEventResponse,
-							outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers, isImplicitStart);
+					Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow,
+							ioEventResponse, outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers,
+							isImplicitStart);
 					kafkaTemplate.send(message);
 
 					outputs += ioEventService.getOutputKey(outputEvent) + ",";
@@ -134,8 +136,9 @@ public class IOEventMessageBuilderService {
 			}
 			return outputs;
 		}
-		throw new IllegalStateException("exclusive target output does not exist within the gateway outputs declared list !");
-		
+		throw new IllegalStateException(
+				"exclusive target output does not exist within the gateway outputs declared list !");
+
 	}
 
 	/**
@@ -160,6 +163,9 @@ public class IOEventMessageBuilderService {
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		if (response.getBody() == null) {
+			response.setBody(KafkaNull.INSTANCE);
+		}
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
