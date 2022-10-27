@@ -32,7 +32,10 @@ import java.util.TimeZone;
 
 import org.springframework.kafka.support.KafkaNull;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**class event logger used to log ioevent Annotation aspect */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventLogger {
 	private String correlationId;
 	private String workflow;
