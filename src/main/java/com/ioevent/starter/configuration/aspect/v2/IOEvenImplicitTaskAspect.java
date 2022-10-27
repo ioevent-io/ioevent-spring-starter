@@ -81,10 +81,11 @@ public class IOEvenImplicitTaskAspect {
 	 * 
 	 * @param joinPoint for the join point during the execution of the program,
 	 * @param ioEvent   for ioevent annotation which include task information,
+	 * @throws JsonProcessingException 
 	 * @throws ParseExceptions
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
-	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) throws ParseException {
+	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) throws ParseException, JsonProcessingException {
 
 		if (ioEventService.isImplicitTask(ioEvent) && ioEventService.getInputs(ioEvent).isEmpty()) {
 
@@ -213,7 +214,7 @@ public class IOEvenImplicitTaskAspect {
 	}
 	
 	public void createImpliciteEndEvent(IOEvent ioEvent, IOFlow ioFlow, IOEventRecordInfo ioeventRecordInfo,
-			IOResponse<Object> response, EventLogger eventLogger) throws ParseException {
+			IOResponse<Object> response, EventLogger eventLogger) throws ParseException, JsonProcessingException {
 		StopWatch watch = new StopWatch();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Implicit End");
@@ -224,8 +225,7 @@ public class IOEvenImplicitTaskAspect {
 				ioeventRecordInfo.getInstanceStartTime(), headers);
 
 		kafkaTemplate.send(message);
-		// prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch,
-		// ioeventRecordInfo);
+		 prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch,ioeventRecordInfo);
 	}
 
 	/**
@@ -372,12 +372,15 @@ public class IOEvenImplicitTaskAspect {
 	 * @param output      for the output where the event will send ,
 	 * @param payload     for the payload of the event,
 	 * @param watch       for capturing time,
+	 * @throws JsonProcessingException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String uuid, IOEvent ioEvent, String processName,
-			String output, IOResponse<Object> payload, StopWatch watch) {
+			String output, IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException {
 		watch.stop();
 		eventLogger.loggerSetting(uuid, processName, ioEvent.key(), null, output, "START", payload.getBody());
 		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
+		log.info(jsonObject);
 		watch.start("IOEvent annotation Implicit TASK Aspect");
 
 	}
