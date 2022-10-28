@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventLogger {
 	private String correlationId;
-	private String workflow;
+	private String ioflow;
 	private String stepName;
 	private String inputEvent;
 	private String outputEvent;
@@ -52,10 +52,10 @@ public class EventLogger {
 		super();
 	}
 
-	public EventLogger(String correlationId, String workflow, String stepName, String inputEvent, String outputEvent,
+	public EventLogger(String correlationId, String ioflow, String stepName, String inputEvent, String outputEvent,
 			String eventType, Object payload) {
 		this.correlationId = correlationId;
-		this.workflow = workflow;
+		this.ioflow = ioflow;
 		this.stepName = stepName;
 		this.inputEvent = inputEvent;
 		this.outputEvent = outputEvent;
@@ -63,10 +63,10 @@ public class EventLogger {
 		this.payload = payload;
 	} 
 
-	public EventLogger(String correlationId, String workflow, String stepName, String inputEvent, String outputEvent,
+	public EventLogger(String correlationId, String ioflow, String stepName, String inputEvent, String outputEvent,
 			String eventType, Object payload, String startTime, String endTime, Long duration) {
 		this.correlationId = correlationId;
-		this.workflow = workflow;
+		this.ioflow = ioflow;
 		this.stepName = stepName;
 		this.inputEvent = inputEvent;
 		this.outputEvent = outputEvent;
@@ -85,12 +85,12 @@ public class EventLogger {
 		this.correlationId = correlationId;
 	}
 
-	public String getWorkflow() {
-		return workflow;
+	public String getIoflow() {
+		return ioflow;
 	}
 
-	public void setWorkflow(String workflow) {
-		this.workflow = workflow;
+	public void setIoflow(String ioflow) {
+		this.ioflow = ioflow;
 	}
 
 	public String getStepName() {
@@ -187,10 +187,10 @@ public class EventLogger {
 		
 		return date.getTime();
 	}
-	public void loggerSetting(String id, String workflow, String stepName, String string, String outputEvent,
+	public void loggerSetting(String id, String ioflow, String stepName, String string, String outputEvent,
 			String eventType, Object payload) {
 		this.correlationId = id;
-		this.workflow = workflow;
+		this.ioflow = ioflow;
 		this.stepName=stepName;
 		this.inputEvent=string;
 		this.outputEvent=outputEvent;

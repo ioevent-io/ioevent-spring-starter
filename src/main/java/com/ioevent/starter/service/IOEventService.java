@@ -602,7 +602,7 @@ public class IOEventService {
 		if (headersConsumed != null) {
 			result = headersConsumed.stream().collect(Collectors.toMap(Header::key, h -> new String(h.value())));
 		}
-		if (newHeaders!=null) {
+		if (newHeaders != null) {
 			result.putAll(newHeaders);
 		}
 		return result;
@@ -610,5 +610,56 @@ public class IOEventService {
 
 	public boolean validExclusiveOutput(IOEvent ioEvent, IOResponse<Object> ioEventResponse) {
 		return this.getExclusiveGatewayOutputNames(ioEvent).contains(ioEventResponse.getKey());
+	}
+
+	/**
+	 * Check if IOFlow is null or the IOFlow name is blank so it throws an
+	 * IllegalArgumentException
+	 * 
+	 * @param ioFlow
+	 */
+	public void ioflowExistValidation(IOFlow ioFlow) {
+
+		if (ioFlow == null) {
+			throw new IllegalArgumentException(
+					"IOFlow must be declared on the class, please be sure you add  @IOFlow annotation to the service class");
+
+		} else {
+			if (StringUtils.isBlank(ioFlow.name())) {
+				throw new IllegalArgumentException(
+						"IOFlow name can't be empty/null or whitespace, please be sure you add a name field to @IOFlow annotation declared on the service class");
+
+			}
+		}
+	}
+
+	/**
+	 * Check if IOEvent key is blank so it throws an IllegalArgumentException
+	 * 
+	 * @param ioEvent
+	 */
+	public void ioeventKeyValidation(IOEvent ioEvent) {
+		if (StringUtils.isBlank(ioEvent.key())) {
+			throw new IllegalArgumentException(
+					"IOEvent key can't be empty/null or whitespace , please be sure you add a key to your @IOEvent annotation");
+		}
+	}
+
+	/**
+	 * Check if IOEvent is an exclusive gateway ,in case it's an exclusive gateway
+	 * it check if the method return type is IOResponse otherwise throw an
+	 * IllegalArgumentException
+	 * 
+	 * @param ioEvent
+	 * @param method
+	 */
+	public void gatewayValidation(IOEvent ioEvent, Method method) {
+		if (ioEvent.gatewayOutput().output().length != 0 && ioEvent.gatewayOutput().exclusive()
+				&& !ioEvent.gatewayOutput().parallel()) {
+			if (!method.getReturnType().equals(IOResponse.class)) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
+			}
+		}
 	}
 }
