@@ -33,7 +33,6 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
-import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
@@ -70,7 +69,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private Set<String> apiKeys;
 	@Autowired
 	private IOEventService ioEventService;
-	
+
 	/**
 	 * method post processor before initialization,
 	 * 
@@ -115,7 +114,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 			IOEvent[] ioEvents = method.getAnnotationsByType(IOEvent.class);
 			for (IOEvent ioEvent : ioEvents) {
-				checkMethodValidation(ioEvent, method);
+				checkMethodValidation(ioFlow, ioEvent, method);
 				if (needListener(ioEvent)) {
 
 					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
@@ -147,11 +146,15 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			}
 		}
 	}
-	@Autowired 
+
+	@Autowired
 	ApplicationContext applicationContext;
-	public void checkMethodValidation(IOEvent ioEvent, Method method) {
+
+	public void checkMethodValidation(IOFlow ioFlow, IOEvent ioEvent, Method method) {
 		try {
-			gatewayValidation(ioEvent, method);
+			ioEventService.ioflowExistValidation(ioFlow);
+			ioEventService.ioeventKeyValidation(ioEvent);
+			ioEventService.gatewayValidation(ioEvent, method);
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);
@@ -159,15 +162,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 		}
 
-	}
-
-	public void gatewayValidation(IOEvent ioEvent, Method method) {
-		if (ioEvent.gatewayOutput().output().length != 0 && ioEvent.gatewayOutput().exclusive() && !ioEvent.gatewayOutput().parallel()) {
-			if (!method.getReturnType().equals(IOResponse.class)) {
-				throw new IllegalArgumentException(
-						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
-			}
-		}
 	}
 
 	public boolean needListener(IOEvent ioEvent) {
