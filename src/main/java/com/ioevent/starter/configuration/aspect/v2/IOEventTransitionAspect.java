@@ -17,7 +17,9 @@
 package com.ioevent.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -81,10 +83,12 @@ public class IOEventTransitionAspect {
 	 * @param returnObject for the returned object,
 	 * @throws JsonProcessingException
 	 * @throws ParseException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws JsonProcessingException, ParseException {
+			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
 
 		if (ioEventService.isTransition(ioEvent)) {
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
@@ -102,13 +106,13 @@ public class IOEventTransitionAspect {
 
 				if (ioEvent.gatewayOutput().parallel()) {
 					ioEventType = IOEventType.GATEWAY_PARALLEL;
-					outputs = messageBuilderService.parallelEventSendProcess(ioEvent, ioFlow, response, outputs,
+					outputs = messageBuilderService.parallelEventSendProcess(eventLogger,ioEvent, ioFlow, response, outputs,
 							ioeventRecordInfo, false);
 
 				} else if (ioEvent.gatewayOutput().exclusive()) {
 					ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
 				try {
-					outputs = messageBuilderService.exclusiveEventSendProcess(ioEvent, ioFlow, returnObject, outputs,
+					outputs = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, ioFlow, returnObject, outputs,
 							ioeventRecordInfo, false);
 				} catch (IllegalStateException e) {
 					ioExceptionHandlingAspect.throwingExceptionAspect(joinPoint, ioEvent, e);
@@ -118,7 +122,7 @@ public class IOEventTransitionAspect {
 				}
 			} else {
 
-				outputs = simpleEventSendProcess(ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);
+				outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);
 			}
 
 			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch, response.getBody(),
@@ -128,6 +132,7 @@ public class IOEventTransitionAspect {
 
 	/**
 	 * Method that build and send the event of a simple task,
+	 * @param eventLogger 
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
@@ -139,9 +144,11 @@ public class IOEventTransitionAspect {
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @param ioEventType       for the event type,
 	 * @return string format list of outputs of the event separated by "," ,
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
-			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) {
+	public String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
+			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) throws InterruptedException, ExecutionException {
 
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
@@ -152,13 +159,15 @@ public class IOEventTransitionAspect {
 
 				message = this.buildSuffixMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 						ioeventRecordInfo.getStartTime(), ioEventType, headers);
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				outputs += ioeventRecordInfo.getOutputConsumedName() + outputEvent.suffix();
 			} else {
 				message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 						ioeventRecordInfo.getStartTime(), ioEventType, headers);
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				outputs += ioEventService.getOutputKey(outputEvent) + ",";
 			}
@@ -179,14 +188,15 @@ public class IOEventTransitionAspect {
 	 * @param payload           for the payload of the event,
 	 * @param ioEventType       for the event type,
 	 * @throws JsonProcessingException
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEventRecordInfo ioeventRecordInfo,
 			IOEvent ioEvent, String output, StopWatch watch, Object payload, IOEventType ioEventType)
-			throws JsonProcessingException {
+			throws JsonProcessingException, ParseException {
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioeventRecordInfo.getOutputConsumedName(), output, ioEventType.toString(), payload);
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}

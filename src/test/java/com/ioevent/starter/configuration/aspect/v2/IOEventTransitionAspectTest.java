@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.aspectj.lang.JoinPoint;
 import org.junit.Assert;
@@ -299,7 +300,7 @@ class IOEventTransitionAspectTest {
 	}
 
 	@Test
-	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException {
+	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException, ParseException {
 
 		Method method = this.getClass().getMethod("suffixTaskAnnotation", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
@@ -317,7 +318,7 @@ class IOEventTransitionAspectTest {
 	}
 
 	@Test
-	void simpleEventSendProcessTest() throws ParseException, NoSuchMethodException, SecurityException {
+	void simpleEventSendProcessTest() throws ParseException, NoSuchMethodException, SecurityException, InterruptedException, ExecutionException {
 		Method method = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Method method2 = this.getClass().getMethod("suffixTaskAnnotation", null);
@@ -337,9 +338,9 @@ class IOEventTransitionAspectTest {
 		watch.start("IOEvent annotation Start Aspect");
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
-		String simpleTaskoutput = transitionAspect.simpleEventSendProcess(ioEvent, null, ioEventResponse, "", ioeventRecordInfo,
+		String simpleTaskoutput = transitionAspect.simpleEventSendProcess(eventLogger,ioEvent, null, ioEventResponse, "", ioeventRecordInfo,
 				IOEventType.TASK);
-		String suffixTaskoutput = transitionAspect.simpleEventSendProcess(ioEvent2, null, ioEventResponse, "",
+		String suffixTaskoutput = transitionAspect.simpleEventSendProcess(eventLogger,ioEvent2, null, ioEventResponse, "",
 				ioeventRecordInfoForSuffix, IOEventType.TASK);
 		assertEquals("output,", simpleTaskoutput);
 		assertEquals("previous output_suffixAdded", suffixTaskoutput);
@@ -347,7 +348,7 @@ class IOEventTransitionAspectTest {
 	}
 
 	@Test
-	void parallelEventSendProcessTest() throws ParseException, NoSuchMethodException, SecurityException {
+	void parallelEventSendProcessTest() throws ParseException, NoSuchMethodException, SecurityException, InterruptedException, ExecutionException {
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Method method = this.getClass().getMethod("parralelTaskAnnotationMethod", null);
@@ -364,14 +365,14 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTaskoutput = messageBuilderService.parallelEventSendProcess(ioEvent, null, ioEventResponse, "",
+		String simpleTaskoutput = messageBuilderService.parallelEventSendProcess(eventLogger,ioEvent, null, ioEventResponse, "",
 				ioeventRecordInfo,false);
 		assertEquals("Output1,Output2,", simpleTaskoutput);
 
 	}
 
 	@Test
-	void exclusiveEventSendProcessTest() throws NoSuchMethodException, SecurityException, ParseException {
+	void exclusiveEventSendProcessTest() throws NoSuchMethodException, SecurityException, ParseException, InterruptedException, ExecutionException {
 
 		Method method = this.getClass().getMethod("exclusiveTaskAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
@@ -387,7 +388,7 @@ class IOEventTransitionAspectTest {
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Start Aspect");
-		String simpleTaskoutput = messageBuilderService.exclusiveEventSendProcess(ioEvent, null,
+		String simpleTaskoutput = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, null,
 				new IOResponse<String>("Output2", "payload"), "", ioeventRecordInfo,false);
 		assertEquals("Output2,", simpleTaskoutput);
 

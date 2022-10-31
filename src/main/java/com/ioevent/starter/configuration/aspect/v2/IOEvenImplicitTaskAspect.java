@@ -19,9 +19,11 @@ package com.ioevent.starter.configuration.aspect.v2;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -81,11 +83,14 @@ public class IOEvenImplicitTaskAspect {
 	 * 
 	 * @param joinPoint for the join point during the execution of the program,
 	 * @param ioEvent   for ioevent annotation which include task information,
-	 * @throws JsonProcessingException 
+	 * @throws JsonProcessingException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 * @throws ParseExceptions
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
-	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) throws ParseException, JsonProcessingException {
+	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent)
+			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 
 		if (ioEventService.isImplicitTask(ioEvent) && ioEventService.getInputs(ioEvent).isEmpty()) {
 
@@ -104,7 +109,8 @@ public class IOEvenImplicitTaskAspect {
 			// List<String> topics = ioEventService.getOutputEventTopics(ioEvent, ioFlow);
 			Message<Object> message = this.buildImplicitStartMessage(ioFlow, response, processName, uuid.toString(),
 					outputKey, eventLogger.getTimestamp(eventLogger.getStartTime()));
-			kafkaTemplate.send(message);
+			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 			prepareAndDisplayEventLogger(eventLogger, uuid.toString(), ioEvent, processName, outputKey, response,
 					watch);
 			IOEventContextHolder.setContext(new IOEventRecordInfo(uuid.toString(), "", "", watch,
@@ -122,10 +128,12 @@ public class IOEvenImplicitTaskAspect {
 	 * @param returnObject for the returned object,
 	 * @throws ParseException
 	 * @throws JsonProcessingException
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws ParseException, JsonProcessingException {
+			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 
 		if (ioEventService.isImplicitTask(ioEvent)) {
 
@@ -140,6 +148,7 @@ public class IOEvenImplicitTaskAspect {
 			if (!ioEventService.getInputs(ioEvent).isEmpty()) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				watch = ioeventRecordInfo.getWatch();
+				eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfo.getStartTime())));
 				Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 						response.getHeaders());
 				ioeventRecordInfo.setWorkFlowName(
@@ -149,7 +158,8 @@ public class IOEvenImplicitTaskAspect {
 						eventLogger.getTimestamp(eventLogger.getStartTime()), ioeventRecordInfo.getInstanceStartTime(),
 						ioEventType, headers);
 
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfo, response, END_PREFIX, ioEventType,
 						watch);
@@ -166,11 +176,13 @@ public class IOEvenImplicitTaskAspect {
 
 					if (ioEvent.gatewayOutput().parallel()) {
 						ioEventType = IOEventType.GATEWAY_PARALLEL;
-						output = messageBuilderService.parallelEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfoInput,true);
+						output = messageBuilderService.parallelEventSendProcess(eventLogger,ioEvent, ioFlow, response, output,
+								ioeventRecordInfoInput, true);
 
 					} else if (ioEvent.gatewayOutput().exclusive()) {
 						ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
-						output = messageBuilderService.exclusiveEventSendProcess(ioEvent, ioFlow, returnObject, output, ioeventRecordInfoInput,true);
+						output = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, ioFlow, returnObject, output,
+								ioeventRecordInfoInput, true);
 
 					}
 				} else {
@@ -181,12 +193,13 @@ public class IOEvenImplicitTaskAspect {
 								ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,
 								outputEvent.topic(), eventLogger.getTimestamp(eventLogger.getStartTime()),
 								ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
-						kafkaTemplate.send(message);
+						Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+						eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 						output += outputKey + ",";
 					}
 				}
-				
+
 				ioeventRecordInfoInput.setOutputConsumedName(START_PREFIX + ioEvent.key());
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfoInput, response, output,
 						ioEventType, watch);
@@ -200,7 +213,8 @@ public class IOEvenImplicitTaskAspect {
 						ioeventRecordInfoInput.getId(), END_PREFIX, "",
 						eventLogger.getTimestamp(eventLogger.getStartTime()),
 						ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers);
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 				ioeventRecordInfoInput.setWorkFlowName(ioFlow.name());
 				ioeventRecordInfoInput.setOutputConsumedName(START_PREFIX + ioEvent.key());
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, ioeventRecordInfoInput, response,
@@ -212,9 +226,9 @@ public class IOEvenImplicitTaskAspect {
 		}
 
 	}
-	
+
 	public void createImpliciteEndEvent(IOEvent ioEvent, IOFlow ioFlow, IOEventRecordInfo ioeventRecordInfo,
-			IOResponse<Object> response, EventLogger eventLogger) throws ParseException, JsonProcessingException {
+			IOResponse<Object> response, EventLogger eventLogger) throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		StopWatch watch = new StopWatch();
 		eventLogger.startEventLog();
 		watch.start("IOEvent annotation Implicit End");
@@ -224,8 +238,9 @@ public class IOEvenImplicitTaskAspect {
 				ioeventRecordInfo.getId(), eventLogger.getTimestamp(eventLogger.getStartTime()),
 				ioeventRecordInfo.getInstanceStartTime(), headers);
 
-		kafkaTemplate.send(message);
-		 prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch,ioeventRecordInfo);
+		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+		prepareAndDisplayEventLogger(eventLogger, ioEvent, response, watch, ioeventRecordInfo);
 	}
 
 	/**
@@ -280,7 +295,6 @@ public class IOEvenImplicitTaskAspect {
 	public Message<Object> buildImplicitStartMessage(IOFlow ioFlow, IOResponse<Object> payload, String processName,
 			String uuid, String outputEventName, Long startTime) {
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-
 		return MessageBuilder.withPayload(payload.getBody()).setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic")
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "START-EVENT")
@@ -328,14 +342,15 @@ public class IOEvenImplicitTaskAspect {
 	 * @param ioEventType       for the IOEvent Type,
 	 * @param watch             for capturing time,
 	 * @throws JsonProcessingException
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent,
 			IOEventRecordInfo ioEventRecordInfo, IOResponse<Object> payload, String outputName, IOEventType ioEventType,
-			StopWatch watch) throws JsonProcessingException {
+			StopWatch watch) throws JsonProcessingException, ParseException {
 		watch.stop();
 		eventLogger.loggerSetting(ioEventRecordInfo.getId(), ioEventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioEventRecordInfo.getOutputConsumedName(), outputName, ioEventType.toString(), payload.getBody());
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}
@@ -350,14 +365,15 @@ public class IOEvenImplicitTaskAspect {
 	 * @param watch             for capturing time,
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @throws JsonProcessingException
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, IOResponse<Object> payload,
-			StopWatch watch, IOEventRecordInfo ioeventRecordInfo) throws JsonProcessingException {
+			StopWatch watch, IOEventRecordInfo ioeventRecordInfo) throws JsonProcessingException, ParseException {
 
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioeventRecordInfo.getOutputConsumedName(), "__", "End", payload.getBody());
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}
@@ -372,13 +388,15 @@ public class IOEvenImplicitTaskAspect {
 	 * @param output      for the output where the event will send ,
 	 * @param payload     for the payload of the event,
 	 * @param watch       for capturing time,
-	 * @throws JsonProcessingException 
+	 * @throws JsonProcessingException
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, String uuid, IOEvent ioEvent, String processName,
-			String output, IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException {
+			String output, IOResponse<Object> payload, StopWatch watch) throws JsonProcessingException, ParseException {
 		watch.stop();
 		eventLogger.loggerSetting(uuid, processName, ioEvent.key(), null, output, "START", payload.getBody());
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
+
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 		watch.start("IOEvent annotation Implicit TASK Aspect");

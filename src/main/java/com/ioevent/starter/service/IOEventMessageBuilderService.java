@@ -1,7 +1,9 @@
 package com.ioevent.starter.service;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,6 +21,7 @@ import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.handler.IOEventRecordInfo;
+import com.ioevent.starter.logger.EventLogger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +41,8 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build and send the event of a Parallel Event task,
 	 * 
+	 * @param eventLogger
+	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -47,15 +52,21 @@ public class IOEventMessageBuilderService {
 	 *                          ",",
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @return string format list of outputs of the event separated by "," ,
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 */
-	public String parallelEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
-			IOEventRecordInfo ioeventRecordInfo, boolean isImplicitStart) {
+	public String parallelEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
+			IOResponse<Object> response, String outputs, IOEventRecordInfo ioeventRecordInfo, boolean isImplicitStart)
+			throws InterruptedException, ExecutionException {
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				response.getHeaders());
+		eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfo.getStartTime())));
+
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, ioFlow, response, outputEvent,
 					ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers, isImplicitStart);
-			kafkaTemplate.send(message);
+			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 			outputs += ioEventService.getOutputKey(outputEvent) + ",";
 		}
@@ -106,6 +117,8 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build and send the event of a Exclusive Event task,
 	 * 
+	 * @param eventLogger
+	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -115,10 +128,14 @@ public class IOEventMessageBuilderService {
 	 *                          ",",
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @return string format list of outputs of the event separated by "," ,
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 */
-	public String exclusiveEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String outputs,
-			IOEventRecordInfo ioeventRecordInfo, boolean isImplicitStart) {
+	public String exclusiveEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
+			Object returnObject, String outputs, IOEventRecordInfo ioeventRecordInfo, boolean isImplicitStart)
+			throws InterruptedException, ExecutionException {
 		IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
+		eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfo.getStartTime())));
 		if (ioEventService.validExclusiveOutput(ioEvent, ioEventResponse)) {
 			Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 					ioEventResponse.getHeaders());
@@ -127,7 +144,8 @@ public class IOEventMessageBuilderService {
 					Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow,
 							ioEventResponse, outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers,
 							isImplicitStart);
-					kafkaTemplate.send(message);
+					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 					outputs += ioEventService.getOutputKey(outputEvent) + ",";
 					log.info("sent to : {}", ioEventService.getOutputKey(outputEvent));
