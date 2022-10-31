@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -54,9 +55,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.InputEvent;
-import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.annotations.OutputEvent;
-import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
+import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
@@ -132,7 +132,7 @@ class IOEventStartAspectTest {
 	}
  
 	@Test
-	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException {
+	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException, ParseException {
 
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);

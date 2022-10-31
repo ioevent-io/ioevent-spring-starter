@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -146,7 +147,7 @@ class IOEventEndAspectTest {
 	}
 
 	@Test
-	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException {
+	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException, ParseException {
 
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);

@@ -169,11 +169,10 @@ public class EventLogger {
 		this.startTime = this.getISODate(new Date());
 	}
 
-	public void stopEvent(Long durationMilli) {
-		this.endTime = this.getISODate(new Date());
-		this.duration = durationMilli;
+	
+	public void stopEvent() throws ParseException {
+		this.duration = getTimestamp(this.getEndTime())-getTimestamp(this.getStartTime());
 	}
-
 	public String getISODate(Date date) {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSSS'Z'");
 		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
