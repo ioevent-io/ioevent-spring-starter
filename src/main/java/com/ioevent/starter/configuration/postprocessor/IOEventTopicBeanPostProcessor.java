@@ -186,7 +186,7 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	private void createIOFlowTopic(IOFlow ioFlow)
 			throws NumberFormatException, InterruptedException, ExecutionException {
 		if (!StringUtils.isBlank(ioFlow.topic())) {
-			ioTopics.add(ioFlow.topic());
+			ioTopics.add(iOEventProperties.getPrefix() + ioFlow.topic());
 			if (!topicExist(ioFlow.topic())) {
 				if (Boolean.TRUE.equals(iOEventProperties.getAuto_create_topic())) {
 					log.info("creating topic : " + ioFlow.topic());
