@@ -24,8 +24,11 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 
 
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -81,10 +84,13 @@ public class IOEventEndAspect {
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
 	 * @throws JsonProcessingException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 * @throws ParseException 
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws JsonProcessingException {
+			throws JsonProcessingException, InterruptedException, ExecutionException, ParseException {
 		if (ioEventService.isEnd(ioEvent)) {
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 			Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
@@ -93,6 +99,7 @@ public class IOEventEndAspect {
 			StopWatch watch = ioeventRecordInfo.getWatch();
 			EventLogger eventLogger = new EventLogger();
 			eventLogger.startEventLog();
+			eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfo.getStartTime())));
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 			ioeventRecordInfo.setWorkFlowName(
 					ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
@@ -100,7 +107,8 @@ public class IOEventEndAspect {
 			String output = "END";
 			Message<Object> message = this.buildEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
 					ioeventRecordInfo.getStartTime(), headers);
-			kafkaTemplate.send(message);
+			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 			prepareAndDisplayEventLogger(eventLogger, ioEvent, payload.getBody(), watch, ioeventRecordInfo);
 		}
 	}
@@ -148,14 +156,15 @@ public class IOEventEndAspect {
 	 * @param payload           for the payload of the event,
 	 * @param watch             for capturing time,
 	 * @param ioeventRecordInfo for the record information from the consumed event,
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEvent ioEvent, Object payload, StopWatch watch,
-			IOEventRecordInfo ioeventRecordInfo) throws JsonProcessingException {
+			IOEventRecordInfo ioeventRecordInfo) throws JsonProcessingException, ParseException {
 
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioeventRecordInfo.getOutputConsumedName(), "__", "End", payload);
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}

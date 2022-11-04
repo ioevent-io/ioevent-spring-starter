@@ -23,16 +23,25 @@ import java.lang.annotation.Target;
 
 /**
  * EndEvent annotation define the finishing point of a process which includes a
- *           key where we specify the name of the flow.
+ * key where we specify the name of the flow.
  * 
- *           ,
+ * ,
  **/
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EndEvent {
-
+	/**
+	 * The name of the IOFlow , which this end event belong to
+	 * 
+	 * @return the IOFlow name
+	 */
 	String value() default "";
 
+	/**
+	 * The name of the IOFlow , which this end event belong to
+	 * 
+	 * @return the IOFlow name
+	 */
 	String key() default "";
 
 }

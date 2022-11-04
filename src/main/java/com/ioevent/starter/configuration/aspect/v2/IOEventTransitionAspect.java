@@ -17,7 +17,9 @@
 package com.ioevent.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -43,6 +45,7 @@ import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
+import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +69,10 @@ public class IOEventTransitionAspect {
 
 	@Autowired
 	private IOEventService ioEventService;
+	@Autowired
+	private IOEventMessageBuilderService messageBuilderService;
+	@Autowired
+	private IOExceptionHandlingAspect ioExceptionHandlingAspect;
 
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a
@@ -74,12 +81,14 @@ public class IOEventTransitionAspect {
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
-	 * @throws ParseException
 	 * @throws JsonProcessingException
+	 * @throws ParseException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws ParseException, JsonProcessingException {
+			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
 
 		if (ioEventService.isTransition(ioEvent)) {
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
@@ -97,16 +106,23 @@ public class IOEventTransitionAspect {
 
 				if (ioEvent.gatewayOutput().parallel()) {
 					ioEventType = IOEventType.GATEWAY_PARALLEL;
-					outputs = parallelEventSendProcess(ioEvent, ioFlow, response, outputs, ioeventRecordInfo);
+					outputs = messageBuilderService.parallelEventSendProcess(eventLogger,ioEvent, ioFlow, response, outputs,
+							ioeventRecordInfo, false);
 
 				} else if (ioEvent.gatewayOutput().exclusive()) {
 					ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
-					outputs = exclusiveEventSendProcess(ioEvent, ioFlow, returnObject, outputs, ioeventRecordInfo);
+				try {
+					outputs = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, ioFlow, returnObject, outputs,
+							ioeventRecordInfo, false);
+				} catch (IllegalStateException e) {
+					ioExceptionHandlingAspect.throwingExceptionAspect(joinPoint, ioEvent, e);
+					throw e;
+				}	
 
 				}
 			} else {
 
-				outputs = simpleEventSendProcess(ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);
+				outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);
 			}
 
 			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch, response.getBody(),
@@ -116,6 +132,7 @@ public class IOEventTransitionAspect {
 
 	/**
 	 * Method that build and send the event of a simple task,
+	 * @param eventLogger 
 	 * 
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
@@ -127,9 +144,11 @@ public class IOEventTransitionAspect {
 	 * @param ioeventRecordInfo for the record information from the consumed event,
 	 * @param ioEventType       for the event type,
 	 * @return string format list of outputs of the event separated by "," ,
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
-			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) {
+	public String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
+			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType) throws InterruptedException, ExecutionException {
 
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
@@ -140,77 +159,19 @@ public class IOEventTransitionAspect {
 
 				message = this.buildSuffixMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 						ioeventRecordInfo.getStartTime(), ioEventType, headers);
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				outputs += ioeventRecordInfo.getOutputConsumedName() + outputEvent.suffix();
 			} else {
 				message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 						ioeventRecordInfo.getStartTime(), ioEventType, headers);
-				kafkaTemplate.send(message);
+				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				outputs += ioEventService.getOutputKey(outputEvent) + ",";
 			}
 
-		}
-		return outputs;
-	}
-
-	/**
-	 * Method that build and send the event of a Exclusive Event task,
-	 * 
-	 * @param ioEvent           for ioevent annotation which include task
-	 *                          information,
-	 * @param ioFlow            for ioflow annotation which include general
-	 *                          information,
-	 * @param returnObject      for the returned object,
-	 * @param outputs           for the list of outputs of the event separated by
-	 *                          ",",
-	 * @param ioeventRecordInfo for the record information from the consumed event,
-	 * @return string format list of outputs of the event separated by "," ,
-	 */
-	public String exclusiveEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, Object returnObject, String outputs,
-			IOEventRecordInfo ioeventRecordInfo) {
-
-		IOResponse<Object> ioEventResponse = IOResponse.class.cast(returnObject);
-		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
-				ioEventResponse.getHeaders());
-		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-			if (ioEventResponse.getKey().equals(ioEventService.getOutputKey(outputEvent))) {
-				Message<Object> message = this.buildTransitionGatewayExclusiveMessage(ioEvent, ioFlow, ioEventResponse,
-						outputEvent, ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers);
-				kafkaTemplate.send(message);
-
-				outputs += ioEventService.getOutputKey(outputEvent) + ",";
-				log.info("sent to : {}", ioEventService.getOutputKey(outputEvent));
-			}
-
-		}
-		return outputs;
-	}
-
-	/**
-	 * Method that build and send the event of a Parallel Event task,
-	 * 
-	 * @param ioEvent           for ioevent annotation which include task
-	 *                          information,
-	 * @param ioFlow            for ioflow annotation which include general
-	 *                          information,
-	 * @param response
-	 * @param outputs           for the list of outputs of the event separated by
-	 *                          ",",
-	 * @param ioeventRecordInfo for the record information from the consumed event,
-	 * @return string format list of outputs of the event separated by "," ,
-	 */
-	public String parallelEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String outputs,
-			IOEventRecordInfo ioeventRecordInfo) {
-		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
-				response.getHeaders());
-		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-			Message<Object> message = this.buildTransitionGatewayParallelMessage(ioEvent, ioFlow, response, outputEvent,
-					ioeventRecordInfo, ioeventRecordInfo.getStartTime(), headers);
-			kafkaTemplate.send(message);
-
-			outputs += ioEventService.getOutputKey(outputEvent) + ",";
 		}
 		return outputs;
 	}
@@ -227,14 +188,15 @@ public class IOEventTransitionAspect {
 	 * @param payload           for the payload of the event,
 	 * @param ioEventType       for the event type,
 	 * @throws JsonProcessingException
+	 * @throws ParseException 
 	 */
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEventRecordInfo ioeventRecordInfo,
 			IOEvent ioEvent, String output, StopWatch watch, Object payload, IOEventType ioEventType)
-			throws JsonProcessingException {
+			throws JsonProcessingException, ParseException {
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioeventRecordInfo.getOutputConsumedName(), output, ioEventType.toString(), payload);
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}
@@ -268,82 +230,6 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
-				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
-				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
-				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
-				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
-	}
-
-	/**
-	 * Method that build the event message of Parallel task to be send in kafka
-	 * topic,
-	 * 
-	 * @param ioEvent           for ioevent annotation which include task
-	 *                          information,
-	 * @param ioFlow            for ioflow annotation which include general
-	 *                          information,
-	 * @param response          for the response which include the payload of the
-	 *                          event
-	 * @param outputEvent       for the output Event where the event will send
-	 * @param ioeventRecordInfo
-	 * @param startTime         for the start time of the event,
-	 * @param headers           for message headers
-	 * @return message type of Message,
-	 */
-	public Message<Object> buildTransitionGatewayParallelMessage(IOEvent ioEvent, IOFlow ioFlow,
-			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
-			Map<String, Object> headers) {
-		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
-		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
-				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
-				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
-				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
-				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
-				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
-				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
-				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
-				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
-	}
-
-	/**
-	 * Method that build the event message of Exclusive task to be send in kafka
-	 * topic,
-	 * 
-	 * @param ioEvent           for ioevent annotation which include task
-	 *                          information,
-	 * @param ioFlow            for ioflow annotation which include general
-	 *                          information,
-	 * @param response          for the response which include the payload of the
-	 *                          event
-	 * @param outputEvent       for the output Event where the event will send
-	 * @param ioeventRecordInfo
-	 * @param startTime         for the start time of the event,
-	 * @param headers           for message headers
-	 * @return message type of Message,
-	 */
-	public Message<Object> buildTransitionGatewayExclusiveMessage(IOEvent ioEvent, IOFlow ioFlow,
-			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
-			Map<String, Object> headers) {
-		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
-		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
-				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
-				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
-				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_EXCLUSIVE.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())

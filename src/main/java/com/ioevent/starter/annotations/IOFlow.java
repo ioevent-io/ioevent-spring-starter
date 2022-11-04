@@ -23,21 +23,41 @@ import java.lang.annotation.Target;
 
 /**
  * IOFlow annotation uses to specify the classes that contains @IOEvent methods
- * , @IOFlow classes are processed by BeanPostProcessors to extract
- * information from @IOEvent method , in @IOFlow we can specify the key
- * or the name of the flow where the class methods are part of ,name of
- * generic topic where the @IOEvent methods will send event if the topic
- * wasn’t specified in the @IOEvent annotation and apiKey which will be
- * attached to the events of the class methods
+ * , @IOFlow classes are processed by BeanPostProcessors to extract information
+ * from @IOEvent method , in @IOFlow we can specify the key or the name of the
+ * flow where the class methods are part of ,name of generic topic where
+ * the @IOEvent methods will send event if the topic wasn’t specified in
+ * the @IOEvent annotation and apiKey which will be attached to the events of
+ * the class methods
  *
  */
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IOFlow {
-
+	/**
+	 * The name of the IOFlow
+	 * 
+	 * @return the IOFlow name
+	 */
 	String name() default "";
 
+	/**
+	 * The topic name from where to consume events that can invoke the method or
+	 * produce event into it after running this ioevent method
+	 * 
+	 * @return the topic name
+	 */
 	String topic() default "";
 
+	/**
+	 * 
+	 * apiKey which will be attached to the events of the class methods and the BPMN
+	 * Parts generated from methods .
+	 * <p>
+	 * Note:API key is a unique identifier used to authenticate projects and allow
+	 * to share them between IOEvent Cockpit users who owns the API key.
+	 * 
+	 * @return  apiKey string
+	 */
 	String apiKey() default "";
 }

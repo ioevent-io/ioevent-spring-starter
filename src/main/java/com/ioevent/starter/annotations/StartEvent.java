@@ -22,15 +22,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * StartEvent annotation define the starting point of a process which includes
- *             a key where we specify the name of the flow.
+ * StartEvent annotation define the starting point of a process which includes a
+ * key where we specify the name of the IOFlow.
  **/
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface StartEvent {
-
+	/**
+	 * The name of the IOFlow , which this start event belong to
+	 * 
+	 * @return the IOFlow name
+	 */
 	String value() default "";
 
+	/**
+	 * The name of the IOFlow , which this start event belong to
+	 * 
+	 * @return the IOFlow name
+	 */
 	String key() default "";
 
 }

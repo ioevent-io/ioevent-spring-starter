@@ -17,7 +17,9 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -76,10 +78,12 @@ public class IOExceptionHandlingAspect {
 	 * @param throwable for throwed exception during the execution,
 	 * @throws ParseException
 	 * @throws JsonProcessingException
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	@AfterThrowing(value = "@annotation(anno)", argNames = "jp, anno,ex", throwing = "ex")
 	public void throwingExceptionAspect(JoinPoint joinPoint, IOEvent ioEvent, Throwable throwable)
-			throws ParseException, JsonProcessingException {
+			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		throwable.printStackTrace();
 		IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 		EventLogger eventLogger = new EventLogger();
@@ -96,9 +100,9 @@ public class IOExceptionHandlingAspect {
 			
 			if (!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
 				ioEventType = IOEventType.ERROR_END;
-				output = endEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
+				output = endEventSendProcess(eventLogger,ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			} else {
-				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
+				output = simpleEventSendProcess(eventLogger,ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 			}
 			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(),
 					ioEventType);
@@ -108,19 +112,20 @@ public class IOExceptionHandlingAspect {
 				eventLogger.setErrorType(throwable.getClass().getCanonicalName());
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, ioeventRecordInfo.getBody());
 				String output ="";
-				output = simpleEventSendProcess(ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
+				output = simpleEventSendProcess(eventLogger,ioEvent, ioFlow, response, output, ioeventRecordInfo, ioEventType, throwable);
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(), ioEventType);
 		}
 	}
 
-	private String endEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String output,
-			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType, Throwable throwable) {
+	private String endEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload, String output,
+			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType, Throwable throwable) throws InterruptedException, ExecutionException {
 		output = "ERROR END";
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				payload.getHeaders());
 		Message<Object> message = this.buildEndEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
 				ioeventRecordInfo.getStartTime(), headers, throwable);
-		kafkaTemplate.send(message);
+		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 		return null;
 	}
 
@@ -139,15 +144,16 @@ public class IOExceptionHandlingAspect {
 		return found;
 	}
 
-	private String simpleEventSendProcess(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String output,
-			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType, Throwable throwable) {
+	private String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String output,
+			IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType, Throwable throwable) throws InterruptedException, ExecutionException {
 		OutputEvent outputEvent = ioEvent.exception().output();
 		Message<Object> message;
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				response.getHeaders());
 		message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
 				ioeventRecordInfo.getStartTime(), ioEventType, headers, throwable);
-		kafkaTemplate.send(message);
+		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 		if(ioEventType.equals(IOEventType.UNHANDLED_ERROR)) {
 			output += "IOEvent_Unhandled_Exception";
 		}else {
@@ -210,11 +216,11 @@ public class IOExceptionHandlingAspect {
 
 	public void prepareAndDisplayEventLogger(EventLogger eventLogger, IOEventRecordInfo ioeventRecordInfo,
 			IOEvent ioEvent, String output, StopWatch watch, Object payload, IOEventType ioEventType)
-			throws JsonProcessingException {
+			throws JsonProcessingException, ParseException {
 		watch.stop();
 		eventLogger.loggerSetting(ioeventRecordInfo.getId(), ioeventRecordInfo.getWorkFlowName(), ioEvent.key(),
 				ioeventRecordInfo.getOutputConsumedName(), output, ioEventType.toString(), payload);
-		eventLogger.stopEvent(watch.getTotalTimeMillis());
+		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}

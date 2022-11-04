@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.service;
-
-
-
-
-
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -167,6 +159,27 @@ public class IOEventService {
 	}
 
 	/**
+	 * method returns exclusive Gateway outputs names of @IOEvent definition,
+	 * 
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return list of outputs names,
+	 */
+	public List<String> getExclusiveGatewayOutputNames(IOEvent ioEvent) {
+		List<String> result = new ArrayList<>();
+
+		for (OutputEvent outputEvent : ioEvent.gatewayOutput().output()) {
+			if (!StringUtils.isBlank(outputEvent.key() + outputEvent.value())) {
+				if (!StringUtils.isBlank(outputEvent.value())) {
+					result.add(outputEvent.value());
+				} else {
+					result.add(outputEvent.key());
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * method returns all output Event of @IOEvent definition,
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
@@ -276,6 +289,7 @@ public class IOEventService {
 
 		return result;
 	}
+
 	/**
 	 * method returns all Input topics of @IOEvent definition,
 	 * 
@@ -305,6 +319,7 @@ public class IOEventService {
 
 		return result;
 	}
+
 	/**
 	 * method returns if two lists are equal
 	 * 
@@ -384,7 +399,7 @@ public class IOEventService {
 	/**
 	 * method returns input event of @IOEvent by name,
 	 * 
-	 * @param ioEvent    for the IOEvent annotation,
+	 * @param ioEvent   for the IOEvent annotation,
 	 * @param inputName for the Input event name
 	 * @return InputEvent ,
 	 */
@@ -454,7 +469,7 @@ public class IOEventService {
 			return ioEvent.endEvent().key();
 
 		} else if (!Objects.isNull(ioFlow)) {
-			
+
 			return ioFlow.name();
 		}
 		return "";
@@ -484,7 +499,7 @@ public class IOEventService {
 	/**
 	 * method returns ApiKey from @IOFlow and IOEventProperties ,
 	 * 
-	 * @param ioFlow         for the IOFlow annotation,
+	 * @param ioFlow            for the IOFlow annotation,
 	 * @param iOEventProperties for the IOEvent custom properties value ,
 	 * @return String of ApiKey ,
 	 */
@@ -532,7 +547,7 @@ public class IOEventService {
 				MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 				int ioPayloadIndex = getIOPayloadIndex(signature.getMethod());
 				if (ioPayloadIndex >= 0) {
-					return new IOResponse<>(null,isNullpayload(joinPoint.getArgs()[ioPayloadIndex]));
+					return new IOResponse<>(null, isNullpayload(joinPoint.getArgs()[ioPayloadIndex]));
 				}
 				try {
 					return new IOResponse<>(null, isNullpayload(joinPoint.getArgs()[0]));
@@ -540,7 +555,6 @@ public class IOEventService {
 					return new IOResponse<>(null, KafkaNull.INSTANCE);
 
 				}
-				
 
 			}
 			return new IOResponse<>(null, returnObject);
@@ -549,8 +563,8 @@ public class IOEventService {
 	}
 
 	private Object isNullpayload(Object object) {
-		if (object==null) {
-			return KafkaNull.INSTANCE ;
+		if (object == null) {
+			return KafkaNull.INSTANCE;
 		}
 		return object;
 	}
@@ -581,14 +595,71 @@ public class IOEventService {
 	 * @param headersConsumed for the List of Header consumed from the event ,
 	 * @param newHeaders      a Map of String,Object for the new headers declared in
 	 *                        method
-	 * @return Map of String,Object 
+	 * @return Map of String,Object
 	 */
 	public Map<String, Object> prepareHeaders(List<Header> headersConsumed, Map<String, Object> newHeaders) {
 		Map<String, Object> result = new HashMap<>();
 		if (headersConsumed != null) {
 			result = headersConsumed.stream().collect(Collectors.toMap(Header::key, h -> new String(h.value())));
 		}
-		result.putAll(newHeaders);
+		if (newHeaders != null) {
+			result.putAll(newHeaders);
+		}
 		return result;
+	}
+
+	public boolean validExclusiveOutput(IOEvent ioEvent, IOResponse<Object> ioEventResponse) {
+		return this.getExclusiveGatewayOutputNames(ioEvent).contains(ioEventResponse.getKey());
+	}
+
+	/**
+	 * Check if IOFlow is null or the IOFlow name is blank so it throws an
+	 * IllegalArgumentException
+	 * 
+	 * @param ioFlow
+	 */
+	public void ioflowExistValidation(IOFlow ioFlow) {
+
+		if (ioFlow == null) {
+			throw new IllegalArgumentException(
+					"IOFlow must be declared on the class, please be sure you add  @IOFlow annotation to the service class");
+
+		} else {
+			if (StringUtils.isBlank(ioFlow.name())) {
+				throw new IllegalArgumentException(
+						"IOFlow name can't be empty/null or whitespace, please be sure you add a name field to @IOFlow annotation declared on the service class");
+
+			}
+		}
+	}
+
+	/**
+	 * Check if IOEvent key is blank so it throws an IllegalArgumentException
+	 * 
+	 * @param ioEvent
+	 */
+	public void ioeventKeyValidation(IOEvent ioEvent) {
+		if (StringUtils.isBlank(ioEvent.key())) {
+			throw new IllegalArgumentException(
+					"IOEvent key can't be empty/null or whitespace , please be sure you add a key to your @IOEvent annotation");
+		}
+	}
+
+	/**
+	 * Check if IOEvent is an exclusive gateway ,in case it's an exclusive gateway
+	 * it check if the method return type is IOResponse otherwise throw an
+	 * IllegalArgumentException
+	 * 
+	 * @param ioEvent
+	 * @param method
+	 */
+	public void gatewayValidation(IOEvent ioEvent, Method method) {
+		if (ioEvent.gatewayOutput().output().length != 0 && ioEvent.gatewayOutput().exclusive()
+				&& !ioEvent.gatewayOutput().parallel()) {
+			if (!method.getReturnType().equals(IOResponse.class)) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
+			}
+		}
 	}
 }
