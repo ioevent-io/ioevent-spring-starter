@@ -32,6 +32,7 @@ import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 
 import org.aspectj.lang.JoinPoint;
@@ -141,6 +142,8 @@ class IOEventStartAspectTest {
 		StopWatch watch = new StopWatch();
 		EventLogger eventLogger = new EventLogger();
 		eventLogger.startEventLog();
+		eventLogger.setEndTime(eventLogger.getISODate(new Date()));
+
 		watch.start("IOEvent annotation Start Aspect");
 		startAspect.prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, "process","output", "payload", watch);
 
