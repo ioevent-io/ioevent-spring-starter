@@ -102,9 +102,8 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(),
-						Arrays.asList(
-								isImplicitStart ? START_PREFIX + ioEvent.key() : ioEventService.getInputNames(ioEvent)))
+				.setHeader(IOEventHeaders.INPUT.toString(), 
+								isImplicitStart ? Arrays.asList(START_PREFIX + ioEvent.key()) : ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
@@ -192,8 +191,7 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_EXCLUSIVE.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(),
-						Arrays.asList(
-								isImplicitStart ? START_PREFIX + ioEvent.key() : ioEventService.getInputNames(ioEvent)))
+								isImplicitStart ? Arrays.asList(START_PREFIX + ioEvent.key() ): ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
