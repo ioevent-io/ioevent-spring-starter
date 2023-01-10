@@ -152,9 +152,10 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 						}
 					}
 				}
+				String methodReturnType = ioEventService.getMethodReturnType(method); 
 				String generateID = ioEventService.generateID(ioEvent);
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
-						method.toGenericString()));
+						method.toGenericString(),methodReturnType,iOEventProperties.getPrefix()));
 
 			}
 		}
@@ -238,9 +239,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * @param className  for the class which include the method,
 	 * @param partID     for the part ID,
 	 * @param methodName for the method name,
+	 * @param string 
+	 * @param string 
 	 **/
 	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID,
-			String methodName) {
+			String methodName,String methodReturnType, String topicPrefix) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
@@ -270,8 +273,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			iobpmnlist.add(errorEnd);
 		}
 
-		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName);
+		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix);
 
 	}
 

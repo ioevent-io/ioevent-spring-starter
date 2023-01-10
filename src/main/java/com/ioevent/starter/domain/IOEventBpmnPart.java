@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.ioevent.starter.annotations.IOEvent;
+import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.annotations.OutputEvent;
 
@@ -54,24 +55,26 @@ public class IOEventBpmnPart {
 	private Map<String, String> inputEvent;
 	private Map<String, String> outputEvent;
 	private int processCount = 0;
+	private String methodReturnType;
 	
 
 	public IOEventBpmnPart() {
 	}
 
-	public IOEventBpmnPart(IOEvent ioEvent, String id, String apiKey, String ioAppName, String workflow,
-			IOEventType ioEventType, String stepName, String methodName) {
+	public IOEventBpmnPart(IOEvent ioEvent,IOFlow ioflow, String id, String apiKey, String ioAppName, String workflow,
+			IOEventType ioEventType, String stepName, String methodName, String methodReturnType,String topicPrefix) {
 		this.id = id;
 		this.apiKey = apiKey;
 		this.ioAppName = ioAppName;
 		this.workflow = workflow;
 		this.ioEventType = ioEventType;
 		this.methodQualifiedName = methodName;
+		this.methodReturnType=methodReturnType;
 		this.stepName = stepName;
 		this.ioeventGatway = new IOEventGatwayInformation(ioEvent);
 		this.ioeventException = new IOEventExceptionInformation(ioEvent);
-		this.inputEvent = this.addInput(ioEvent);
-		this.outputEvent = this.addOutput(ioEvent);
+		this.inputEvent = this.addInput(ioEvent,ioflow,topicPrefix);
+		this.outputEvent = this.addOutput(ioEvent,ioflow,topicPrefix);
 	}
 
 	public String getId() {
@@ -134,6 +137,14 @@ public class IOEventBpmnPart {
 		return ioeventGatway;
 	}
 
+	public String getMethodReturnType() {
+		return methodReturnType;
+	}
+
+	public void setMethodReturnType(String methodReturnType) {
+		this.methodReturnType = methodReturnType;
+	}
+
 	public void setIoeventGatway(IOEventGatwayInformation ioeventGatway) {
 		this.ioeventGatway = ioeventGatway;
 	}
@@ -162,33 +173,33 @@ public class IOEventBpmnPart {
 		this.processCount = processCount;
 	}
 
-	public Map<String, String> addInput(IOEvent ioEvent) {
+	public Map<String, String> addInput(IOEvent ioEvent,IOFlow ioFlow, String topicPrefix) {
 		Map<String, String> result = new HashMap<>();
 		for (InputEvent input : ioEvent.input()) {
 			if (!StringUtils.isBlank(input.key() + input.value())) {
 				if (!StringUtils.isBlank(input.value())) {
-					result.put(input.value(), input.topic());
+					result.put(input.value(),  getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 				} else {
-					result.put(input.key(), input.topic());
+					result.put(input.key(), getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 				}
 			}
 		}
 		for (InputEvent input : ioEvent.gatewayInput().input()) {
 			if (!StringUtils.isBlank(input.key() + input.value())) {
 				if (!StringUtils.isBlank(input.value())) {
-					result.put(input.value(), input.topic());
+					result.put(input.value(),  getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 				} else {
-					result.put(input.key(), input.topic());
+					result.put(input.key(),  getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 				}
 			}
 		}
 		return result;
 	}
 
-	public Map<String, String> addOutput(IOEvent ioEvent) {
+	public Map<String, String> addOutput(IOEvent ioEvent,IOFlow ioFlow, String topicPrefix) {
 		Map<String, String> result = new HashMap<>();
 		if(!StringUtils.isBlank(ioEvent.exception().endEvent().value())) {
-			result.put(ioEvent.exception().endEvent().value(), ioEvent.topic());
+			result.put(ioEvent.exception().endEvent().value(), getEventTopic("",ioEvent,ioFlow,topicPrefix));
 		}
 		boolean isSuffix = false;
 		String suffix = "";
@@ -199,18 +210,18 @@ public class IOEventBpmnPart {
 			}
 			if (!StringUtils.isBlank(output.key() + output.value())) {
 				if (!StringUtils.isBlank(output.value())) {
-					result.put(output.value(), output.topic());
+					result.put(output.value(),getEventTopic(output.topic(),ioEvent,ioFlow,topicPrefix));
 				} else {
-					result.put(output.key(), output.topic());
+					result.put(output.key(), getEventTopic(output.topic(),ioEvent,ioFlow,topicPrefix));
 				}
 			}
 		}
 		for (OutputEvent output : ioEvent.gatewayOutput().output()) {
 			if (!StringUtils.isBlank(output.key() + output.value())) {
 				if (!StringUtils.isBlank(output.value())) {
-					result.put(output.value(), output.topic());
+					result.put(output.value(), getEventTopic(output.topic(),ioEvent,ioFlow,topicPrefix));
 				} else {
-					result.put(output.key(), output.topic());
+					result.put(output.key(), getEventTopic(output.topic(),ioEvent,ioFlow,topicPrefix));
 				}
 			}
 		}
@@ -218,9 +229,9 @@ public class IOEventBpmnPart {
 			for (InputEvent input : ioEvent.input()) {
 				if (!StringUtils.isBlank(input.key() + input.value())) {
 					if (!StringUtils.isBlank(input.value())) {
-						result.put(input.value() + suffix, input.topic());
+						result.put(input.value() + suffix, getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 					} else {
-						result.put(input.key() + suffix, input.topic());
+						result.put(input.key() + suffix, getEventTopic(input.topic(),ioEvent,ioFlow,topicPrefix));
 					}
 
 				}
@@ -228,6 +239,19 @@ public class IOEventBpmnPart {
 		}
 		
 		return result;
+	}
+
+	private String getEventTopic(String topic, IOEvent ioEvent, IOFlow ioFlow, String topicPrefix) {
+		if (!StringUtils.isBlank(topic)) {
+			return topicPrefix+topic;
+		}
+		else if (!StringUtils.isBlank(ioEvent.topic())) {
+			return topicPrefix+ioEvent.topic();
+		}
+		else if (!StringUtils.isBlank(ioFlow.topic())) {
+			return topicPrefix+ioFlow.topic();
+		}
+		return "";
 	}
 
 	@Override
