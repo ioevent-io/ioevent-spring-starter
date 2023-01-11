@@ -56,6 +56,9 @@ public class IOEventBpmnPart {
 	private Map<String, String> outputEvent;
 	private int processCount = 0;
 	private String methodReturnType;
+	private String generalTopic;
+	
+
 	
 
 	public IOEventBpmnPart() {
@@ -172,7 +175,13 @@ public class IOEventBpmnPart {
 	public void setProcessCount(int processCount) {
 		this.processCount = processCount;
 	}
+	public String getGeneralTopic() {
+		return generalTopic;
+	}
 
+	public void setGeneralTopic(String generalTopic) {
+		this.generalTopic = generalTopic;
+	}
 	public Map<String, String> addInput(IOEvent ioEvent,IOFlow ioFlow, String topicPrefix) {
 		Map<String, String> result = new HashMap<>();
 		for (InputEvent input : ioEvent.input()) {
@@ -237,7 +246,9 @@ public class IOEventBpmnPart {
 				}
 			}
 		}
-		
+		if (result.isEmpty()) {
+			this.generalTopic=getEventTopic(null,ioEvent,ioFlow,topicPrefix);
+		}
 		return result;
 	}
 
