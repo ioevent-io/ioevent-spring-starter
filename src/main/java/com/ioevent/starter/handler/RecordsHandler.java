@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -69,6 +70,7 @@ public class RecordsHandler {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
+
 	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
 			return consumedValue;
@@ -93,8 +95,8 @@ public class RecordsHandler {
 
 	}
 
-	public void invokeWithtwoParameter(Method method, Object bean, Object[] params) throws IllegalAccessException, InvocationTargetException
-			 {
+	public void invokeWithtwoParameter(Method method, Object bean, Object[] params)
+			throws IllegalAccessException, InvocationTargetException {
 		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), params);
 	}
 
@@ -106,7 +108,7 @@ public class RecordsHandler {
 	 * ioeventRecordInfo to aspect and call doinvoke(), else send ioeventRecordsInfo
 	 * to aspect and call doinvoke()
 	 **/
-
+	
 	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
@@ -116,7 +118,8 @@ public class RecordsHandler {
 				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
 
 					if (InputName.equals(outputConsumed)) {
-						new Thread(() -> {
+					
+						 CompletableFuture.runAsync(()->{
 
 							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
 							IOEventContextHolder.setContext(ioeventRecordInfo);
@@ -128,15 +131,13 @@ public class RecordsHandler {
 
 								try {
 									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
-								} catch ( IllegalAccessException 
-										| InvocationTargetException | JsonProcessingException e) {
+								} catch (IllegalAccessException | InvocationTargetException
+										| JsonProcessingException e) {
 									log.error("error while invoking method");
 									e.printStackTrace();
 								}
 							}
-						}).start();
-
-
+						});
 					}
 				}
 			}
@@ -168,15 +169,14 @@ public class RecordsHandler {
 		return message;
 	}
 
-	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo) throws  IllegalAccessException, InvocationTargetException, JsonProcessingException
-			 {
+	private void simpleInvokeMethod(BeanMethodPair pair, String consumerValue, IOEventRecordInfo ioeventRecordInfo)
+			throws IllegalAccessException, InvocationTargetException, JsonProcessingException {
 
-		
 		Map<String, Object> headersMap = ioeventRecordInfo.getHeaderList().stream()
 				.collect(Collectors.toMap(Header::key, header -> new String(header.value())));
 		Object[] params = prepareParameters(pair.getMethod(), consumerValue, headersMap);
 		this.invokeWithtwoParameter(pair.getMethod(), pair.getBean(), params);
-		
+
 	}
 
 	public Object[] prepareParameters(Method method, String consumerValue, Map<String, Object> headersMap)
@@ -186,18 +186,18 @@ public class RecordsHandler {
 
 		List<Integer> headerIndexlist = getIOHeaderIndexList(method);
 		Map<Integer, Object> param = getParamMap(method, consumerValue, headersMap);
-		
+
 		for (int i = 0; i < parameterTypes.length; i++) {
 			if (param.get(i) == null) {
 				paramList.add(parseConsumedValue(consumerValue, parameterTypes[i]));
-			}else if (param.get(i).equals("no such header exist")) {
+			} else if (param.get(i).equals("no such header exist")) {
 				paramList.add(null);
 
 			} else {
 				paramList.add(param.get(i));
 			}
 		}
-		
+
 		return paramList.toArray();
 	}
 
@@ -205,13 +205,13 @@ public class RecordsHandler {
 			throws JsonProcessingException {
 		Class[] parameterTypes = method.getParameterTypes();
 		List<Object> paramList = new ArrayList<>();
-		Map<Integer, Object> param = getParallelParamMap(method,parallelEventConsumed);
+		Map<Integer, Object> param = getParallelParamMap(method, parallelEventConsumed);
 		for (int i = 0; i < parameterTypes.length; i++) {
 			if (param.get(i) == null) {
 				String payloadInputName = parallelEventConsumed.getInputRequired().get(0);
 				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 						parameterTypes[i]));
-			}else if (param.get(i).equals("no such header exist")) {
+			} else if (param.get(i).equals("no such header exist")) {
 				paramList.add(null);
 
 			} else {
@@ -230,18 +230,18 @@ public class RecordsHandler {
 			Annotation[] annotations = parameterAnnotations[i];
 			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
 				for (Annotation annotation : annotations) {
-					IOPayload	ioPayload=(IOPayload) annotation;
+					IOPayload ioPayload = (IOPayload) annotation;
 					String payloadInputName = parallelEventConsumed.getInputRequired().get(ioPayload.index());
-					paramMap.put(i,parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
+					paramMap.put(i, parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
 							parameterTypes[i]));
-				}	
+				}
 			}
 			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
 				for (Annotation annotation : annotations) {
 					IOHeader ioHeader = (IOHeader) annotation;
 					paramMap.put(i,
-							parallelEventConsumed.getHeaders().get(ioHeader.value()) != null
-									? parseConsumedValue(parallelEventConsumed.getHeaders().get(ioHeader.value()), parameterTypes[i])
+							parallelEventConsumed.getHeaders().get(ioHeader.value()) != null ? parseConsumedValue(
+									parallelEventConsumed.getHeaders().get(ioHeader.value()), parameterTypes[i])
 									: "no such header exist");
 				}
 
@@ -358,9 +358,9 @@ public class RecordsHandler {
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo();
 		ioeventRecordInfo.setHeaderList(Arrays.asList(consumerRecord.headers().toArray()).stream()
 				.filter(header -> !header.key().equals("spring_json_header_types"))
-				.filter(header -> !header.key().equals(IOEventHeaders.ERROR_TYPE.toString()) 
-						&& !header.key().equals(IOEventHeaders.ERROR_MESSAGE.toString()) 
-						&& !header.key().equals(IOEventHeaders.ERROR_TRACE.toString()) )
+				.filter(header -> !header.key().equals(IOEventHeaders.ERROR_TYPE.toString())
+						&& !header.key().equals(IOEventHeaders.ERROR_MESSAGE.toString())
+						&& !header.key().equals(IOEventHeaders.ERROR_TRACE.toString()))
 				.collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {

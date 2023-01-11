@@ -49,7 +49,7 @@ public class Listener {
 	private Object bean;
 	private Method method;
 	private String topic;
-	private List<BeanMethodPair> beanMethodPairs = new ArrayList<BeanMethodPair>();
+	private List<BeanMethodPair> beanMethodPairs = new ArrayList<>();
 
 	/**
 	 * listener constructor
@@ -80,8 +80,8 @@ public class Listener {
 				if (!consumerRecords.isEmpty()) {
 					recordsHandler.process(consumerRecords, this.beanMethodPairs);
 				}
-
 			}
+			
 		} finally {
 			consumer.close();
 		}

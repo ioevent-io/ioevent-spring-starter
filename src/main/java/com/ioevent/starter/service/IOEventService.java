@@ -662,4 +662,15 @@ public class IOEventService {
 			}
 		}
 	}
+
+	public String getMethodReturnType(Method method) {
+		if (method.getGenericReturnType() != null) {
+			return method.getGenericReturnType().getTypeName();
+		}
+		int ioPayloadIndex = getIOPayloadIndex(method);
+		if (ioPayloadIndex >= 0) {
+			return method.getGenericParameterTypes()[ioPayloadIndex].getTypeName();
+		}
+		return null;
+	}
 }
