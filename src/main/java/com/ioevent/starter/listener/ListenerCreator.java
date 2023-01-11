@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.listener;
-
-
-
-
-
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -69,7 +61,6 @@ public class ListenerCreator {
 	private String PLAIN;
 	@Value("${spring.kafka.security.protocol:}")
 	private String SASL_SSL;
-	
 
 	/**
 	 * create listener on a single thread for the method and the topic given
@@ -93,7 +84,7 @@ public class ListenerCreator {
 			props.put("sasl.mechanism", plain);
 			props.put("sasl.jaas.config", saslJaasConfig);
 		}
-		
+
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method, ioEvent, topicName);
 		listeners.add(consumerApplication);

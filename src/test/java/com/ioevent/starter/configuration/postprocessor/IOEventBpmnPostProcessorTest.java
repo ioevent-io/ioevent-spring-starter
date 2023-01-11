@@ -108,10 +108,10 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getProcessName(ioEventStart,null,"")).thenReturn("startkey");
 		when(iOEventProperties.getApikey()).thenReturn("");
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
-		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null, "testClass",
-				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
-				"test annotation", "testMethod");
+		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null,null, "testClass",
+				bpmnPartId.toString(), "testMethod","type");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart,null, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
+				"test annotation", "testMethod","type","");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -127,10 +127,10 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getProcessName(ioEventEnd,null,"")).thenReturn("endkey");
 		when(iOEventProperties.getApikey()).thenReturn("");
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
-		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null, "testClass",
-				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
-				"test annotation", "testMethod");
+		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null,null, "testClass",
+				bpmnPartId.toString(), "type","testMethod");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd,null, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
+				"test annotation", "testMethod","type","");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -145,10 +145,10 @@ class IOEventBpmnPostProcessorTest {
 		when(ioEventService.getProcessName(ioEventTask,null,"")).thenReturn("");
 		when(iOEventProperties.getApikey()).thenReturn("");
 		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
-		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null, "testClass",
-				bpmnPartId.toString(), "testMethod");
-		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
-				"test annotation", "testMethod");
+		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null,null, "testClass",
+				bpmnPartId.toString(),"type", "testMethod");
+		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask,null, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
+				"test annotation", "testMethod","type","");
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 

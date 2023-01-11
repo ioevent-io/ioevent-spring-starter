@@ -18,12 +18,15 @@ package com.ioevent.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -67,6 +70,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private List<Listener> listeners;
 	@Autowired
 	private Set<String> apiKeys;
+	@Autowired
+	private AdminClient client;
 	@Autowired
 	private IOEventService ioEventService;
 
@@ -119,29 +124,38 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
-							synchronized (method) {
-								Thread listenerThread = new Thread() {
-									@Override
-									public void run() {
-										try {
-											listenerCreator.createListener(bean, method, ioEvent,
-													iOEventProperties.getPrefix() + topicName, kafkaGroupid,
-													Thread.currentThread());
-										} catch (Throwable e) {
-											log.error("Listener creation failed   !!!");
+							DescribeTopicsResult describeTopics = client
+									.describeTopics(Collections.singleton(iOEventProperties.getPrefix() + topicName));
+							int partitionNumber = describeTopics.all().get()
+									.get(iOEventProperties.getPrefix() + topicName).partitions().size();
+							for (int i = 0; i < (partitionNumber / 2) + 1; i++) {
+								synchronized (method) {
+									Thread listenerThread = new Thread() {
+										@Override
+										public void run() {
+											try {
+												listenerCreator.createListener(bean, method, ioEvent,
+														iOEventProperties.getPrefix() + topicName, kafkaGroupid,
+														Thread.currentThread());
+											} catch (Throwable e) {
+												log.error("Listener creation failed   !!!");
+											}
 										}
-									}
-								};
-								listenerThread.start();
+									};
+									listenerThread.start();
 
-								method.wait();
+									method.wait();
+
+								}
 							}
+
 						}
 					}
 				}
+				String methodReturnType = ioEventService.getMethodReturnType(method); 
 				String generateID = ioEventService.generateID(ioEvent);
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
-						method.toGenericString()));
+						method.toGenericString(),methodReturnType,iOEventProperties.getPrefix()));
 
 			}
 		}
@@ -165,6 +179,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	public boolean needListener(IOEvent ioEvent) {
+
 		if (((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))
 				&& (ioEvent.input().length != 0)) || (ioEvent.gatewayInput().input().length != 0)) {
 			for (InputEvent input : ioEvent.input()) {
@@ -201,6 +216,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * @return boolean true if the listener exist else false,
 	 **/
 	public boolean listenerExist(String topicName, Object bean, Method method, IOEvent ioEvent) {
+		boolean isExist = false;
 		for (Listener listener : listeners) {
 			if (listener != null) {
 				String t = listener.getTopic();
@@ -208,11 +224,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 					listener.addBeanMethod(new BeanMethodPair(bean, method, ioEvent));
 
-					return true;
+					isExist = true;
 				}
 			}
 		}
-		return false;
+		return isExist;
 	}
 
 	/**
@@ -223,9 +239,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * @param className  for the class which include the method,
 	 * @param partID     for the part ID,
 	 * @param methodName for the method name,
+	 * @param string 
+	 * @param string 
 	 **/
 	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID,
-			String methodName) {
+			String methodName,String methodReturnType, String topicPrefix) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
@@ -255,8 +273,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			iobpmnlist.add(errorEnd);
 		}
 
-		return new IOEventBpmnPart(ioEvent, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName);
+		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix);
 
 	}
 
