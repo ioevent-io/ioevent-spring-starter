@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -70,6 +70,8 @@ public class RecordsHandler {
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
+	@Autowired
+	private Executor asyncExecutor;
 
 	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
@@ -119,7 +121,7 @@ public class RecordsHandler {
 
 					if (InputName.equals(outputConsumed)) {
 					
-						 CompletableFuture.runAsync(()->{
+						 asyncExecutor.execute(()->{
 
 							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
 							IOEventContextHolder.setContext(ioeventRecordInfo);
@@ -133,8 +135,7 @@ public class RecordsHandler {
 									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
 								} catch (IllegalAccessException | InvocationTargetException
 										| JsonProcessingException e) {
-									log.error("error while invoking method");
-									e.printStackTrace();
+									log.error("error while invoking method",e);
 								}
 							}
 						});
