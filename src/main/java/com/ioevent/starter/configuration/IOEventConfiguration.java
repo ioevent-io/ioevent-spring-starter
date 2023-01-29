@@ -178,8 +178,8 @@ public class IOEventConfiguration {
 	public Executor asyncExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(5);
-		executor.setMaxPoolSize(5);
-		executor.setQueueCapacity(500);
+		executor.setMaxPoolSize(10);
+		//executor.setQueueCapacity(500);
 		executor.setThreadNamePrefix("Asynchronous Process-");
 		executor.initialize();
 		return executor;
