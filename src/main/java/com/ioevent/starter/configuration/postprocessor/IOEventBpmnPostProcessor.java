@@ -169,6 +169,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			ioEventService.ioflowExistValidation(ioFlow);
 			ioEventService.ioeventKeyValidation(ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
+			ioEventService.startAndEndvalidation(ioEvent, method);
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);

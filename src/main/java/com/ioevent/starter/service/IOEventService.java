@@ -654,11 +654,22 @@ public class IOEventService {
 	 * @param method
 	 */
 	public void gatewayValidation(IOEvent ioEvent, Method method) {
-		if (ioEvent.gatewayOutput().output().length != 0 && ioEvent.gatewayOutput().exclusive()
+		if ((ioEvent.gatewayOutput().output().length != 0) && ioEvent.gatewayOutput().exclusive()
 				&& !ioEvent.gatewayOutput().parallel()) {
 			if (!method.getReturnType().equals(IOResponse.class)) {
 				throw new IllegalArgumentException(
 						"IOEvent Method with Exclusive Gateway must return IOResponse Object , please be sure you return IOResponce in your exclusive gateway method");
+			}
+			if (ioEvent.exception().exception().length != 0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Exclusive Gateway can not be declared with @ExceptionEvent ");
+			}
+		}
+		if ((ioEvent.gatewayOutput().output().length != 0 || ioEvent.gatewayInput().input().length != 0)
+				&& (ioEvent.gatewayOutput().parallel() || ioEvent.gatewayInput().parallel())) {
+			if (ioEvent.exception().exception().length != 0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Parallel Gateway can not be declared with @ExceptionEvent");
 			}
 		}
 	}
@@ -672,5 +683,14 @@ public class IOEventService {
 			return method.getGenericParameterTypes()[ioPayloadIndex].getTypeName();
 		}
 		return null;
+	}
+
+	public void startAndEndvalidation(IOEvent ioEvent, Method method) {
+		if (isStart(ioEvent) || isEnd(ioEvent)) {
+			if (ioEvent.exception().exception().length != 0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Start/End Event can not be declared with @ExceptionEvent");
+			}
+		}
 	}
 }
