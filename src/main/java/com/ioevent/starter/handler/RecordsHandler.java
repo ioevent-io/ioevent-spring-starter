@@ -362,6 +362,7 @@ public class RecordsHandler {
 				.filter(header -> !header.key().equals(IOEventHeaders.ERROR_TYPE.toString())
 						&& !header.key().equals(IOEventHeaders.ERROR_MESSAGE.toString())
 						&& !header.key().equals(IOEventHeaders.ERROR_TRACE.toString()))
+				.filter(header -> !header.key().equals(IOEventHeaders.RESUME.toString()))
 				.collect(Collectors.toList()));
 		StopWatch watch = new StopWatch();
 		consumerRecord.headers().forEach(header -> {
