@@ -275,7 +275,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		}
 
 		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix);
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix, ioEvent.EventType());
 
 	}
 

@@ -52,6 +52,7 @@ import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.service.IOEventService;
 
@@ -111,7 +112,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null,null, "testClass",
 				bpmnPartId.toString(), "testMethod","type");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart,null, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
-				"test annotation", "testMethod","type","");
+				"test annotation", "testMethod","type","",EventTypesEnum.SERVICE);
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -130,7 +131,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null,null, "testClass",
 				bpmnPartId.toString(), "type","testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd,null, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
-				"test annotation", "testMethod","type","");
+				"test annotation", "testMethod","type","",EventTypesEnum.SERVICE);
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
@@ -148,7 +149,7 @@ class IOEventBpmnPostProcessorTest {
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null,null, "testClass",
 				bpmnPartId.toString(),"type", "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask,null, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
-				"test annotation", "testMethod","type","");
+				"test annotation", "testMethod","type","",EventTypesEnum.SERVICE);
 		
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
