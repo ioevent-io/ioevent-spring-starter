@@ -42,4 +42,11 @@ public @interface StartEvent {
 	 */
 	String key() default "";
 
+	/**
+	 * StartTimer to schedule start events for specific period or date.
+	 *
+	 * @return IOTimer Object
+	 */
+	IOTimer timer() default @IOTimer();
+
 }
