@@ -19,10 +19,12 @@ package com.ioevent.starter.configuration.postprocessor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimerTask;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -33,10 +35,14 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.IOEventExceptionInformation;
@@ -75,6 +81,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	@Autowired
 	private IOEventService ioEventService;
 
+	@Autowired
+	private AppContext ctx;
 	/**
 	 * method post processor before initialization,
 	 * 
@@ -156,8 +164,26 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				String generateID = ioEventService.generateID(ioEvent);
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
 						method.toGenericString(),methodReturnType,iOEventProperties.getPrefix()));
-
+				checkStartTimer(ioEvent, method, bean);
 			}
+		}
+	}
+
+	private void checkStartTimer(IOEvent ioEvent, Method method, Object bean) {
+		if(ioEventService.isStartTimer(ioEvent)){
+			TaskScheduler scheduler = this.scheduler();
+			TimerTask task = new TimerTask() {
+				@Override
+				public void run() {
+					try {
+						method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), new Object[0]);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			CronTrigger cronTrigger = new CronTrigger(ioEvent.startEvent().timer().cron());
+			scheduler.schedule(task, cronTrigger);
 		}
 	}
 
@@ -170,6 +196,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			ioEventService.ioeventKeyValidation(ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
+			ioEventService.startTimervalidation(ioEvent, method);
+			//Check start timer with 0 params
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);
@@ -277,6 +305,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
 				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix, ioEvent.EventType());
 
+	}
+	public TaskScheduler scheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.initialize();
+		return scheduler;
 	}
 
 }

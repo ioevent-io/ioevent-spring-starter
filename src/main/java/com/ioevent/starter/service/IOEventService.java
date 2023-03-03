@@ -359,6 +359,16 @@ public class IOEventService {
 				&& (!getOutputs(ioEvent).isEmpty()));
 
 	}
+	
+	/**
+	 * method returns if the IOEvent annotation is a Timer Event
+	 * 
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isStartTimer(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.startEvent().timer().cron()));
+	}
 
 	/**
 	 * method returns if the IOEvent annotation is of a End Event
@@ -693,4 +703,14 @@ public class IOEventService {
 			}
 		}
 	}
+
+	public void startTimervalidation(IOEvent ioEvent, Method method) {
+		if (isStartTimer(ioEvent)) {
+			if (method.getParameterCount()!=0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Start Timer Event can not have parameters");
+			}
+		}
+	}
+
 }

@@ -41,6 +41,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,16 +90,13 @@ public class IOEventStartAspect {
 	 * @throws ParseExceptions
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
-	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) throws ParseException, JsonProcessingException {
-
+	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) {
 		if (ioEventService.isStart(ioEvent)) {
-
 			StopWatch watch = new StopWatch();
 			watch.start("IOEvent annotation Start Aspect");
 			IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch,
 					(new Date()).getTime(), ""));
 		}
-
 	}
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a Start
@@ -127,22 +127,73 @@ public class IOEventStartAspect {
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 
 			UUID uuid = UUID.randomUUID();
-			String output = "";
+			StringBuilder output = new StringBuilder();
 			IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
 			String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
-
-			for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-				Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
-						outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
-				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
-				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
-
-				output += ioEventService.getOutputKey(outputEvent) + ",";
-			}
-			prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output, response.getBody(), watch);
+/*			if(ioEventService.isStartTimer(ioEvent)) {
+				TaskScheduler scheduler = this.scheduler();				
+				CronTrigger cronTrigger = new CronTrigger(ioEvent.startEvent().timer().cron());
+				scheduler.schedule(new IoEventTaskExecutor(ioEvent, ioFlow, response, processName, output, uuid, watch, eventLogger, this), cronTrigger);
+			}else {*/
+				for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
+					Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
+							outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+					output.append(ioEventService.getOutputKey(outputEvent)).append(",");
+				}
+				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(), watch);
+			//}
 		}
 
 	}
+	
+/*
+	private class IoEventTaskExecutor implements Runnable {
+
+		private IOEvent ioEvent;
+		private IOFlow ioFlow;
+		private IOResponse<Object> response;
+		private String processName;
+		private StringBuilder output;
+		private UUID uuid;
+		private StopWatch watch;
+		private EventLogger eventLogger;
+		private IOEventStartAspect ioEventStartAspect;
+		
+		public IoEventTaskExecutor(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, String processName, StringBuilder output, 
+				UUID uuid, StopWatch watch, EventLogger eventLogger, IOEventStartAspect ioEventStartAspect) {
+			this.ioEvent = ioEvent;
+			this.ioFlow = ioFlow;
+			this.response = response;
+			this.processName = processName;
+			this.output = output;
+			this.uuid = uuid;
+			this.watch = watch;
+			this.eventLogger = eventLogger;
+			this.ioEventStartAspect = ioEventStartAspect;
+		}
+
+		public void run() {
+			try {
+				log.info("[Scheduled Task ]: Processing ...");
+
+				for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
+					Message<Object> message = ioEventStartAspect.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
+							outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+					output.append(ioEventService.getOutputKey(outputEvent)).append(",");
+				}
+				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(), watch);			
+			}catch(Exception e) {
+				log.info("[Scheduled Task ]: ERROR ...");
+				e.printStackTrace();
+			}
+		}
+
+	}
+*/
 
 	/**
 	 * Method that build the event message of Start task to be send in kafka topic,
@@ -193,4 +244,16 @@ public class IOEventStartAspect {
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}
+	
+	/**
+	 * Method to initialize a TaskScheduler,
+	 * 
+	 * @return ThreadPoolTaskScheduler,
+	 */
+/*	public TaskScheduler scheduler() {
+	    ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+	    scheduler.initialize();
+	    return scheduler;
+	  }*/
+	
 }
