@@ -65,7 +65,7 @@ public class IOEventRegistryService implements ApplicationListener<WebServerInit
 	@PreDestroy
 	public void shutdownHook() throws InterruptedException, ExecutionException, UnknownHostException {
 		Message<List<IOEventBpmnPart>> message = MessageBuilder.withPayload(iobpmnlist)
-				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.MESSAGE_KEY, appName)
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.KEY, appName)
 				.setHeader("IO-APP-NAME", appName).setHeader("APIKEYS", apiKeys)
 				.setHeader("INSTANCE-ID", instanceId.toString())
 				.setHeader("IO-APP-HOST", InetAddress.getLocalHost().getHostAddress()).setHeader("IO-APP-PORT", port)
@@ -77,7 +77,7 @@ public class IOEventRegistryService implements ApplicationListener<WebServerInit
 	@Scheduled(fixedRate = 30000)
 	public void registryHeartBeat() throws InterruptedException, ExecutionException, UnknownHostException {
 		Message<List<IOEventBpmnPart>> message = MessageBuilder.withPayload(iobpmnlist)
-				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.MESSAGE_KEY, appName)
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-apps").setHeader(KafkaHeaders.KEY, appName)
 				.setHeader("IO-APP-NAME", appName).setHeader("INSTANCE-ID", instanceId.toString())
 				.setHeader("IO-APP-HOST", InetAddress.getLocalHost().getHostAddress()).setHeader("IO-APP-PORT", port)
 				.setHeader("APIKEYS", apiKeys).setHeader("TOPICS", ioTopics.stream().collect(Collectors.toList()))

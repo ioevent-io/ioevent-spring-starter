@@ -161,7 +161,7 @@ public class IOEventStartAspect {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders()).setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(KafkaHeaders.KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
