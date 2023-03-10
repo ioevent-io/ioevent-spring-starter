@@ -54,6 +54,8 @@ import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.service.IOEventService;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 class IOEventBpmnPostProcessorTest {
 	@Value("${spring.application.name}")
@@ -153,8 +155,8 @@ class IOEventBpmnPostProcessorTest {
 		assertEquals(ioEventBpmnPart.getWorkflow(), ioEventBpmnPartCreated.getWorkflow());
 
 	}
-	@Spy
-	 List<Listener> listeners =new ArrayList<Listener>();
+	//@Spy
+	List<Listener> listeners =new ArrayList<Listener>();
  //	new Listener(null, null, null, null, null, "Topic");
 	
 	@Test
@@ -162,11 +164,12 @@ class IOEventBpmnPostProcessorTest {
 		Method taskMethod = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		when(iOEventProperties.getPrefix()).thenReturn("test_");
 		listeners.add(new Listener(null, null, this, taskMethod, null, "test_Topic"));
+		ioeventBpmnPostProcessor.setListeners(listeners);
 		assertTrue(ioeventBpmnPostProcessor.listenerExist("Topic", this, taskMethod, null));
 	}
 	@Test
 	void ListenerExist_returnFalse() throws InterruptedException {
-		
+		ioeventBpmnPostProcessor.setListeners(listeners);
 		assertFalse(ioeventBpmnPostProcessor.listenerExist("Topic", null, null, null));
 	}
 }
