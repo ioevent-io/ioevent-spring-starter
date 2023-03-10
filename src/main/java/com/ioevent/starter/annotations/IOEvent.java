@@ -140,4 +140,5 @@ public @interface IOEvent {
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
 	EventTypesEnum EventType() default EventTypesEnum.SERVICE;
+	String textAnnotation() default "";
 }
