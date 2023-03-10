@@ -140,5 +140,14 @@ public @interface IOEvent {
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
 	EventTypesEnum EventType() default EventTypesEnum.SERVICE;
+
 	String textAnnotation() default "";
+
+	/**
+	 * Timer event to schedule start events for specific period or date.
+	 *
+	 * @return IOTimer Object
+	 */
+	IOTimer timer() default @IOTimer();
+
 }
