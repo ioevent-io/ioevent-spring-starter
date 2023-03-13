@@ -340,7 +340,11 @@ public class IOEventService {
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
-			return IOEventType.START;
+			if(isStartTimer(ioEvent)){
+				return IOEventType.START_TIMER;
+			}else{
+				return IOEventType.START;
+			}
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {

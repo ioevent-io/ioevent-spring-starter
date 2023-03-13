@@ -19,7 +19,6 @@ package com.ioevent.starter.configuration.postprocessor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -197,7 +196,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
 			ioEventService.startTimervalidation(ioEvent, method);
-			//Check start timer with 0 params
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);
@@ -268,8 +266,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	 * @param className  for the class which include the method,
 	 * @param partID     for the part ID,
 	 * @param methodName for the method name,
-	 * @param string 
-	 * @param string 
+	 * @param methodReturnType for method return type
+	 * @param topicPrefix for topic Prefix
 	 **/
 	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID,
 			String methodName,String methodReturnType, String topicPrefix) {
