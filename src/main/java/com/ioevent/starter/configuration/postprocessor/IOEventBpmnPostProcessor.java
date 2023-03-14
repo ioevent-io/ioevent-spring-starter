@@ -177,7 +177,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 					try {
 						method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), new Object[0]);
 					} catch (Exception e) {
-						e.printStackTrace();
+						log.error(e.getMessage());
 					}
 				}
 			};
