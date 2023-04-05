@@ -52,6 +52,9 @@ public class IOEventProperties {
 	private String topic_replication="1" ;
 	private String api_key = "";
 	private Long heartBeat = 30000L ;
+	private int corePoolSize = 2 ;
+	
+	
 	public Long getHeartBeat() {
 		return heartBeat;
 	}

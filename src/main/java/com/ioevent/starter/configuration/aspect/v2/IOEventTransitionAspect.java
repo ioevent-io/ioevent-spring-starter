@@ -96,12 +96,10 @@ public class IOEventTransitionAspect {
 			eventLogger.startEventLog();
 			StopWatch watch = ioeventRecordInfo.getWatch();
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-			ioeventRecordInfo.setWorkFlowName(
-					ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
+			ioeventRecordInfo.setWorkFlowName(ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 			String outputs = "";
 			IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
 			IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
-
 			if (ioEvent.gatewayOutput().output().length != 0) {
 
 				if (ioEvent.gatewayOutput().parallel()) {
@@ -111,22 +109,21 @@ public class IOEventTransitionAspect {
 
 				} else if (ioEvent.gatewayOutput().exclusive()) {
 					ioEventType = IOEventType.GATEWAY_EXCLUSIVE;
-				try {
-					outputs = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, ioFlow, returnObject, outputs,
-							ioeventRecordInfo, false);
-				} catch (IllegalStateException e) {
-					ioExceptionHandlingAspect.throwingExceptionAspect(joinPoint, ioEvent, e);
-					throw e;
-				}	
-
+					try {
+						outputs = messageBuilderService.exclusiveEventSendProcess(eventLogger,ioEvent, ioFlow, returnObject, outputs,
+								ioeventRecordInfo, false);
+					} catch (IllegalStateException e) {
+						ioExceptionHandlingAspect.throwingExceptionAspect(joinPoint, ioEvent, e);
+						throw e;
+					}
 				}
 			} else {
-
-				outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);
+				if(ioEventService.isIntermediateTimer(ioEvent)){
+					ioEventType = IOEventType.INTERMEDIATE_TIMER;
+				}
+				outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo, ioEventType);				
 			}
-
-			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch, response.getBody(),
-					ioEventType);
+			prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch, response.getBody(), ioEventType);
 		}
 	}
 

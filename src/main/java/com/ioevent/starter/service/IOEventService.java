@@ -348,6 +348,11 @@ public class IOEventService {
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {
+			if(ioEvent.timer().delay() > 0){
+				return IOEventType.INTERMEDIATE_TIMER;
+			}else if(ioEvent.timer().limit() > 0){
+				return IOEventType.BOUNDRY_TIMER;
+			}
 			return IOEventType.TASK;
 		}
 	}
@@ -365,7 +370,7 @@ public class IOEventService {
 	}
 	
 	/**
-	 * method returns if the IOEvent annotation is a Timer Event
+	 * method returns if the IOEvent annotation is a start timer Event
 	 * 
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
@@ -374,6 +379,26 @@ public class IOEventService {
 		return (!StringUtils.isBlank(ioEvent.startEvent().timer().cron()));
 	}
 
+	/**
+	 * method returns if the IOEvent annotation is an intermediate timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isIntermediateTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().delay() > 0);
+	}
+
+	/**
+	 * method returns if the IOEvent annotation is a boundry timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isBoundryTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().limit() > 0);
+	}
+	
 	/**
 	 * method returns if the IOEvent annotation is of a End Event
 	 * 
@@ -384,7 +409,7 @@ public class IOEventService {
 		return (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
 				&& (!getInputs(ioEvent).isEmpty()));
 	}
-
+	
 	/**
 	 * method returns if the IOEvent annotation is of a Implicit Task Event
 	 * 

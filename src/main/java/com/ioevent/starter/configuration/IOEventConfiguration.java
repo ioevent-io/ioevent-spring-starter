@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +49,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,6 +98,8 @@ public class IOEventConfiguration {
 
 	@Value("${spring.application.name}")
 	private String appName;
+	
+	//@Value("${IOEvent.corePoolSize}")
 
 	/**
 	 * method for processing parallel events from the ioevent-parallel-gateway-events topic using kafka stream,
@@ -174,15 +176,20 @@ public class IOEventConfiguration {
 		return new ListenerCreator();
 	}
 
+//	@Bean
+//	public Executor asyncExecutor() {
+//		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+//		executor.setCorePoolSize(5);
+//		executor.setMaxPoolSize(10);
+//		//executor.setQueueCapacity(500);
+//		executor.setThreadNamePrefix("Asynchronous Process-");
+//		executor.initialize();
+//		return executor;
+//	}
+	
 	@Bean
-	public Executor asyncExecutor() {
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(5);
-		executor.setMaxPoolSize(10);
-		//executor.setQueueCapacity(500);
-		executor.setThreadNamePrefix("Asynchronous Process-");
-		executor.initialize();
-		return executor;
+	public ScheduledExecutorService asyncExecutor() {
+		return new ScheduledThreadPoolExecutor(1);
 	}
 
 	@ConditionalOnMissingBean
