@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -121,36 +122,16 @@ public class RecordsHandler {
 			for (BeanMethodPair pair : beanMethodPairs) {
 
 				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
-
+					TimeUnit timeUnit = (pair.getIoEvent().timer().timeUnit() != null) ? pair.getIoEvent().timer().timeUnit() : TimeUnit.SECONDS;
+					long duration = (pair.getIoEvent().timer().delay()>0  ) ? pair.getIoEvent().timer().delay() : 0L ;
 					if (InputName.equals(outputConsumed)) {
-						if(ioEventService.isIntermediateTimer(pair.getIoEvent())) {
-				        	asyncExecutor.schedule(() -> {
-										IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
-										IOEventContextHolder.setContext(ioeventRecordInfo);
-										if (pair.getIoEvent().gatewayInput().parallel()) {
-											parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
-
-										} else {
-											try {
-												simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
-											} catch (IllegalAccessException | InvocationTargetException
-													| JsonProcessingException e) {
-												log.error("error while invoking method",e);
-											}
-										}
-									}					        	
-								 , pair.getIoEvent().timer().delay(), pair.getIoEvent().timer().timeUnit());
-						}else {
-							 asyncExecutor.execute(()->{
-
+			        	asyncExecutor.schedule(() -> {
 									IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
 									IOEventContextHolder.setContext(ioeventRecordInfo);
 									if (pair.getIoEvent().gatewayInput().parallel()) {
-
 										parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
 
 									} else {
-
 										try {
 											simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
 										} catch (IllegalAccessException | InvocationTargetException
@@ -158,11 +139,9 @@ public class RecordsHandler {
 											log.error("error while invoking method",e);
 										}
 									}
-								});
+								}					        	
+							 , duration, timeUnit);
 						}
-					
-
-					}
 				}
 			}
 

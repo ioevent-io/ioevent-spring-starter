@@ -99,7 +99,8 @@ public class IOEventConfiguration {
 	@Value("${spring.application.name}")
 	private String appName;
 	
-	//@Value("${IOEvent.corePoolSize}")
+	@Value("${ioevent.core_pool_size:2}")
+	private int core_pool_size ;
 
 	/**
 	 * method for processing parallel events from the ioevent-parallel-gateway-events topic using kafka stream,
@@ -189,7 +190,7 @@ public class IOEventConfiguration {
 	
 	@Bean
 	public ScheduledExecutorService asyncExecutor() {
-		return new ScheduledThreadPoolExecutor(1);
+		return new ScheduledThreadPoolExecutor(core_pool_size);
 	}
 
 	@ConditionalOnMissingBean
