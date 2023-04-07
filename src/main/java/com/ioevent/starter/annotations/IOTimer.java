@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 
 /**
  * IOTimer annotation to schedule timed events for specific period or date
@@ -24,12 +25,18 @@ public @interface IOTimer {
      * @return
      */
     long limit() default 0;
-
+    
     /**
-     *
+     * intermediate delay.
      *
      * @return
      */
-    String timeUnit() default "";
+    long delay() default 0;
+
+    /**
+     * Time unit used for the timer duration
+     * @return
+     */
+    TimeUnit timeUnit() default TimeUnit.SECONDS;
 
 }

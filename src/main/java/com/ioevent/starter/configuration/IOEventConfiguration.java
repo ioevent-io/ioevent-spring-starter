@@ -22,7 +22,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Grouped;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Produced;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -34,7 +45,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -85,6 +95,9 @@ public class IOEventConfiguration {
 
 	@Value("${spring.application.name}")
 	private String appName;
+	
+	@Value("${ioevent.core_pool_size:2}")
+	private int core_pool_size ;
 
 	
 	@Bean
@@ -137,15 +150,20 @@ public class IOEventConfiguration {
 		return new ListenerCreator();
 	}
 
+//	@Bean
+//	public Executor asyncExecutor() {
+//		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+//		executor.setCorePoolSize(5);
+//		executor.setMaxPoolSize(10);
+//		//executor.setQueueCapacity(500);
+//		executor.setThreadNamePrefix("Asynchronous Process-");
+//		executor.initialize();
+//		return executor;
+//	}
+	
 	@Bean
-	public Executor asyncExecutor() {
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(5);
-		executor.setMaxPoolSize(10);
-		// executor.setQueueCapacity(500);
-		executor.setThreadNamePrefix("Asynchronous Process-");
-		executor.initialize();
-		return executor;
+	public ScheduledExecutorService asyncExecutor() {
+		return new ScheduledThreadPoolExecutor(core_pool_size);
 	}
 
 	@ConditionalOnMissingBean
