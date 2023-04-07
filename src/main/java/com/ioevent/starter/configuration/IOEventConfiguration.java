@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-
-
 package com.ioevent.starter.configuration;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -39,6 +34,7 @@ import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +48,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
 import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
@@ -65,15 +60,17 @@ import com.ioevent.starter.configuration.postprocessor.IOEventTopicBeanPostProce
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.controller.IOEventController;
 import com.ioevent.starter.domain.IOEventBpmnPart;
-import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.handler.RecordsHandler;
 import com.ioevent.starter.listener.IOEventParrallelListener;
+import com.ioevent.starter.listener.IOEventTimerListener;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
 import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventRegistryService;
 import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.TopicServices;
+import com.ioevent.starter.stream.ParallelStream;
+import com.ioevent.starter.stream.TimerStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +86,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableKafkaStreams
 @EnableScheduling
 @EnableAsync
-@Import({ KafkaConfig.class})
+@Import({ KafkaConfig.class })
 @Service
 @RequiredArgsConstructor
 public class IOEventConfiguration {
@@ -102,53 +99,28 @@ public class IOEventConfiguration {
 	@Value("${ioevent.core_pool_size:2}")
 	private int core_pool_size ;
 
-	/**
-	 * method for processing parallel events from the ioevent-parallel-gateway-events topic using kafka stream,
-	 * 
-	 * @param builder type of StreamsBuilder,
-	 */
-	@Autowired
-	public void processKStream(final StreamsBuilder builder) {
-
-		Gson gson = new Gson();
-
-		KStream<String, String> kstream = builder
-				.stream("ioevent-parallel-gateway-events", Consumed.with(Serdes.String(), Serdes.String()))
-				.map(KeyValue::new).filter((k, v) -> {
-					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
-					return appName.equals(value.getHeaders().get("AppName"));
-				});
-		kstream.groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
-				.aggregate(() -> "", (key, value, aggregateValue) -> {
-					IOEventParallelEventInformation currentValue = gson.fromJson(value,
-							IOEventParallelEventInformation.class);
-					IOEventParallelEventInformation updatedValue;
-					if (!aggregateValue.isBlank()) {
-						updatedValue = gson.fromJson(aggregateValue, IOEventParallelEventInformation.class);
-					} else {
-						updatedValue = currentValue;
-					}
-					List<String> updatedOutputList = Stream
-							.of(currentValue.getInputsArrived(), updatedValue.getInputsArrived())
-							.flatMap(Collection::stream).distinct().collect(Collectors.toList());
-					Map<String, Object> updatedHeaders = Stream.of(currentValue.getHeaders(), updatedValue.getHeaders())
-							.flatMap(map -> map.entrySet().stream())
-							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					Map<String, Object> updatedPayload = Stream.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
-							.flatMap(map -> map.entrySet().stream())
-							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					updatedValue.setInputsArrived(updatedOutputList);
-					updatedValue.setHeaders(updatedHeaders);
-					updatedValue.setPayloadMap(updatedPayload);
-					aggregateValue = gson.toJson(updatedValue);
-					return aggregateValue;
-				}).toStream().to("ioevent-parallel-gateway-aggregation", Produced.with(Serdes.String(), Serdes.String()));
-
+	
+	@Bean
+	public ParallelStream parallelStream() {
+		return new ParallelStream();
 	}
+	
+	@Bean
+	public TimerStream timerStream() {
+		return new TimerStream();
+	}
+	
+
 	@ConditionalOnMissingBean
 	@Bean
 	public IOEventParrallelListener ioEventParrallelListener() {
 		return new IOEventParrallelListener();
+	}
+
+	@ConditionalOnMissingBean
+	@Bean
+	public IOEventTimerListener ioEventTimerListener() {
+		return new IOEventTimerListener();
 	}
 
 	@Bean
@@ -166,6 +138,7 @@ public class IOEventConfiguration {
 	public TopicServices topicServices() {
 		return new TopicServices();
 	}
+
 	@ConditionalOnMissingBean
 	@Bean
 	public RecordsHandler recordsHandler() {
@@ -200,7 +173,7 @@ public class IOEventConfiguration {
 	}
 
 	@ConditionalOnMissingBean
-@Bean
+	@Bean
 	public IOEventBpmnPostProcessor ioEventBpmnPostProcessor() {
 		return new IOEventBpmnPostProcessor();
 	}
@@ -212,16 +185,16 @@ public class IOEventConfiguration {
 	}
 
 	@ConditionalOnMissingBean
-@Bean
+	@Bean
 	public IOEventTransitionAspect ioEventTransitionAspect() {
 		return new IOEventTransitionAspect();
-	}	
+	}
+
 	@ConditionalOnMissingBean
 	@Bean
 	public IOExceptionHandlingAspect ioExceptionHandlingAspect() {
 		return new IOExceptionHandlingAspect();
 	}
-	
 
 	@ConditionalOnMissingBean
 	@Bean
@@ -241,21 +214,21 @@ public class IOEventConfiguration {
 		return new IOEventController();
 	}
 
-	
-
 	@Bean("iobpmnlist")
 	public List<IOEventBpmnPart> iobpmnlist() {
 		return new LinkedList<>();
 	}
+
 	@Bean("ioTopics")
 	public Set<String> ioTopics() {
 		return new HashSet<>();
 	}
-	
+
 	@Bean("apiKeys")
 	public Set<String> apiKeys() {
 		return new HashSet<>();
 	}
+
 	@Bean("listeners")
 	public List<Listener> listeners() {
 		return new ArrayList<>();
@@ -266,18 +239,21 @@ public class IOEventConfiguration {
 	public IOEventService ioEventService() {
 		return new IOEventService();
 	}
+
 	@ConditionalOnMissingBean
 	@Bean
 	public IOEventMessageBuilderService ioeventMessageBuilderService() {
 		return new IOEventMessageBuilderService();
 	}
+
 	@Bean
 	public IOEventRegistryService ioeventRegistryService() {
 		return new IOEventRegistryService();
 	}
+
 	@Bean("instanceID")
 	public UUID instanceID() {
 		return UUID.randomUUID();
 	}
-	
+
 }
