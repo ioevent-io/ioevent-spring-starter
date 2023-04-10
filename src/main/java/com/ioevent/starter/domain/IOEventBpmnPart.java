@@ -92,7 +92,9 @@ public class IOEventBpmnPart {
 
 
 	
-
+	
+	
+	
 	public String getTextAnnotation() {
 		return textAnnotation;
 	}
