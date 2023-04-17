@@ -146,7 +146,6 @@ public class IOEventStartAspect {
 	 */
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			String processName, String uuid, OutputEvent outputEvent, Long startTime) {
-		log.info("CHECKING START ASPECT EVENT TYPE START OR START TIMER : {}",ioEventService.getIOEventType(ioEvent).toString());
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders()).setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
