@@ -693,4 +693,30 @@ public class IOEventService {
 			}
 		}
 	}
+
+	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
+		if (ioFlow.topic().equals("")) {
+			if (ioEvent.topic().equals("")) {
+				List<InputEvent> inputs = getInputs(ioEvent);
+				if (inputs.size() == 0) {
+					throw new IllegalArgumentException("Topic not specified");
+				}
+				for (InputEvent input : inputs) {
+					if (input.topic().equals("")) {
+						throw new IllegalArgumentException("Topic not specified");
+					}
+				}
+				List<OutputEvent> outputs = getOutputs(ioEvent);
+				if (outputs.size() == 0) {
+					throw new IllegalArgumentException("Topic not specified");
+				}
+				for (OutputEvent output : outputs) {
+					if (output.topic().equals("")) {
+						throw new IllegalArgumentException("Topic not specified");
+					}
+				}
+			}
+		}
+	}
+
 }
