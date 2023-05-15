@@ -695,26 +695,33 @@ public class IOEventService {
 	}
 
 	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
-		if (ioFlow.topic().equals("")) {
-			if (ioEvent.topic().equals("")) {
-				List<InputEvent> inputs = getInputs(ioEvent);
-				if (inputs.size() == 0) {
-					throw new IllegalArgumentException("Topic not specified");
-				}
-				for (InputEvent input : inputs) {
-					if (input.topic().equals("")) {
-						throw new IllegalArgumentException("Topic not specified");
-					}
-				}
-				List<OutputEvent> outputs = getOutputs(ioEvent);
-				if (outputs.size() == 0) {
-					throw new IllegalArgumentException("Topic not specified");
-				}
-				for (OutputEvent output : outputs) {
-					if (output.topic().equals("")) {
-						throw new IllegalArgumentException("Topic not specified");
-					}
-				}
+		String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
+		if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
+
+			checkInputTopic(getInputs(ioEvent), errorMsg);
+			checkOutputTopic(getOutputs(ioEvent), errorMsg);
+
+		}
+	}
+
+	void checkInputTopic(List<InputEvent> inputs, String msg) {
+		if (inputs.isEmpty()) {
+			throw new IllegalArgumentException(msg);
+		}
+		for (InputEvent input : inputs) {
+			if ( StringUtils.isBlank(input.topic())) {
+				throw new IllegalArgumentException(msg);
+			}
+		}
+	}
+
+	void checkOutputTopic(List<OutputEvent> outputs, String msg) {
+		if (outputs.isEmpty()) {
+			throw new IllegalArgumentException(msg);
+		}
+		for (OutputEvent output : outputs) {
+			if (StringUtils.isBlank(output.topic()) ) {
+				throw new IllegalArgumentException(msg);
 			}
 		}
 	}
