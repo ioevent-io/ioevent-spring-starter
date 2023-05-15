@@ -166,9 +166,9 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	public void checkMethodValidation(IOFlow ioFlow, IOEvent ioEvent, Method method) {
 		try {
-			ioEventService.topicExistValidation(ioFlow, ioEvent);
 			ioEventService.ioflowExistValidation(ioFlow);
 			ioEventService.ioeventKeyValidation(ioEvent);
+			ioEventService.topicExistValidation(ioFlow, ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
 		} catch (IllegalArgumentException e) {
