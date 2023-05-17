@@ -1,5 +1,5 @@
 package com.ioevent.starter.enums;
 
 public enum EventTypesEnum {
-	SERVICE,RECEIVE,USER
+	SERVICE,RECEIVE,USER,MANUAL,SEND
 }

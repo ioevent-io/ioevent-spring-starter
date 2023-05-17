@@ -61,7 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Aspect
 @Configuration
-//@ConditionalOnExpression("${IOEvent.EventType : EventTypesEnum.USER}")
 @ConditionalOnExpression("${false}")
 public class IOEventStartAspect {
 
@@ -89,7 +88,7 @@ public class IOEventStartAspect {
 			throws ParseException, JsonProcessingException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if (myAnnotation.EventType() != EventTypesEnum.USER) {
+		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
 
 				StopWatch watch = new StopWatch();
@@ -117,7 +116,7 @@ public class IOEventStartAspect {
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if (myAnnotation.EventType() != EventTypesEnum.USER) {
+		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 
 
 			if (ioEventService.isStart(ioEvent)) {
