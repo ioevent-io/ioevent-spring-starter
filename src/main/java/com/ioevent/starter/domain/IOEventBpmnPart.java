@@ -24,6 +24,7 @@ package com.ioevent.starter.domain;
 
 
 
+import java.lang.System.Logger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,6 +60,7 @@ public class IOEventBpmnPart {
 	private String methodReturnType;
 	private String generalTopic;
 	private EventTypesEnum EventType = EventTypesEnum.SERVICE;
+	private String textAnnotation = "" ;
 
 	
 
@@ -66,7 +68,8 @@ public class IOEventBpmnPart {
 	}
 
 	public IOEventBpmnPart(IOEvent ioEvent,IOFlow ioflow, String id, String apiKey, String ioAppName, String workflow,
-			IOEventType ioEventType, String stepName, String methodName, String methodReturnType,String topicPrefix, EventTypesEnum EventType) {
+			IOEventType ioEventType, String stepName, String methodName, String methodReturnType,String topicPrefix, EventTypesEnum EventType,
+			String textAnnotation) {
 		this.id = id;
 		this.apiKey = apiKey;
 		this.ioAppName = ioAppName;
@@ -80,8 +83,26 @@ public class IOEventBpmnPart {
 		this.inputEvent = this.addInput(ioEvent,ioflow,topicPrefix);
 		this.outputEvent = this.addOutput(ioEvent,ioflow,topicPrefix);
 		this.EventType = EventType;
+		this.textAnnotation = textAnnotation;
 	}
 	
+	
+	
+	
+
+
+	
+	
+	
+	
+	public String getTextAnnotation() {
+		return textAnnotation;
+	}
+
+	public void setTextAnnotation(String textAnnotation) {
+		this.textAnnotation = textAnnotation;
+	}
+
 	public EventTypesEnum getEventType() {
 		return EventType;
 	}

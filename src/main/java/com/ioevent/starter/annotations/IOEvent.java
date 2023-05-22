@@ -139,11 +139,27 @@ public @interface IOEvent {
 	 * @return an ExceptionEvent object
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
+	
+	/**
+	 * eventType is a specification of the task type.
+	 *ioevent supports service, receive and user tasks.
+	 *
+	 * @return EventTypesEnum object
+	 */
 	EventTypesEnum EventType() default EventTypesEnum.SERVICE;
+
+	/**
+	 * Text annotation is a label attached to a bpmn object.
+	 *
+	 * @return String
+	 */
+	String textAnnotation() default "";
+
 	/**
 	 * Timer event to schedule start events for specific period or date.
 	 *
 	 * @return IOTimer Object
 	 */
 	IOTimer timer() default @IOTimer();
+
 }

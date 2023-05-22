@@ -302,12 +302,10 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 			iobpmnlist.add(errorEnd);
 		}
+		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix, ioEvent.EventType(),
+				ioEvent.textAnnotation());
 
-		return new IOEventBpmnPart(ioEvent, ioFlow, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName, methodReturnType, topicPrefix,
-				ioEvent.EventType());
-
-	}
 
 	public TaskScheduler scheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
