@@ -85,8 +85,8 @@ public class IOEventStartAspect {
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
 	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent)
-			throws ParseException, JsonProcessingException {
-		if (ioEvent.EventType() != EventTypesEnum.USER) {
+			throws ParseException, JsonProcessingException {		
+		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
 				StopWatch watch = new StopWatch();
 				watch.start("IOEvent annotation Start Aspect");
@@ -111,7 +111,7 @@ public class IOEventStartAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 
-			if (ioEvent.EventType() != EventTypesEnum.USER) {
+		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
 				EventLogger eventLogger = new EventLogger();
 				IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
