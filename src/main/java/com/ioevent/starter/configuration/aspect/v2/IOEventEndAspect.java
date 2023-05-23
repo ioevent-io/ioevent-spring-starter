@@ -89,7 +89,7 @@ public class IOEventEndAspect {
 			throws JsonProcessingException, InterruptedException, ExecutionException, ParseException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if (myAnnotation.EventType() != EventTypesEnum.USER) {
+		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isEnd(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),

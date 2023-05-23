@@ -140,7 +140,7 @@ public class IOEvenImplicitTaskAspect {
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if (myAnnotation.EventType() != EventTypesEnum.USER) {
+		if ((myAnnotation.EventType() != EventTypesEnum.USER) && (myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 
 			if (ioEventService.isImplicitTask(ioEvent)) {
 
