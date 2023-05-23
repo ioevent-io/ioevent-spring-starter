@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.KafkaNull;
@@ -20,6 +21,7 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.domain.IOTimerEvent;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 
@@ -35,7 +37,10 @@ public class IOEventMessageBuilderService {
 	private IOEventProperties iOEventProperties;
 	@Autowired
 	private IOEventService ioEventService;
-
+	
+	@Value("${spring.application.name}")
+	private String appName;
+	
 	private static final String START_PREFIX = "start-to-";
 
 	/**
@@ -199,5 +204,19 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), isImplicitStart)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+	}
+	
+	public Message<IOTimerEvent> sendTimerEvent(
+			IOTimerEvent ioTimerEvent,String topic) {
+
+		Message<IOTimerEvent> message = MessageBuilder.withPayload(ioTimerEvent)
+				.setHeader(KafkaHeaders.TOPIC, topic)
+				.setHeader(KafkaHeaders.MESSAGE_KEY,
+						ioTimerEvent.getMethodeQialifiedName()
+								+ appName)
+				.build();
+		kafkaTemplate.send(message);
+		kafkaTemplate.flush();
+		return message;
 	}
 }
