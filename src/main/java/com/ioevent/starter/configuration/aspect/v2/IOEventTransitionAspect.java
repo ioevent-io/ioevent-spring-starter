@@ -93,9 +93,7 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
+		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -107,7 +105,6 @@ public class IOEventTransitionAspect {
 				String outputs = "";
 				IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
-
 				if (ioEvent.gatewayOutput().output().length != 0) {
 
 					if (ioEvent.gatewayOutput().parallel()) {
@@ -124,10 +121,11 @@ public class IOEventTransitionAspect {
 							ioExceptionHandlingAspect.throwingExceptionAspect(joinPoint, ioEvent, e);
 							throw e;
 						}
-
 					}
 				} else {
-
+        if(ioEventService.isIntermediateTimer(ioEvent)){
+					ioEventType = IOEventType.INTERMEDIATE_TIMER;
+				}
 					outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo,
 							ioEventType);
 				}

@@ -85,18 +85,14 @@ public class IOEventStartAspect {
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
 	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent)
-			throws ParseException, JsonProcessingException {
-		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
+			throws ParseException, JsonProcessingException {		
+		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
-
 				StopWatch watch = new StopWatch();
 				watch.start("IOEvent annotation Start Aspect");
 				IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch, (new Date()).getTime(), ""));
 			}
 		}
-
 	}
 
 	/**
@@ -114,25 +110,17 @@ public class IOEventStartAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
-		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 
-
+		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
-
-				// StopWatch watch = new StopWatch();
 				EventLogger eventLogger = new EventLogger();
 				IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
 				StopWatch watch = ioeventRecordInfoInput.getWatch();
 				eventLogger.startEventLog();
 				eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfoInput.getStartTime())));
-				// watch.start("IOEvent annotation Start Aspect");
-
 				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-
 				UUID uuid = UUID.randomUUID();
-				String output = "";
+			  StringBuilder output = new StringBuilder();
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
 				String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 
@@ -142,13 +130,13 @@ public class IOEventStartAspect {
 					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
-					output += ioEventService.getOutputKey(outputEvent) + ",";
+				output.append(ioEventService.getOutputKey(outputEvent)).append(",");
 				}
-				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output, response.getBody(),
+				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(),
 						watch);
 			}
-		}
 
+		}
 	}
 
 	/**
@@ -171,7 +159,7 @@ public class IOEventStartAspect {
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
-				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventService.getIOEventType(ioEvent).toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
@@ -180,7 +168,6 @@ public class IOEventStartAspect {
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
-
 	}
 
 	/**
@@ -203,4 +190,5 @@ public class IOEventStartAspect {
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
 	}
+
 }
