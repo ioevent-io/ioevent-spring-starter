@@ -101,7 +101,7 @@ public class IOEvenImplicitTaskAspect {
 				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 				EventLogger eventLogger = new EventLogger();
 				eventLogger.startEventLog();
-				IOResponse<Object> response = new IOResponse<>(null, KafkaNull.INSTANCE, null);
+				IOResponse<Object> response = new IOResponse<>(null, KafkaNull.INSTANCE,true, null);
 				StopWatch watch = new StopWatch();
 				UUID uuid = UUID.randomUUID();
 				System.out.println(uuid);

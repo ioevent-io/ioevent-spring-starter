@@ -41,10 +41,14 @@ public class IOResponse<T> {
 	 */
 	private T body;
 	/**
+	 * attribute for conditional start event
+	 */
+	private boolean Conditional = true;
+	/**
 	 * Map of header key and headerValue that represent a custom headers to be added
 	 * to event headers
 	 */
-	@Builder.Default 
+	@Builder.Default
 	private Map<String, Object> headers = new HashMap<>();
 
 	/**
@@ -68,6 +72,20 @@ public class IOResponse<T> {
 	public IOResponse(T body, Map<String, Object> headers) {
 		this.body = body;
 		this.headers = headers;
+
+	}
+
+	/**
+	 * create IOResponse with conditional Used mostly in conditional start event
+	 * 
+	 * @param key
+	 * @param body
+	 * @param conditional
+	 */
+	public IOResponse(String key, T body, boolean conditional) {
+		this.body = body;
+		this.key = key;
+		this.Conditional = conditional;
 
 	}
 }

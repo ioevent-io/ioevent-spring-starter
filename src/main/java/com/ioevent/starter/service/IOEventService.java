@@ -48,6 +48,7 @@ import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.enums.EventTypesEnum;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -365,7 +366,9 @@ public class IOEventService {
 	 */
 	public boolean isStart(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
-				&& (!getOutputs(ioEvent).isEmpty()));
+				&& (!getOutputs(ioEvent).isEmpty())
+				|| (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				);
 
 	}
 	
@@ -417,7 +420,8 @@ public class IOEventService {
 	 * @return boolean ,
 	 */
 	public boolean isImplicitTask(IOEvent ioEvent) {
-		return ((getInputs(ioEvent).isEmpty() || getOutputs(ioEvent).isEmpty())
+		return ( (getInputs(ioEvent).isEmpty() && (!ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				|| getOutputs(ioEvent).isEmpty())
 				&& (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
 						&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
 

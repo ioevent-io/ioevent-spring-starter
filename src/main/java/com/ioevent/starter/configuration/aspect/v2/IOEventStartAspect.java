@@ -21,13 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +43,6 @@ import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
-import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
@@ -102,14 +99,10 @@ public class IOEventStartAspect {
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
-	 * @throws ParseException
-	 * @throws JsonProcessingException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
+			throws Exception {
 
 		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isStart(ioEvent)) {
@@ -122,18 +115,27 @@ public class IOEventStartAspect {
 				UUID uuid = UUID.randomUUID();
 			  StringBuilder output = new StringBuilder();
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
-				String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
+				if (response.isConditional() == true)
+				{
+					String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 
-				for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-					Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName,
-							uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
-					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
-					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+					for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
+						Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName,
+								uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+						Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+						eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
-				output.append(ioEventService.getOutputKey(outputEvent)).append(",");
+					output.append(ioEventService.getOutputKey(outputEvent)).append(",");
+					}
+					prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(),
+							watch);
+					
 				}
-				prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(),
-						watch);
+				else 
+				{
+					throw new Exception ("condition is false");
+				}
+				
 			}
 
 		}
