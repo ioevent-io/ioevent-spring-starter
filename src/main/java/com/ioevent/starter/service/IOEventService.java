@@ -340,6 +340,10 @@ public class IOEventService {
 	 * @return IOEventType ,
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
+		if (isStartConditional(ioEvent))
+		{
+			return IOEventType.START_CONDITIONAL;
+		}
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
 			if(isStartTimer(ioEvent)){
 				return IOEventType.START_TIMER;
@@ -358,6 +362,9 @@ public class IOEventService {
 		}
 	}
 
+	public boolean isStartConditional(IOEvent ioEvent) {
+		return (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT));
+	}
 	/**
 	 * method returns if the IOEvent annotation is of a Start Event
 	 * 
