@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -37,12 +38,14 @@ import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ioevent.starter.annotations.ConditionalIOResponse;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
+import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
@@ -81,14 +84,12 @@ public class IOEventStartAspect {
 	 * @throws ParseExceptions
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
-	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent)
-			throws ParseException, JsonProcessingException {		
-		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
-			if (ioEventService.isStart(ioEvent)) {
-				StopWatch watch = new StopWatch();
-				watch.start("IOEvent annotation Start Aspect");
-				IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch, (new Date()).getTime(), ""));
-			}
+	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) {
+		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
+				&& (ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
+			StopWatch watch = new StopWatch();
+			watch.start("IOEvent annotation Start Aspect");
+			IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch, (new Date()).getTime(), ""));
 		}
 	}
 
@@ -99,46 +100,53 @@ public class IOEventStartAspect {
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 */
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
-			throws Exception {
+			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
 
-		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
-			if (ioEventService.isStart(ioEvent)) {
-				EventLogger eventLogger = new EventLogger();
-				IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
-				StopWatch watch = ioeventRecordInfoInput.getWatch();
-				eventLogger.startEventLog();
-				eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfoInput.getStartTime())));
-				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
-				UUID uuid = UUID.randomUUID();
-			  StringBuilder output = new StringBuilder();
+		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
+				&& ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent)))) {
+			EventLogger eventLogger = new EventLogger();
+			IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
+			StopWatch watch = ioeventRecordInfoInput.getWatch();
+			eventLogger.startEventLog();
+			eventLogger.setStartTime(eventLogger.getISODate(new Date(ioeventRecordInfoInput.getStartTime())));
+			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
+			UUID uuid = UUID.randomUUID();
+			StringBuilder output = new StringBuilder();
+			if (!ioEventService.isConditionalStart(ioEvent)) {
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
-				if (response.isConditional() == true)
-				{
+
+				continueFlow(ioEvent, ioFlow, response, uuid, eventLogger, watch, output);
+
+			}
+
+			else {
+				ConditionalIOResponse<Object> response = ioEventService.getConditionalPayload(joinPoint, returnObject);
+				if (response.isCondition()) {
+
+					continueFlow(ioEvent, ioFlow, response, uuid, eventLogger, watch,
+							output);
+				} else {
 					String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
+					String endOutput = "Condition_start_failed";
+					Message<Object> message = this.buildFailedConditionMessage(ioEvent, ioFlow, response, processName,
+							uuid.toString(), endOutput, eventLogger.getTimestamp(eventLogger.getStartTime()));
+					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
-					for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-						Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName,
-								uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
-						Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
-						eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+					prepareAndDisplayEventLoggerForFailedConditional(eventLogger, uuid, ioEvent, processName,
+							endOutput.toString(), response.getBody(), watch);
 
-					output.append(ioEventService.getOutputKey(outputEvent)).append(",");
-					}
-					prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(),
-							watch);
-					
 				}
-				else 
-				{
-					throw new Exception ("condition is false");
-				}
-				
+
 			}
 
 		}
+
 	}
 
 	/**
@@ -191,6 +199,56 @@ public class IOEventStartAspect {
 		eventLogger.stopEvent();
 		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
 		log.info(jsonObject);
+	}
+
+	public Message<Object> buildFailedConditionMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
+			String processName, String uuid, String outputEvent, Long startTime) {
+		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, "");
+		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
+
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
+				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START_CONDITIONAL.toString())
+				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), processName)
+				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime)
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+	}
+
+	public void prepareAndDisplayEventLoggerForFailedConditional(EventLogger eventLogger, UUID uuid, IOEvent ioEvent,
+			String processName, String output, Object payload, StopWatch watch)
+			throws JsonProcessingException, ParseException {
+		watch.stop();
+		eventLogger.loggerSetting(uuid.toString(), processName, ioEvent.key(), null, output, "START_CONDITIONAL",
+				payload);
+		eventLogger.stopEvent();
+		String jsonObject = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventLogger);
+		log.info(jsonObject);
+	}
+
+	public void continueFlow(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response, UUID uuid,
+			EventLogger eventLogger, StopWatch watch, StringBuilder output)
+			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
+		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
+
+		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
+			Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
+					outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+
+			output.append(ioEventService.getOutputKey(outputEvent)).append(",");
+
+		}
+		prepareAndDisplayEventLogger(eventLogger, uuid, ioEvent, processName, output.toString(), response.getBody(),
+				watch);
+
 	}
 
 }

@@ -35,21 +35,18 @@ public class IOResponse<T> {
 	 * key of the IOResponse where the method will produce the event to the output
 	 * that has the same key
 	 */
-	private String key;
+	protected String key;
 	/**
 	 * the body or payload to send in the event.
 	 */
-	private T body;
-	/**
-	 * attribute for conditional start event
-	 */
-	private boolean Conditional = true;
+	protected T body;
+	
 	/**
 	 * Map of header key and headerValue that represent a custom headers to be added
 	 * to event headers
 	 */
 	@Builder.Default
-	private Map<String, Object> headers = new HashMap<>();
+	protected Map<String, Object> headers = new HashMap<>();
 
 	/**
 	 * create IOResponse with key and body
@@ -75,17 +72,5 @@ public class IOResponse<T> {
 
 	}
 
-	/**
-	 * create IOResponse with conditional Used mostly in conditional start event
-	 * 
-	 * @param key
-	 * @param body
-	 * @param conditional
-	 */
-	public IOResponse(String key, T body, boolean conditional) {
-		this.body = body;
-		this.key = key;
-		this.Conditional = conditional;
-
-	}
+	
 }

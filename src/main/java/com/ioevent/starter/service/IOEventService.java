@@ -38,6 +38,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import com.ioevent.starter.annotations.ConditionalIOResponse;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.IOPayload;
@@ -374,7 +375,11 @@ public class IOEventService {
 	public boolean isStart(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
 				&& (!getOutputs(ioEvent).isEmpty())
-				|| (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				);
+
+	}
+	public boolean isConditionalStart(IOEvent ioEvent) {
+		return ((ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
 				);
 
 	}
@@ -611,7 +616,14 @@ public class IOEventService {
 
 		}
 	}
+	public ConditionalIOResponse<Object> getConditionalPayload(JoinPoint joinPoint, Object returnObject) {
+		ConditionalIOResponse<Object> conditional = ConditionalIOResponse.class.cast(returnObject);
+		return new ConditionalIOResponse<>(getpayload(joinPoint, returnObject).getKey(),
+				getpayload(joinPoint, returnObject).getBody(), conditional.isCondition());
+	}
 
+	
+	
 	private Object isNullpayload(Object object) {
 		if (object == null) {
 			return KafkaNull.INSTANCE;
