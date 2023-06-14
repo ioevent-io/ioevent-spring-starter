@@ -119,9 +119,7 @@ public class IOEventStartAspect {
 			StringBuilder output = new StringBuilder();
 			if (!ioEventService.isConditionalStart(ioEvent)) {
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
-
 				continueFlow(ioEvent, ioFlow, response, uuid, eventLogger, watch, output);
-
 			}
 
 			else {
@@ -134,7 +132,7 @@ public class IOEventStartAspect {
 					String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 					String endOutput = "Condition_start_failed";
 					Message<Object> message = this.buildFailedConditionMessage(ioEvent, ioFlow, response, processName,
-							uuid.toString(), endOutput, eventLogger.getTimestamp(eventLogger.getStartTime()));
+							uuid.toString(), endOutput, eventLogger.getTimestamp(eventLogger.getStartTime()));		
 					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
@@ -162,13 +160,14 @@ public class IOEventStartAspect {
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
-			String processName, String uuid, OutputEvent outputEvent, Long startTime) {
+			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
-        .setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, uuid)
-        .setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventService.getIOEventType(ioEvent).toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
@@ -239,8 +238,8 @@ public class IOEventStartAspect {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
-			Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName, uuid.toString(),
-					outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+			Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName,
+					uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()),"");
 			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 

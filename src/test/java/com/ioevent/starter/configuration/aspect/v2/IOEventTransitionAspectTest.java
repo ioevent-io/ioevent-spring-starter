@@ -177,7 +177,7 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "recordOutput", new StopWatch(),1000L,null);
 		Message messageResult = transitionAspect.buildTransitionTaskMessage(ioEvent, null, ioEventResponse,
-				ioEvent.output()[0], ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
+				ioEvent.output()[0], ioeventRecordInfo, (long) 123546, IOEventType.TASK, headersMap, "example");
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
@@ -210,7 +210,7 @@ class IOEventTransitionAspectTest {
 		when(ioEventService.getInputEventByName(Mockito.any(), Mockito.any())).thenReturn(ioEvent.input()[0]);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "previous targe", new StopWatch(),1000L,null);
 		Message messageResult = transitionAspect.buildSuffixMessage(ioEvent, null, ioEventResponse, ioEvent.output()[0],
-				ioeventRecordInfo, (long) 123546, IOEventType.TASK,headersMap);
+				ioeventRecordInfo, (long) 123546, IOEventType.TASK, headersMap, "example");
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "test annotation")
@@ -340,9 +340,9 @@ class IOEventTransitionAspectTest {
 		Map<String, Object> headersMap=new HashMap<>();
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		String simpleTaskoutput = transitionAspect.simpleEventSendProcess(eventLogger,ioEvent, null, ioEventResponse, "", ioeventRecordInfo,
-				IOEventType.TASK);
+				IOEventType.TASK, "example");
 		String suffixTaskoutput = transitionAspect.simpleEventSendProcess(eventLogger,ioEvent2, null, ioEventResponse, "",
-				ioeventRecordInfoForSuffix, IOEventType.TASK);
+				ioeventRecordInfoForSuffix, IOEventType.TASK, "example");
 		assertEquals("output,", simpleTaskoutput);
 		assertEquals("previous output_suffixAdded", suffixTaskoutput);
 

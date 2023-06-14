@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -20,13 +21,13 @@ import com.google.gson.Gson;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 
 import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 public class ParallelStream {
 
-
 	@Value("${spring.application.name}")
 	private String appName;
-	
+
 	/**
 	 * method for processing parallel events from the
 	 * ioevent-parallel-gateway-events topic using kafka stream,
@@ -54,6 +55,8 @@ public class ParallelStream {
 					} else {
 						updatedValue = currentValue;
 					}
+					
+
 					List<String> updatedOutputList = Stream
 							.of(currentValue.getInputsArrived(), updatedValue.getInputsArrived())
 							.flatMap(Collection::stream).distinct().collect(Collectors.toList());
@@ -64,9 +67,22 @@ public class ParallelStream {
 							.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
-					updatedValue.setInputsArrived(updatedOutputList);
+
+					
 					updatedValue.setHeaders(updatedHeaders);
 					updatedValue.setPayloadMap(updatedPayload);
+					
+					if (updatedValue.isMessage()) {
+						String updatedMessageKey = StringUtils.isBlank(updatedValue.getMessageKeyArrived())
+								? currentValue.getMessageKeyArrived()
+								: updatedValue.getMessageKeyArrived();
+
+						updatedValue.setMessageKeyArrived(updatedMessageKey);
+					}
+					else {
+						updatedValue.setInputsArrived(updatedOutputList);
+					}
+
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream()

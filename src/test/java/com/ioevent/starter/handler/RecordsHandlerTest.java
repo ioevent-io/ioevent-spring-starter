@@ -167,6 +167,4 @@ class RecordsHandlerTest {
 		assertThatNoException();
 
 	}
-
-
 }

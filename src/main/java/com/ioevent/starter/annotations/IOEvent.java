@@ -161,5 +161,9 @@ public @interface IOEvent {
 	 * @return IOTimer Object
 	 */
 	IOTimer timer() default @IOTimer();
+	
+	IOMessage message() default @IOMessage();
+	
+	
 
 }
