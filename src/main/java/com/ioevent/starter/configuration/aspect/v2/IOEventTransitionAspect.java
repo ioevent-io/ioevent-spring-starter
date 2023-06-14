@@ -25,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -93,7 +92,7 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		if ((ioEvent.EventType() != EventTypesEnum.USER)&&(ioEvent.EventType() != EventTypesEnum.MANUAL)) {
+		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -122,12 +121,24 @@ public class IOEventTransitionAspect {
 							throw e;
 						}
 					}
+				} else if (ioEventService.isMessage(ioEvent)) {
+					if (ioEventService.isMessageThrow(ioEvent)) {
+						ioEventType = IOEventType.MESSAGE_THROW;
+						outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs,
+								ioeventRecordInfo, ioEventType, ioEvent.message().key());
+
+					} else if (ioEventService.isMessageCatch(ioEvent)) {
+						ioEventType = IOEventType.MESSAGE_CATCH;
+						outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs,
+								ioeventRecordInfo, ioEventType, ioEvent.message().key());
+
+					}
 				} else {
-        if(ioEventService.isIntermediateTimer(ioEvent)){
-					ioEventType = IOEventType.INTERMEDIATE_TIMER;
-				}
+					if (ioEventService.isIntermediateTimer(ioEvent)) {
+						ioEventType = IOEventType.INTERMEDIATE_TIMER;
+					}
 					outputs = simpleEventSendProcess(eventLogger, ioEvent, ioFlow, response, outputs, ioeventRecordInfo,
-							ioEventType);
+							ioEventType, "");
 				}
 
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch,
@@ -155,8 +166,8 @@ public class IOEventTransitionAspect {
 	 * @throws InterruptedException
 	 */
 	public String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
-			IOResponse<Object> response, String outputs, IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType)
-			throws InterruptedException, ExecutionException {
+			IOResponse<Object> response, String outputs, IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType,
+			String messageKey) throws InterruptedException, ExecutionException {
 
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
@@ -166,14 +177,14 @@ public class IOEventTransitionAspect {
 			if (!StringUtils.isBlank(outputEvent.suffix())) {
 
 				message = this.buildSuffixMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
-						ioeventRecordInfo.getStartTime(), ioEventType, headers);
+						ioeventRecordInfo.getStartTime(), ioEventType, headers, messageKey);
 				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
 				outputs += ioeventRecordInfo.getOutputConsumedName() + outputEvent.suffix();
 			} else {
 				message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
-						ioeventRecordInfo.getStartTime(), ioEventType, headers);
+						ioeventRecordInfo.getStartTime(), ioEventType, headers, messageKey);
 				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
@@ -228,13 +239,14 @@ public class IOEventTransitionAspect {
 	 */
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
-			Map<String, Object> headers) {
+			Map<String, Object> headers, String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
@@ -267,7 +279,7 @@ public class IOEventTransitionAspect {
 	 */
 	public Message<Object> buildSuffixMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
-			Map<String, Object> headers) {
+			Map<String, Object> headers, String key) {
 		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName())
 				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
@@ -276,6 +288,7 @@ public class IOEventTransitionAspect {
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())

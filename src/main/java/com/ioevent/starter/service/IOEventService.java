@@ -48,6 +48,7 @@ import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.enums.MessageTypesEnum;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -340,21 +341,41 @@ public class IOEventService {
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
-			if(isStartTimer(ioEvent)){
+			if (isStartTimer(ioEvent)) {
 				return IOEventType.START_TIMER;
-			}else{
+			} else {
 				return IOEventType.START;
 			}
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {
-			if(ioEvent.timer().delay() > 0){
+			if (ioEvent.timer().delay() > 0) {
 				return IOEventType.INTERMEDIATE_TIMER;
-			}else if(ioEvent.timer().limit() > 0){
+			} else if (ioEvent.timer().limit() > 0) {
 				return IOEventType.BOUNDRY_TIMER;
+			} else if (isMessage(ioEvent)) {
+				if (isMessageThrow(ioEvent)) {
+					return IOEventType.MESSAGE_THROW;
+				} else if (isMessageCatch(ioEvent)) {
+					return IOEventType.MESSAGE_CATCH;
+				}
 			}
+
 			return IOEventType.TASK;
 		}
+	}
+
+	public boolean isMessage(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.message().key()));
+		// !!!!!!!! an iomessage must have property key not blank (not empty string)
+	}
+
+	public boolean isMessageThrow(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.THROW));
+	}
+
+	public boolean isMessageCatch(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.CATCH));
 	}
 
 	/**
@@ -368,7 +389,7 @@ public class IOEventService {
 				&& (!getOutputs(ioEvent).isEmpty()));
 
 	}
-	
+
 	/**
 	 * method returns if the IOEvent annotation is a start timer Event
 	 * 
@@ -398,7 +419,7 @@ public class IOEventService {
 	public boolean isBoundryTimer(IOEvent ioEvent) {
 		return (ioEvent.timer().limit() > 0);
 	}
-	
+
 	/**
 	 * method returns if the IOEvent annotation is of a End Event
 	 * 
@@ -409,7 +430,7 @@ public class IOEventService {
 		return (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
 				&& (!getInputs(ioEvent).isEmpty()));
 	}
-	
+
 	/**
 	 * method returns if the IOEvent annotation is of a Implicit Task Event
 	 * 
@@ -459,13 +480,18 @@ public class IOEventService {
 	 */
 	public IOEventType checkTaskType(IOEvent ioEvent) {
 		IOEventType type = IOEventType.TASK;
-
 		if ((ioEvent.gatewayOutput().output().length != 0) || (ioEvent.gatewayInput().input().length != 0)) {
 
 			if (ioEvent.gatewayOutput().parallel() || ioEvent.gatewayInput().parallel()) {
 				type = IOEventType.GATEWAY_PARALLEL;
 			} else if (ioEvent.gatewayOutput().exclusive() || ioEvent.gatewayInput().exclusive()) {
 				type = IOEventType.GATEWAY_EXCLUSIVE;
+			}
+		} else if (isMessage(ioEvent)) {
+			if (isMessageThrow(ioEvent)) {
+				return IOEventType.MESSAGE_THROW;
+			} else if (isMessageCatch(ioEvent)) {
+				return IOEventType.MESSAGE_CATCH;
 			}
 		}
 
@@ -735,9 +761,8 @@ public class IOEventService {
 
 	public void startTimervalidation(IOEvent ioEvent, Method method) {
 		if (isStartTimer(ioEvent)) {
-			if (method.getParameterCount()!=0) {
-				throw new IllegalArgumentException(
-						"IOEvent Method with Start Timer Event can not have parameters");
+			if (method.getParameterCount() != 0) {
+				throw new IllegalArgumentException("IOEvent Method with Start Timer Event can not have parameters");
 			}
 		}
 	}

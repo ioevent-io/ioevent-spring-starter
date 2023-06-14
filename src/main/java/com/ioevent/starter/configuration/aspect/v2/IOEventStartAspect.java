@@ -27,7 +27,6 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +44,6 @@ import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
-import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
@@ -126,7 +124,7 @@ public class IOEventStartAspect {
 
 				for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 					Message<Object> message = this.buildStartMessage(ioEvent, ioFlow, response, processName,
-							uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()));
+							uuid.toString(), outputEvent, eventLogger.getTimestamp(eventLogger.getStartTime()),"");
 					Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 					eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 
@@ -152,12 +150,13 @@ public class IOEventStartAspect {
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
-			String processName, String uuid, OutputEvent outputEvent, Long startTime) {
+			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventService.getIOEventType(ioEvent).toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))

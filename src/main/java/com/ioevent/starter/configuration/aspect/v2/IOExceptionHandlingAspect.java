@@ -138,7 +138,7 @@ public class IOExceptionHandlingAspect {
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				payload.getHeaders());
 		Message<Object> message = this.buildEndEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
-				ioeventRecordInfo.getStartTime(), headers, throwable);
+				ioeventRecordInfo.getStartTime(), headers, throwable,"");
 		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 		return null;
@@ -167,7 +167,7 @@ public class IOExceptionHandlingAspect {
 		Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
 				response.getHeaders());
 		message = this.buildTransitionTaskMessage(ioEvent, ioFlow, response, outputEvent, ioeventRecordInfo,
-				ioeventRecordInfo.getStartTime(), ioEventType, headers, throwable);
+				ioeventRecordInfo.getStartTime(), ioEventType, headers, throwable,"");
 		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 		if (ioEventType.equals(IOEventType.UNHANDLED_ERROR)) {
@@ -180,12 +180,13 @@ public class IOExceptionHandlingAspect {
 
 	public Message<Object> buildEndEventMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload,
 			String outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, Map<String, Object> headers,
-			Throwable throwable) {
+			Throwable throwable,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
@@ -206,7 +207,7 @@ public class IOExceptionHandlingAspect {
 
 	public Message<Object> buildTransitionTaskMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
-			Map<String, Object> headers, Throwable throwable) {
+			Map<String, Object> headers, Throwable throwable,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		String nextOutput = ioEventService.getOutputKey(outputEvent);
@@ -217,6 +218,7 @@ public class IOExceptionHandlingAspect {
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
