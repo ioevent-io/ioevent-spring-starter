@@ -61,9 +61,7 @@ public class IOEventParrallelListener {
 		Gson gson = new Gson();
 		IOEventParallelEventInformation ioeventParallelEventInformation = gson.fromJson(s,
 				IOEventParallelEventInformation.class);
-		if ((ioeventParallelEventInformation != null)&&
-				(validParallel(ioeventParallelEventInformation) || validMessage(ioeventParallelEventInformation)) ) {
-
+		if (ioeventParallelEventInformation != null && validParallel(ioeventParallelEventInformation)) {
 			try {
 				Object beanmObject = ctx.getApplicationContext()
 						.getBean(Class.forName(ioeventParallelEventInformation.getClassName()));
@@ -96,15 +94,7 @@ public class IOEventParrallelListener {
 
 		} else {
 			log.info("Parallel Event Input Not Completed, output arrived : "
-					+ ioeventParallelEventInformation.getInputsArrived()
-					+"output Required : "
-					+ ioeventParallelEventInformation.getInputRequired()
-					);
-			log.info("message key arrived : "
-					+ ioeventParallelEventInformation.getMessageKeyArrived()
-					+ "message key required : "
-					+ ioeventParallelEventInformation.getMessageKeyRequired());
-			
+		+ ioeventParallelEventInformation.getInputsArrived());
 		}
 
 	}
@@ -114,11 +104,7 @@ public class IOEventParrallelListener {
 		return sameList(ioeventParallelEventInformation.getInputRequired(),
 				ioeventParallelEventInformation.getInputsArrived());
 	}
-	private boolean validMessage (IOEventParallelEventInformation ioeventParallelEventInformation)
-	{
-		return ioeventParallelEventInformation.getMessageKeyArrived().equals(ioeventParallelEventInformation.getMessageKeyRequired())
-				&& ioeventParallelEventInformation.isMessage();
-	}
+
 	
 	/** method to invoke the method from a specific bean **/
 	public void invokeTargetMethod(String methodName, Object beanmObject,

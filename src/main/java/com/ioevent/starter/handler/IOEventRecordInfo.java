@@ -35,6 +35,7 @@ public class IOEventRecordInfo {
 	private String lastEventEndTime;
 	private String body;
 	private String MessageKey;
+	private String taskType;
 
 	public IOEventRecordInfo() {
 	}
@@ -63,7 +64,7 @@ public class IOEventRecordInfo {
 
 	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, List<Header> headerList,
 			StopWatch watch, Long instanceStartTime, Long startTime, String lastEventEndTime, String body,
-			String messageKey) {
+			String messageKey,String taskType) {
 		super();
 		this.id = id;
 		this.workFlowName = workFlowName;
@@ -74,7 +75,19 @@ public class IOEventRecordInfo {
 		this.startTime = startTime;
 		this.lastEventEndTime = lastEventEndTime;
 		this.body = body;
-		MessageKey = messageKey;
+		this.MessageKey = messageKey;
+		this.taskType = taskType ;
+	}
+	
+
+
+
+	public String getTaskType() {
+		return taskType;
+	}
+
+	public void setTaskType(String taskType) {
+		this.taskType = taskType;
 	}
 
 	public String getMessageKey() {
