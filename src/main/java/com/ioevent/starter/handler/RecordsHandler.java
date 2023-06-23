@@ -48,7 +48,9 @@ import com.ioevent.starter.annotations.IOPayload;
 import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.postprocessor.BeanMethodPair;
 import com.ioevent.starter.domain.IOEventHeaders;
+import com.ioevent.starter.domain.IOEventMessageEventInformation;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
+import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.service.IOEventContextHolder;
 import com.ioevent.starter.service.IOEventService;
 
@@ -74,8 +76,6 @@ public class RecordsHandler {
 	@Autowired
 	private ScheduledExecutorService asyncExecutor;
 
-//	@Autowired
-//	private ScheduledExecutorService scheduledExectuor;
 
 	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
@@ -119,7 +119,6 @@ public class RecordsHandler {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 
 			String outputConsumed = this.getIOEventHeaders(consumerRecord).getOutputConsumedName();
-			String messageKeyConsumed = this.getIOEventHeaders(consumerRecord).getMessageKey();
 			for (BeanMethodPair pair : beanMethodPairs) {
 				String messgeKeyExpected = pair.getIoEvent().message().key();
 
@@ -128,21 +127,19 @@ public class RecordsHandler {
 							? pair.getIoEvent().timer().timeUnit()
 							: TimeUnit.SECONDS;
 					long duration = (pair.getIoEvent().timer().delay() > 0) ? pair.getIoEvent().timer().delay() : 0L;
-					if (InputName.equals(outputConsumed) || ioEventService.isMessage(pair.getIoEvent())
-							&& ioEventService.isMessageCatch(pair.getIoEvent())) {
+
+					if (InputName.equals(outputConsumed)
+					) {
 						asyncExecutor.schedule(() -> {
 							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
 							IOEventContextHolder.setContext(ioeventRecordInfo);
 							if (pair.getIoEvent().gatewayInput().parallel()) {
 								parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
 
-							}
-							else if (ioEventService.isMessage(pair.getIoEvent())
-											&& ioEventService.isMessageCatch(pair.getIoEvent()))
-							{
-								parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
-							}
-							else {
+							} else if (ioEventService.isMessage(pair.getIoEvent())
+									&& ioEventService.isMessageCatch(pair.getIoEvent())) {
+								messageInvoke(pair, consumerRecord, ioeventRecordInfo);
+							} else {
 								try {
 									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
 								} catch (IllegalAccessException | InvocationTargetException
@@ -151,7 +148,16 @@ public class RecordsHandler {
 								}
 							}
 						}, duration, timeUnit);
+					} else if (isMessageThrowEvent(consumerRecord)) {
+						asyncExecutor.schedule(() -> {
+							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+							if (ioEventService.isMessage(pair.getIoEvent())
+									&& ioEventService.isMessageCatch(pair.getIoEvent())) {
+								messageInvoke(pair, consumerRecord, ioeventRecordInfo);
+							}
+						}, duration, timeUnit);
 					}
+
 				}
 
 			}
@@ -159,9 +165,12 @@ public class RecordsHandler {
 		}
 	}
 
+	private boolean isMessageThrowEvent(ConsumerRecord<String, String> consumerRecord) {
+		return this.getIOEventHeaders(consumerRecord).getTaskType().equals(IOEventType.MESSAGE_THROW.toString());
+	}
+
 	public void parallelInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			IOEventRecordInfo ioeventRecordInfo) {
-
 		IOEventParallelEventInformation parallelEventInfo = new IOEventParallelEventInformation(consumerRecord,
 				ioeventRecordInfo, pair, ioEventService.getInputNames(pair.getIoEvent()), appName);
 		sendParallelInfo(parallelEventInfo);
@@ -169,14 +178,16 @@ public class RecordsHandler {
 		log.info("parallel event arrived : " + ioeventRecordInfo.getOutputConsumedName());
 
 	}
+
 	public void messageInvoke(BeanMethodPair pair, ConsumerRecord<String, String> consumerRecord,
 			IOEventRecordInfo ioeventRecordInfo) {
 
-		IOEventParallelEventInformation parallelEventInfo = new IOEventParallelEventInformation(consumerRecord,
-				ioeventRecordInfo, pair, ioEventService.getInputNames(pair.getIoEvent()), appName);
-		sendParallelInfo(parallelEventInfo);
-		log.info("IOEventINFO : " + parallelEventInfo);
-		log.info("parallel event arrived : " + ioeventRecordInfo.getOutputConsumedName());
+		IOEventMessageEventInformation messageEventInfo = new IOEventMessageEventInformation(consumerRecord,
+				ioeventRecordInfo, pair, ioEventService.getInputNames(pair.getIoEvent()), appName,
+				pair.getIoEvent().message().key());
+		sendMessageInfo(messageEventInfo);
+		log.info("IOEventINFO : " + messageEventInfo);
+		log.info("message event arrived : " + ioeventRecordInfo.getOutputConsumedName());
 
 	}
 
@@ -188,6 +199,19 @@ public class RecordsHandler {
 				.setHeader(KafkaHeaders.KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
 								+ parallelEventInfo.getInputRequired())
+				.build();
+		kafkaTemplate.send(message);
+		kafkaTemplate.flush();
+		return message;
+	}
+
+	public Message<IOEventMessageEventInformation> sendMessageInfo(IOEventMessageEventInformation messageEventInfo) {
+
+		Message<IOEventMessageEventInformation> message = MessageBuilder.withPayload(messageEventInfo)
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-message-events")
+				.setHeader(KafkaHeaders.MESSAGE_KEY,
+						messageEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
+								+ messageEventInfo.getInputRequired() + messageEventInfo.getMessageEventRequired())
 				.build();
 		kafkaTemplate.send(message);
 		kafkaTemplate.flush();
@@ -400,7 +424,10 @@ public class RecordsHandler {
 				ioeventRecordInfo.setInstanceStartTime(Long.valueOf(new String(header.value())));
 			} else if (header.key().equals(IOEventHeaders.MESSAGE_KEY.toString())) {
 				ioeventRecordInfo.setMessageKey(new String(header.value()));
+			} else if (header.key().equals(IOEventHeaders.EVENT_TYPE.toString())) {
+				ioeventRecordInfo.setTaskType(new String(header.value()));
 			}
+
 		});
 		ioeventRecordInfo.setWatch(watch);
 		return ioeventRecordInfo;

@@ -17,17 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.google.gson.Gson;
-import com.ioevent.starter.domain.IOEventParallelEventInformation;
+import com.ioevent.starter.domain.IOEventMessageEventInformation;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class ParallelStream {
-
+public class MessageStream {
 
 	@Value("${spring.application.name}")
 	private String appName;
-	
+
 	/**
 	 * method for processing parallel events from the
 	 * ioevent-parallel-gateway-events topic using kafka stream,
@@ -35,23 +31,23 @@ public class ParallelStream {
 	 * @param builder type of StreamsBuilder,
 	 */
 	@Autowired
-	public void processKStream(final StreamsBuilder builder) {
+	public void processMessage(final StreamsBuilder builder) {
 
 		Gson gson = new Gson();
 
 		KStream<String, String> kstream = builder
-				.stream("ioevent-parallel-gateway-events", Consumed.with(Serdes.String(), Serdes.String()))
-				.map(KeyValue::new).filter((k, v) -> {
-					IOEventParallelEventInformation value = gson.fromJson(v, IOEventParallelEventInformation.class);
+				.stream("ioevent-message-events", Consumed.with(Serdes.String(), Serdes.String())).map(KeyValue::new)
+				.filter((k, v) -> {
+					IOEventMessageEventInformation value = gson.fromJson(v, IOEventMessageEventInformation.class);
 					return appName.equals(value.getHeaders().get("AppName"));
 				});
 		kstream.groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
 				.aggregate(() -> "", (key, value, aggregateValue) -> {
-					IOEventParallelEventInformation currentValue = gson.fromJson(value,
-							IOEventParallelEventInformation.class);
-					IOEventParallelEventInformation updatedValue;
+					IOEventMessageEventInformation currentValue = gson.fromJson(value,
+							IOEventMessageEventInformation.class);
+					IOEventMessageEventInformation updatedValue;
 					if (!aggregateValue.isBlank()) {
-						updatedValue = gson.fromJson(aggregateValue, IOEventParallelEventInformation.class);
+						updatedValue = gson.fromJson(aggregateValue, IOEventMessageEventInformation.class);
 					} else {
 						updatedValue = currentValue;
 					}
@@ -65,13 +61,18 @@ public class ParallelStream {
 							.of(currentValue.getPayloadMap(), updatedValue.getPayloadMap())
 							.flatMap(map -> map.entrySet().stream())
 							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
+					if (currentValue.getMessageEventArrived().equals(currentValue.getMessageEventRequired())) {
+						updatedValue.setMessageEventArrived(currentValue.getMessageEventArrived());
+					}
+					updatedOutputList.retainAll(currentValue.getInputRequired());
 					updatedValue.setInputsArrived(updatedOutputList);
 					updatedValue.setHeaders(updatedHeaders);
 					updatedValue.setPayloadMap(updatedPayload);
+
 					aggregateValue = gson.toJson(updatedValue);
 					return aggregateValue;
 				}).toStream()
-				.to("ioevent-parallel-gateway-aggregation", Produced.with(Serdes.String(), Serdes.String()));
+				.to("ioevent-event-message-aggregation", Produced.with(Serdes.String(), Serdes.String()));
 
 	}
 }
