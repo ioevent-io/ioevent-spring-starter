@@ -38,6 +38,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import com.ioevent.starter.annotations.ConditionalIOResponse;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.IOPayload;
@@ -48,6 +49,7 @@ import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.enums.EventTypesEnum;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -339,6 +341,10 @@ public class IOEventService {
 	 * @return IOEventType ,
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
+		if (isStartConditional(ioEvent))
+		{
+			return IOEventType.START_CONDITIONAL;
+		}
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
 			if(isStartTimer(ioEvent)){
 				return IOEventType.START_TIMER;
@@ -357,6 +363,9 @@ public class IOEventService {
 		}
 	}
 
+	public boolean isStartConditional(IOEvent ioEvent) {
+		return (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT));
+	}
 	/**
 	 * method returns if the IOEvent annotation is of a Start Event
 	 * 
@@ -365,7 +374,13 @@ public class IOEventService {
 	 */
 	public boolean isStart(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
-				&& (!getOutputs(ioEvent).isEmpty()));
+				&& (!getOutputs(ioEvent).isEmpty())
+				);
+
+	}
+	public boolean isConditionalStart(IOEvent ioEvent) {
+		return ((ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				);
 
 	}
 	
@@ -417,7 +432,8 @@ public class IOEventService {
 	 * @return boolean ,
 	 */
 	public boolean isImplicitTask(IOEvent ioEvent) {
-		return ((getInputs(ioEvent).isEmpty() || getOutputs(ioEvent).isEmpty())
+		return ( (getInputs(ioEvent).isEmpty() && (!ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				|| getOutputs(ioEvent).isEmpty())
 				&& (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
 						&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
 
@@ -600,7 +616,14 @@ public class IOEventService {
 
 		}
 	}
+	public ConditionalIOResponse<Object> getConditionalPayload(JoinPoint joinPoint, Object returnObject) {
+		ConditionalIOResponse<Object> conditional = ConditionalIOResponse.class.cast(returnObject);
+		return new ConditionalIOResponse<>(getpayload(joinPoint, returnObject).getKey(),
+				getpayload(joinPoint, returnObject).getBody(), conditional.isCondition());
+	}
 
+	
+	
 	private Object isNullpayload(Object object) {
 		if (object == null) {
 			return KafkaNull.INSTANCE;
