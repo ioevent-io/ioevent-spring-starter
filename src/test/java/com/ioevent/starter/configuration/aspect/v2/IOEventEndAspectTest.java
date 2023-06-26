@@ -184,11 +184,9 @@ class IOEventEndAspectTest {
 		MethodSignature methodSignature = mock(MethodSignature.class);
 		when(methodSignature.getMethod()).thenReturn(method );
 		when(joinPoint.getSignature()).thenReturn(methodSignature);
-
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent, "payload");
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent2, "payload");
 		assertThatNoException();
-
 
 	}
 }

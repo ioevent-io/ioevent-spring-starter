@@ -66,7 +66,7 @@ public class MessageListener {
 							invokeTargetMethod(iOEventMessageEventInformation.getMethod(), beanmObject,
 									iOEventMessageEventInformation);
 						} catch (Throwable e) {
-							e.printStackTrace();
+							log.error(e.getMessage());
 						}
 					}).start();
 				}

@@ -408,7 +408,6 @@ class IOEventTransitionAspectTest {
 		IOEvent ioEventParallel = methodParallel.getAnnotation(IOEvent.class);
 		Method endMethod = this.getClass().getMethod("endAnnotationMethod", null);
 		IOEvent ioEventEnd = endMethod.getAnnotation(IOEvent.class);
-
 		CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
 		StopWatch watch = new StopWatch();
 		watch.start("IOEvent annotation Task Aspect");
