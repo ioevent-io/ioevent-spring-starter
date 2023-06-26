@@ -35,18 +35,18 @@ public class IOResponse<T> {
 	 * key of the IOResponse where the method will produce the event to the output
 	 * that has the same key
 	 */
-	protected String key;
+	private String key;
 	/**
 	 * the body or payload to send in the event.
 	 */
-	protected T body;
+	private T body;
 	
 	/**
 	 * Map of header key and headerValue that represent a custom headers to be added
 	 * to event headers
 	 */
 	@Builder.Default
-	protected Map<String, Object> headers = new HashMap<>();
+	private Map<String, Object> headers = new HashMap<>();
 
 	/**
 	 * create IOResponse with key and body
