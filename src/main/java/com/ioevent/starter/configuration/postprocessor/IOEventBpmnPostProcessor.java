@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimerTask;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -74,6 +75,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private List<IOEventBpmnPart> iobpmnlist;
 	@Autowired
 	private ListenerCreator listenerCreator;
+
 	@Autowired
 	private List<Listener> listeners;
 	@Autowired
@@ -87,6 +89,10 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Autowired
 	private AppContext ctx;
+
+	public void setListeners(List<Listener> listeners) {
+		this.listeners = listeners;
+	}
 
 	/**
 	 * method post processor before initialization,
@@ -196,6 +202,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		try {
 			ioEventService.ioflowExistValidation(ioFlow);
 			ioEventService.ioeventKeyValidation(ioEvent);
+			ioEventService.topicExistValidation(ioFlow, ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
 			ioEventService.startTimervalidation(ioEvent, method);
@@ -207,7 +214,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		}
 
 	}
-
 	public boolean needListener(IOEvent ioEvent) {
 
 		if (((StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value()))

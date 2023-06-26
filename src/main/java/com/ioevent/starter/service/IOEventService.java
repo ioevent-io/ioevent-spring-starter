@@ -69,7 +69,7 @@ public class IOEventService {
 	 */
 	public void sendParallelEventInfo(IOEventParallelEventInformation parallelEventInfo) {
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()))
 				.build();
 
@@ -733,11 +733,41 @@ public class IOEventService {
 		}
 	}
 
+
 	public void startTimervalidation(IOEvent ioEvent, Method method) {
 		if (isStartTimer(ioEvent)) {
 			if (method.getParameterCount()!=0) {
 				throw new IllegalArgumentException(
 						"IOEvent Method with Start Timer Event can not have parameters");
+
+	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
+		String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
+		if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
+
+			checkInputTopic(getInputs(ioEvent), errorMsg);
+			checkOutputTopic(getOutputs(ioEvent), errorMsg);
+
+		}
+	}
+
+	void checkInputTopic(List<InputEvent> inputs, String msg) {
+		if (inputs.isEmpty()) {
+			throw new IllegalArgumentException(msg);
+		}
+		for (InputEvent input : inputs) {
+			if ( StringUtils.isBlank(input.topic())) {
+				throw new IllegalArgumentException(msg);
+			}
+		}
+	}
+
+	void checkOutputTopic(List<OutputEvent> outputs, String msg) {
+		if (outputs.isEmpty()) {
+			throw new IllegalArgumentException(msg);
+		}
+		for (OutputEvent output : outputs) {
+			if (StringUtils.isBlank(output.topic()) ) {
+				throw new IllegalArgumentException(msg);
 			}
 		}
 	}

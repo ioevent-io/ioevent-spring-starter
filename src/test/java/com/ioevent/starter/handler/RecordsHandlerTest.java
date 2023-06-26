@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -49,8 +50,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StopWatch;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -124,7 +123,7 @@ class RecordsHandlerTest {
 	@Test
 	void sendParallelInfoTest() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("init", null);
-		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
+		CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L,null);
 		ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<String, String>("topic", 1, 152, 11125,
@@ -142,7 +141,7 @@ class RecordsHandlerTest {
 
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events")
-				.setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString() + parallelEventInfo.getInputRequired())
 				.build();
 
@@ -152,7 +151,7 @@ class RecordsHandlerTest {
 	@Test
 	void parallelInvokeMethodTest() throws NoSuchMethodException, SecurityException {
 		Method method = this.getClass().getMethod("init", null);
-		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
+		CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
 		when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 		when(ioEventService.getInputNames(Mockito.any())).thenReturn(Arrays.asList("Output 1", "Output 2"));
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "Output 1", new StopWatch(),1000L,null);
