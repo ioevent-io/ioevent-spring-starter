@@ -278,7 +278,7 @@ public class IOEvenImplicitTaskAspect {
 		}
 		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(KafkaHeaders.KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(),
 						ioEventType.equals(IOEventType.END) ? "END-EVENT" : ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
@@ -296,7 +296,7 @@ public class IOEvenImplicitTaskAspect {
 			String uuid, String outputEventName, Long startTime) {
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(payload.getBody()).setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic")
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(KafkaHeaders.KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "START-EVENT")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
@@ -316,7 +316,7 @@ public class IOEvenImplicitTaskAspect {
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
 		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
-				.setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic").setHeader(KafkaHeaders.MESSAGE_KEY, uuid)
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-implicit-topic").setHeader(KafkaHeaders.KEY, uuid)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "END-EVENT")
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())

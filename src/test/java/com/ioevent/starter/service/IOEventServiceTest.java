@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
@@ -49,8 +50,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.messaging.Message;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.ioevent.starter.annotations.EndEvent;
 import com.ioevent.starter.annotations.GatewayInputEvent;
@@ -58,8 +57,8 @@ import com.ioevent.starter.annotations.GatewayOutputEvent;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOResponse;
 import com.ioevent.starter.annotations.InputEvent;
-import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.annotations.OutputEvent;
+import com.ioevent.starter.annotations.StartEvent;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
@@ -152,7 +151,7 @@ class IOEventServiceTest {
 	@Test
 	void givenKeyValue_whenSend_thenVerifyHistory() {
 
-	    ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
+		CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
 	    when(kafkaTemplate.send(Mockito.any(Message.class))).thenReturn(future);
 	    ioEventService.sendParallelEventInfo(new IOEventParallelEventInformation("aaa", Arrays.asList("5"), new HashMap<String, Object>() {{
 	        put("key","value");}}, "aazz", "fff", "fgyj", Arrays.asList("5"), new HashMap<String, Object>() {{
