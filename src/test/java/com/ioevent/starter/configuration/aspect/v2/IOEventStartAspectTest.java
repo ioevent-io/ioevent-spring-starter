@@ -26,6 +26,7 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -106,13 +107,14 @@ class IOEventStartAspectTest {
 		Assert.assertEquals(true, simpleTaskAnnotationMethod());
 
 	}
- 
+
 	@Test
 	void buildStartMessageTest() throws NoSuchMethodException, SecurityException {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(ioEventService.getOutputTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("topic");
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
+		when(ioEventService.getIOEventType(ioEvent)).thenReturn(IOEventType.START);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
 		Message messageResult = startAspect.buildStartMessage(ioEvent, null,ioEventResponse,"process", "1155", ioEvent.output()[0],
 				(long) 123546);
@@ -125,12 +127,14 @@ class IOEventStartAspectTest {
 
 		Method method2 = this.getClass().getMethod("startAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
+		when(ioEventService.getIOEventType(ioEvent2)).thenReturn(IOEventType.START);
+
 		Message messageResult2 = startAspect.buildStartMessage(ioEvent2,null, ioEventResponse,"process", "1155", ioEvent2.output()[0],
 				(long) 123546);
 		assertEquals(message.getHeaders().get("kafka_topic"), messageResult2.getHeaders().get("kafka_topic"));
 
 	}
- 
+
 	@Test
 	void prepareAndDisplayEventLoggerTest() throws JsonProcessingException, NoSuchMethodException, SecurityException, ParseException {
 
@@ -149,7 +153,7 @@ class IOEventStartAspectTest {
 		assertThatNoException();
 
 	}
- 
+
 	@Test
 	void iOEventAnnotationAspectTest() throws Throwable {
 		Method method = this.getClass().getMethod("startAnnotationMethod", null);

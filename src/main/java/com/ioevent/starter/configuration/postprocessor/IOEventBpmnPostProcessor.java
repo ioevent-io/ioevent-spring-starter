@@ -96,7 +96,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	/**
 	 * method post processor before initialization,
-	 * 
+	 *
 	 * @param bean     for the bean,
 	 * @param beanName for the bean name,
 	 * @return A bean Object ,
@@ -114,7 +114,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	/**
 	 * method post processor after initialization,
-	 * 
+	 *
 	 * @param bean     for the bean,
 	 * @param beanName for the bean name,
 	 **/
@@ -125,7 +125,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	/**
 	 * process method to check for annotations in the bean and create the Bpmn parts
-	 * 
+	 *
 	 * @param bean     for the bean,
 	 * @param beanName for the bean name,
 	 * @throws Exception
@@ -202,7 +202,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		try {
 			ioEventService.ioflowExistValidation(ioFlow);
 			ioEventService.ioeventKeyValidation(ioEvent);
-			ioEventService.topicExistValidation(ioFlow, ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
 			ioEventService.startTimervalidation(ioEvent, method);
@@ -244,7 +243,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	/**
 	 * check if the listener already exist,
-	 * 
+	 *
 	 * @param bean      for the bean,
 	 * @param topicName for the topic name,
 	 * @param method    for the method information,
@@ -269,7 +268,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	/**
 	 * methods to create IOEvent BPMN Parts from annotations
-	 * 
+	 *
 	 * @param ioEvent          for the ioEvent annotation info,
 	 * @param ioFlow           for the ioFlow annotation info ,
 	 * @param className        for the class which include the method,
