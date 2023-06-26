@@ -340,10 +340,19 @@ public class IOEventService {
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
-			return IOEventType.START;
+			if(isStartTimer(ioEvent)){
+				return IOEventType.START_TIMER;
+			}else{
+				return IOEventType.START;
+			}
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {
+			if(ioEvent.timer().delay() > 0){
+				return IOEventType.INTERMEDIATE_TIMER;
+			}else if(ioEvent.timer().limit() > 0){
+				return IOEventType.BOUNDRY_TIMER;
+			}
 			return IOEventType.TASK;
 		}
 	}
@@ -359,7 +368,37 @@ public class IOEventService {
 				&& (!getOutputs(ioEvent).isEmpty()));
 
 	}
+	
+	/**
+	 * method returns if the IOEvent annotation is a start timer Event
+	 * 
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isStartTimer(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.startEvent().timer().cron()));
+	}
 
+	/**
+	 * method returns if the IOEvent annotation is an intermediate timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isIntermediateTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().delay() > 0);
+	}
+
+	/**
+	 * method returns if the IOEvent annotation is a boundry timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isBoundryTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().limit() > 0);
+	}
+	
 	/**
 	 * method returns if the IOEvent annotation is of a End Event
 	 * 
@@ -370,7 +409,7 @@ public class IOEventService {
 		return (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())
 				&& (!getInputs(ioEvent).isEmpty()));
 	}
-
+	
 	/**
 	 * method returns if the IOEvent annotation is of a Implicit Task Event
 	 * 
@@ -693,6 +732,13 @@ public class IOEventService {
 			}
 		}
 	}
+
+
+	public void startTimervalidation(IOEvent ioEvent, Method method) {
+		if (isStartTimer(ioEvent)) {
+			if (method.getParameterCount()!=0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Start Timer Event can not have parameters");
 
 	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
 		String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";

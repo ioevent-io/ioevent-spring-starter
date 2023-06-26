@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.ioevent.starter.enums.EventTypesEnum;
+
 /**
  * Annotation that marks a method of IOEvent, in @IOEvent we can specify the key
  * or the name of the task, name of generic topic where the @IOEvent methods
@@ -137,4 +139,27 @@ public @interface IOEvent {
 	 * @return an ExceptionEvent object
 	 */
 	ExceptionEvent exception() default @ExceptionEvent();
+	
+	/**
+	 * eventType is a specification of the task type.
+	 *ioevent supports service, receive and user tasks.
+	 *
+	 * @return EventTypesEnum object
+	 */
+	EventTypesEnum EventType() default EventTypesEnum.SERVICE;
+
+	/**
+	 * Text annotation is a label attached to a bpmn object.
+	 *
+	 * @return String
+	 */
+	String textAnnotation() default "";
+
+	/**
+	 * Timer event to schedule start events for specific period or date.
+	 *
+	 * @return IOTimer Object
+	 */
+	IOTimer timer() default @IOTimer();
+
 }

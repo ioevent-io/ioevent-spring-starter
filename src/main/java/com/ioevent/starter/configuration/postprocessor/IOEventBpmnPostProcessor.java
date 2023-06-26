@@ -17,6 +17,14 @@
 package com.ioevent.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TimerTask;
 import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,17 +36,23 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
+import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.IOEventExceptionInformation;
 import com.ioevent.starter.domain.IOEventGatwayInformation;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.domain.IOTimerEvent;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
+import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +84,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	private AdminClient client;
 	@Autowired
 	private IOEventService ioEventService;
+	@Autowired
+	private IOEventMessageBuilderService ioEventMessageBuilderService;
+
+	@Autowired
+	private AppContext ctx;
 
 	public void setListeners(List<Listener> listeners) {
 		this.listeners = listeners;
@@ -152,12 +171,27 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 						}
 					}
 				}
-				String methodReturnType = ioEventService.getMethodReturnType(method); 
+				String methodReturnType = ioEventService.getMethodReturnType(method);
 				String generateID = ioEventService.generateID(ioEvent);
 				iobpmnlist.add(createIOEventBpmnPart(ioEvent, ioFlow, bean.getClass().getName(), generateID,
-						method.toGenericString(),methodReturnType,iOEventProperties.getPrefix()));
-
+						method.toGenericString(), methodReturnType, iOEventProperties.getPrefix()));
+				checkStartTimer(ioEvent, method, bean);
 			}
+		}
+	}
+
+	private void checkStartTimer(IOEvent ioEvent, Method method, Object bean) {
+		if (ioEventService.isStartTimer(ioEvent)) {
+			TaskScheduler scheduler = this.scheduler();
+			TimerTask task = new TimerTask() {
+				@Override
+				public void run() {
+					IOTimerEvent ioTimerEvent = new IOTimerEvent(ioEvent.startEvent().timer().cron(), method.getName(),method.toGenericString(), bean.getClass().getName(),appName,new Date().getTime());
+					ioEventMessageBuilderService.sendTimerEvent(ioTimerEvent,"ioevent-timer");
+				}
+			};
+			CronTrigger cronTrigger = new CronTrigger(ioEvent.startEvent().timer().cron());
+			scheduler.schedule(task, cronTrigger);
 		}
 	}
 
@@ -171,6 +205,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			ioEventService.topicExistValidation(ioFlow, ioEvent);
 			ioEventService.gatewayValidation(ioEvent, method);
 			ioEventService.startAndEndvalidation(ioEvent, method);
+			ioEventService.startTimervalidation(ioEvent, method);
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			SpringApplication.exit(applicationContext, () -> 0);
@@ -235,16 +270,16 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	/**
 	 * methods to create IOEvent BPMN Parts from annotations
 	 * 
-	 * @param ioEvent    for the ioEvent annotation info,
-	 * @param ioFlow     for the ioFlow annotation info ,
-	 * @param className  for the class which include the method,
-	 * @param partID     for the part ID,
-	 * @param methodName for the method name,
+	 * @param ioEvent          for the ioEvent annotation info,
+	 * @param ioFlow           for the ioFlow annotation info ,
+	 * @param className        for the class which include the method,
+	 * @param partID           for the part ID,
+	 * @param methodName       for the method name,
 	 * @param methodReturnType for method return type
-	 * @param topicPrefix for topic Prefix
+	 * @param topicPrefix      for topic Prefix
 	 **/
 	public IOEventBpmnPart createIOEventBpmnPart(IOEvent ioEvent, IOFlow ioFlow, String className, String partID,
-			String methodName,String methodReturnType, String topicPrefix) {
+			String methodName, String methodReturnType, String topicPrefix) {
 		String processName = ioEventService.getProcessName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
@@ -273,10 +308,16 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 			iobpmnlist.add(errorEnd);
 		}
-
 		return new IOEventBpmnPart(ioEvent,ioFlow, partID, apiKey, appName, processName,
-				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix);
+				ioEventService.getIOEventType(ioEvent), ioEvent.key(), methodName,methodReturnType,topicPrefix, ioEvent.EventType(),
+				ioEvent.textAnnotation());
+		}
 
+
+	public TaskScheduler scheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.initialize();
+		return scheduler;
 	}
 
 }
