@@ -26,7 +26,7 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.text.ParseException;
@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -123,7 +125,7 @@ class IOEventEndAspectTest {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(ioEventService.getOutputTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("");
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
-		
+
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Map<String, Object> headersMap=new HashMap<>();
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L,null);
@@ -179,6 +181,9 @@ class IOEventEndAspectTest {
 		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.output()));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
+		MethodSignature methodSignature = mock(MethodSignature.class);
+		when(methodSignature.getMethod()).thenReturn(method );
+		when(joinPoint.getSignature()).thenReturn(methodSignature);
 
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent, "payload");
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent2, "payload");

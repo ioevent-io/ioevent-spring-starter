@@ -37,17 +37,17 @@ public class IOEventMessageBuilderService {
 	private IOEventProperties iOEventProperties;
 	@Autowired
 	private IOEventService ioEventService;
-	
+
 	@Value("${spring.application.name}")
 	private String appName;
-	
+
 	private static final String START_PREFIX = "start-to-";
 
 	/**
 	 * Method that build and send the event of a Parallel Event task,
-	 * 
+	 *
 	 * @param eventLogger
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -81,7 +81,7 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build the event message of Parallel task to be send in kafka
 	 * topic,
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -107,7 +107,7 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), 
+				.setHeader(IOEventHeaders.INPUT.toString(),
 								isImplicitStart ? Arrays.asList(START_PREFIX + ioEvent.key()) : ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
@@ -120,9 +120,9 @@ public class IOEventMessageBuilderService {
 
 	/**
 	 * Method that build and send the event of a Exclusive Event task,
-	 * 
+	 *
 	 * @param eventLogger
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -166,7 +166,7 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build the event message of Exclusive task to be send in kafka
 	 * topic,
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -205,13 +205,13 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), isImplicitStart)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
-	
+
 	public Message<IOTimerEvent> sendTimerEvent(
 			IOTimerEvent ioTimerEvent,String topic) {
 
 		Message<IOTimerEvent> message = MessageBuilder.withPayload(ioTimerEvent)
 				.setHeader(KafkaHeaders.TOPIC, topic)
-				.setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.KEY,
 						ioTimerEvent.getMethodeQialifiedName()
 								+ appName)
 				.build();

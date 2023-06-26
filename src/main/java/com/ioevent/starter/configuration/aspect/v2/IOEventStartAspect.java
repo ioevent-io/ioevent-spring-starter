@@ -77,7 +77,7 @@ public class IOEventStartAspect {
 	/**
 	 * Method Before advice runs after a successful completion of a Start task with
 	 * IOEvent annotation,
-	 * 
+	 *
 	 * @param joinPoint for the join point during the execution of the program,
 	 * @param ioEvent   for ioevent annotation which include task information,
 	 * @throws JsonProcessingException
@@ -96,7 +96,7 @@ public class IOEventStartAspect {
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a Start
 	 * task with IOEvent annotation,
-	 * 
+	 *
 	 * @param joinPoint    for the join point during the execution of the program,
 	 * @param ioEvent      for ioevent annotation which include task information,
 	 * @param returnObject for the returned object,
@@ -151,7 +151,7 @@ public class IOEventStartAspect {
 
 	/**
 	 * Method that build the event message of Start task to be send in kafka topic,
-	 * 
+	 *
 	 * @param ioEvent     for ioevent annotation which include task information,
 	 * @param ioFlow      for ioflow annotation which include general information,
 	 * @param response    for the IOResponse
@@ -183,7 +183,7 @@ public class IOEventStartAspect {
 
 	/**
 	 * Method that display logs after task completed ,
-	 * 
+	 *
 	 * @param eventLogger for the log info dto display,
 	 * @param uuid        for the correlation_id,
 	 * @param ioEvent     for ioevent annotation which include task information,
@@ -209,7 +209,7 @@ public class IOEventStartAspect {
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
 
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
+				.setHeader(KafkaHeaders.KEY, uuid).setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.START_CONDITIONAL.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("Start")))
