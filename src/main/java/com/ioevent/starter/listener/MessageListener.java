@@ -82,7 +82,7 @@ public class MessageListener {
 
 	}
 
-	private boolean validMessage(IOEventMessageEventInformation iOEventMessageEventInformation) {
+	public boolean validMessage(IOEventMessageEventInformation iOEventMessageEventInformation) {
 		return sameList(iOEventMessageEventInformation.getInputRequired(),
 				iOEventMessageEventInformation.getInputsArrived())
 				&& iOEventMessageEventInformation.getMessageEventArrived()
