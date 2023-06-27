@@ -209,7 +209,7 @@ public class RecordsHandler {
 
 		Message<IOEventMessageEventInformation> message = MessageBuilder.withPayload(messageEventInfo)
 				.setHeader(KafkaHeaders.TOPIC, "ioevent-message-events")
-				.setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.KEY,
 						messageEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()).toString()
 								+ messageEventInfo.getInputRequired() + messageEventInfo.getMessageEventRequired())
 				.build();
