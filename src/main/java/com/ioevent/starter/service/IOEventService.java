@@ -50,6 +50,7 @@ import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
 import com.ioevent.starter.enums.EventTypesEnum;
+import com.ioevent.starter.enums.MessageTypesEnum;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -357,13 +358,33 @@ public class IOEventService {
 				return IOEventType.INTERMEDIATE_TIMER;
 			} else if (ioEvent.timer().limit() > 0) {
 				return IOEventType.BOUNDRY_TIMER;
+			} else if (isMessage(ioEvent)) {
+				if (isMessageThrow(ioEvent)) {
+					return IOEventType.MESSAGE_THROW;
+				} else if (isMessageCatch(ioEvent)) {
+					return IOEventType.MESSAGE_CATCH;
+				}
 			}
+
 			return IOEventType.TASK;
 		}
 	}
 
 	public boolean isStartConditional(IOEvent ioEvent) {
 		return (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT));
+	}
+	
+	public boolean isMessage(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.message().key()));
+		// An iomessage must have property key not blank (not empty string)
+	}
+
+	public boolean isMessageThrow(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.THROW));
+	}
+
+	public boolean isMessageCatch(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.CATCH));
 	}
 
 	/**
@@ -382,7 +403,6 @@ public class IOEventService {
 	public boolean isConditionalStart(IOEvent ioEvent) {
 		return ((ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
 		);
-
 	}
 
 	/**
@@ -476,13 +496,18 @@ public class IOEventService {
 	 */
 	public IOEventType checkTaskType(IOEvent ioEvent) {
 		IOEventType type = IOEventType.TASK;
-
 		if ((ioEvent.gatewayOutput().output().length != 0) || (ioEvent.gatewayInput().input().length != 0)) {
 
 			if (ioEvent.gatewayOutput().parallel() || ioEvent.gatewayInput().parallel()) {
 				type = IOEventType.GATEWAY_PARALLEL;
 			} else if (ioEvent.gatewayOutput().exclusive() || ioEvent.gatewayInput().exclusive()) {
 				type = IOEventType.GATEWAY_EXCLUSIVE;
+			}
+		} else if (isMessage(ioEvent)) {
+			if (isMessageThrow(ioEvent)) {
+				return IOEventType.MESSAGE_THROW;
+			} else if (isMessageCatch(ioEvent)) {
+				return IOEventType.MESSAGE_CATCH;
 			}
 		}
 
@@ -763,40 +788,40 @@ public class IOEventService {
 			if (method.getParameterCount() != 0) {
 				throw new IllegalArgumentException(
 						"IOEvent Method with Start Timer Event can not have parameters");
-
-//	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
-//		String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
-//		if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
-//
-//			checkInputTopic(getInputs(ioEvent), errorMsg);
-//			checkOutputTopic(getOutputs(ioEvent), errorMsg);
-//
-//		}
-//	}
-
-//	void checkInputTopic(List<InputEvent> inputs, String msg) {
-//		if (inputs.isEmpty()) {
-//			throw new IllegalArgumentException(msg);
-//		}
-//		for (InputEvent input : inputs) {
-//			if ( StringUtils.isBlank(input.topic())) {
-//				throw new IllegalArgumentException(msg);
-//			}
-//		}
-//	}
-
-//	void checkOutputTopic(List<OutputEvent> outputs, String msg) {
-//		if (outputs.isEmpty()) {
-//			throw new IllegalArgumentException(msg);
-//		}
-//		for (OutputEvent output : outputs) {
-//			if (StringUtils.isBlank(output.topic()) ) {
-//				throw new IllegalArgumentException(msg);
-//			}
-//		}
-//	}
-
 			}
 		}
 	}
+	
+//	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
+//	String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
+//	if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
+//
+//		checkInputTopic(getInputs(ioEvent), errorMsg);
+//		checkOutputTopic(getOutputs(ioEvent), errorMsg);
+//
+//	}
+//}
+
+//void checkInputTopic(List<InputEvent> inputs, String msg) {
+//	if (inputs.isEmpty()) {
+//		throw new IllegalArgumentException(msg);
+//	}
+//	for (InputEvent input : inputs) {
+//		if ( StringUtils.isBlank(input.topic())) {
+//			throw new IllegalArgumentException(msg);
+//		}
+//	}
+//}
+
+//void checkOutputTopic(List<OutputEvent> outputs, String msg) {
+//	if (outputs.isEmpty()) {
+//		throw new IllegalArgumentException(msg);
+//	}
+//	for (OutputEvent output : outputs) {
+//		if (StringUtils.isBlank(output.topic()) ) {
+//			throw new IllegalArgumentException(msg);
+//		}
+//	}
+//}
+
 }

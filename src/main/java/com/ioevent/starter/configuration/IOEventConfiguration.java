@@ -24,16 +24,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Produced;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -65,10 +55,12 @@ import com.ioevent.starter.listener.IOEventParrallelListener;
 import com.ioevent.starter.listener.IOEventTimerListener;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
+import com.ioevent.starter.listener.MessageListener;
 import com.ioevent.starter.service.IOEventMessageBuilderService;
 import com.ioevent.starter.service.IOEventRegistryService;
 import com.ioevent.starter.service.IOEventService;
 import com.ioevent.starter.service.TopicServices;
+import com.ioevent.starter.stream.MessageStream;
 import com.ioevent.starter.stream.ParallelStream;
 import com.ioevent.starter.stream.TimerStream;
 
@@ -104,6 +96,10 @@ public class IOEventConfiguration {
 	public ParallelStream parallelStream() {
 		return new ParallelStream();
 	}
+	@Bean
+	public MessageStream messageStream() {
+		return new MessageStream();
+	}
 	
 	@Bean
 	public TimerStream timerStream() {
@@ -111,6 +107,12 @@ public class IOEventConfiguration {
 	}
 	
 
+	@ConditionalOnMissingBean
+	@Bean
+	public MessageListener messageListener() {
+		return new MessageListener();
+	}
+	
 	@ConditionalOnMissingBean
 	@Bean
 	public IOEventParrallelListener ioEventParrallelListener() {

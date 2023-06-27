@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-
-
-
 package com.ioevent.starter.handler;
-
-
-
-
-
 
 import java.util.List;
 
@@ -40,14 +32,16 @@ public class IOEventRecordInfo {
 	private StopWatch watch;
 	private Long instanceStartTime;
 	private Long startTime = System.currentTimeMillis();
-	private String lastEventEndTime ;
+	private String lastEventEndTime;
 	private String body;
-	
+	private String MessageKey;
+	private String taskType;
+
 	public IOEventRecordInfo() {
 	}
 
 	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, StopWatch watch,
-			Long instanceStartTime,String lastEventEndTime) {
+			Long instanceStartTime, String lastEventEndTime) {
 		this.id = id;
 		this.workFlowName = workFlowName;
 		this.outputConsumedName = outputConsumedName;
@@ -57,7 +51,7 @@ public class IOEventRecordInfo {
 	}
 
 	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, List<Header> headerList,
-			Long instanceStartTime,String lastEventEndTime) {
+			Long instanceStartTime, String lastEventEndTime) {
 		super();
 		this.id = id;
 		this.workFlowName = workFlowName;
@@ -68,10 +62,46 @@ public class IOEventRecordInfo {
 
 	}
 
+	public IOEventRecordInfo(String id, String workFlowName, String outputConsumedName, List<Header> headerList,
+			StopWatch watch, Long instanceStartTime, Long startTime, String lastEventEndTime, String body,
+			String messageKey,String taskType) {
+		super();
+		this.id = id;
+		this.workFlowName = workFlowName;
+		this.outputConsumedName = outputConsumedName;
+		this.headerList = headerList;
+		this.watch = watch;
+		this.instanceStartTime = instanceStartTime;
+		this.startTime = startTime;
+		this.lastEventEndTime = lastEventEndTime;
+		this.body = body;
+		this.MessageKey = messageKey;
+		this.taskType = taskType ;
+	}
+	
+
+
+
+	public String getTaskType() {
+		return taskType;
+	}
+
+	public void setTaskType(String taskType) {
+		this.taskType = taskType;
+	}
+
+	public String getMessageKey() {
+		return MessageKey;
+	}
+
+	public void setMessageKey(String messageKey) {
+		MessageKey = messageKey;
+	}
+
 	public String getBody() {
 		return body;
 	}
-	
+
 	public void setBody(String body) {
 		this.body = body;
 	}
@@ -131,6 +161,7 @@ public class IOEventRecordInfo {
 	public void setStartTime(Long startTime) {
 		this.startTime = startTime;
 	}
+
 	public String getLastEventEndTime() {
 		return lastEventEndTime;
 	}

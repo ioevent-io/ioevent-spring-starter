@@ -26,7 +26,8 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.text.ParseException;
@@ -38,7 +39,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,7 +130,7 @@ class IOEventEndAspectTest {
 		Map<String, Object> headersMap=new HashMap<>();
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L,null);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
-		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546, headersMap, "example");
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
 				.setHeader(KafkaHeaders.KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "terminate the event").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
@@ -143,7 +143,7 @@ class IOEventEndAspectTest {
 
 		Method method2 = this.getClass().getMethod("endAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546, headersMap, "example");
 		assertEquals("test-", messageResult2.getHeaders().get("kafka_topic"));
 
 	}
@@ -184,12 +184,9 @@ class IOEventEndAspectTest {
 		MethodSignature methodSignature = mock(MethodSignature.class);
 		when(methodSignature.getMethod()).thenReturn(method );
 		when(joinPoint.getSignature()).thenReturn(methodSignature);
-
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent, "payload");
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent2, "payload");
 		assertThatNoException();
 
-
 	}
-
 }

@@ -105,7 +105,7 @@ public class IOEventEndAspect {
 				IOResponse<Object> payload = ioEventService.getpayload(joinPoint, returnObject);
 				String output = "END";
 				Message<Object> message = this.buildEventMessage(ioEvent, ioFlow, payload, output, ioeventRecordInfo,
-						ioeventRecordInfo.getStartTime(), headers);
+						ioeventRecordInfo.getStartTime(), headers,"");
 				Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 				eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
 				prepareAndDisplayEventLogger(eventLogger, ioEvent, payload.getBody(), watch, ioeventRecordInfo);
@@ -128,12 +128,13 @@ public class IOEventEndAspect {
 	 * @return message type of Message,
 	 */
 	public Message<Object> buildEventMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> payload,
-			String outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, Map<String, Object> headers) {
+			String outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, Map<String, Object> headers,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, "");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(payload.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), outputEvent)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
