@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.KafkaNull;
@@ -20,6 +21,7 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.domain.IOTimerEvent;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 
@@ -36,13 +38,16 @@ public class IOEventMessageBuilderService {
 	@Autowired
 	private IOEventService ioEventService;
 
+	@Value("${spring.application.name}")
+	private String appName;
+
 	private static final String START_PREFIX = "start-to-";
 
 	/**
 	 * Method that build and send the event of a Parallel Event task,
-	 * 
+	 *
 	 * @param eventLogger
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -76,7 +81,7 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build the event message of Parallel task to be send in kafka
 	 * topic,
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -98,11 +103,11 @@ public class IOEventMessageBuilderService {
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_PARALLEL.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), 
+				.setHeader(IOEventHeaders.INPUT.toString(),
 								isImplicitStart ? Arrays.asList(START_PREFIX + ioEvent.key()) : ioEventService.getInputNames(ioEvent))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
@@ -115,9 +120,9 @@ public class IOEventMessageBuilderService {
 
 	/**
 	 * Method that build and send the event of a Exclusive Event task,
-	 * 
+	 *
 	 * @param eventLogger
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -161,7 +166,7 @@ public class IOEventMessageBuilderService {
 	/**
 	 * Method that build the event message of Exclusive task to be send in kafka
 	 * topic,
-	 * 
+	 *
 	 * @param ioEvent           for ioevent annotation which include task
 	 *                          information,
 	 * @param ioFlow            for ioflow annotation which include general
@@ -186,7 +191,7 @@ public class IOEventMessageBuilderService {
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
-				.setHeader(KafkaHeaders.MESSAGE_KEY, ioeventRecordInfo.getId())
+				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.GATEWAY_EXCLUSIVE.toString())
@@ -199,5 +204,19 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), isImplicitStart)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+	}
+
+	public Message<IOTimerEvent> sendTimerEvent(
+			IOTimerEvent ioTimerEvent,String topic) {
+
+		Message<IOTimerEvent> message = MessageBuilder.withPayload(ioTimerEvent)
+				.setHeader(KafkaHeaders.TOPIC, topic)
+				.setHeader(KafkaHeaders.KEY,
+						ioTimerEvent.getMethodeQialifiedName()
+								+ appName)
+				.build();
+		kafkaTemplate.send(message);
+		kafkaTemplate.flush();
+		return message;
 	}
 }

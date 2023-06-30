@@ -26,6 +26,7 @@ package com.ioevent.starter.configuration.aspect.v2;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -35,8 +36,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,8 +53,6 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StopWatch;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.SettableListenableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ioevent.starter.annotations.EndEvent;
@@ -124,14 +125,14 @@ class IOEventEndAspectTest {
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(ioEventService.getOutputTopicName(Mockito.any(IOEvent.class), Mockito.any(), Mockito.any(String.class))).thenReturn("");
 		Method method = this.getClass().getMethod("endAnnotationMethod", null);
-		
+
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Map<String, Object> headersMap=new HashMap<>();
 		IOEventRecordInfo ioeventRecordInfo = new IOEventRecordInfo("1155", "process name", "_", new StopWatch(),100L,null);
 		IOResponse<Object> ioEventResponse = new IOResponse<>(null, "payload", null);
-		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult = endAspect.buildEventMessage(ioEvent,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546, headersMap, "example");
 		Message<String> message = MessageBuilder.withPayload("payload").setHeader(KafkaHeaders.TOPIC, "test-topic")
-				.setHeader(KafkaHeaders.MESSAGE_KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
+				.setHeader(KafkaHeaders.KEY, "1155").setHeader(IOEventHeaders.CORRELATION_ID.toString(), "1155")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), "terminate the event").setHeader(IOEventHeaders.EVENT_TYPE.toString(), IOEventType.END.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), new ArrayList<String>(Arrays.asList("previous Task")))
 				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "END").setHeader(IOEventHeaders.PROCESS_NAME.toString(), "process name")
@@ -142,7 +143,7 @@ class IOEventEndAspectTest {
 
 		Method method2 = this.getClass().getMethod("endAnnotationMethod2", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546,headersMap);
+		Message messageResult2 = endAspect.buildEventMessage(ioEvent2,null, ioEventResponse, "END", ioeventRecordInfo, (long) 123546, headersMap, "example");
 		assertEquals("test-", messageResult2.getHeaders().get("kafka_topic"));
 
 	}
@@ -171,7 +172,7 @@ class IOEventEndAspectTest {
 		IOEvent ioEvent = method.getAnnotation(IOEvent.class);
 		Method method2 = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEvent2 = method2.getAnnotation(IOEvent.class);
-		ListenableFuture<SendResult<String, Object>> future = new SettableListenableFuture<>();
+		CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
 		StopWatch watch = new StopWatch();
 		watch.start("IOEvent annotation End Aspect");
 		IOEventContextHolder.setContext(ioeventRecordInfo);
@@ -180,12 +181,12 @@ class IOEventEndAspectTest {
 		when(ioEventService.getOutputs(ioEvent)).thenReturn(Arrays.asList(ioEvent.output()));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
 		when(joinPoint.getArgs()).thenReturn(new String[] { "payload" });
-
+		MethodSignature methodSignature = mock(MethodSignature.class);
+		when(methodSignature.getMethod()).thenReturn(method );
+		when(joinPoint.getSignature()).thenReturn(methodSignature);
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent, "payload");
 		endAspect.iOEventAnnotationAspect(joinPoint, ioEvent2, "payload");
 		assertThatNoException();
 
-
 	}
-
 }

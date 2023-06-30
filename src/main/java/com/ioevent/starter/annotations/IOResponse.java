@@ -40,11 +40,12 @@ public class IOResponse<T> {
 	 * the body or payload to send in the event.
 	 */
 	private T body;
+	
 	/**
 	 * Map of header key and headerValue that represent a custom headers to be added
 	 * to event headers
 	 */
-	@Builder.Default 
+	@Builder.Default
 	private Map<String, Object> headers = new HashMap<>();
 
 	/**
@@ -70,4 +71,6 @@ public class IOResponse<T> {
 		this.headers = headers;
 
 	}
+
+	
 }

@@ -38,6 +38,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import com.ioevent.starter.annotations.ConditionalIOResponse;
 import com.ioevent.starter.annotations.IOEvent;
 import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.IOPayload;
@@ -48,6 +49,8 @@ import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventParallelEventInformation;
 import com.ioevent.starter.domain.IOEventType;
+import com.ioevent.starter.enums.EventTypesEnum;
+import com.ioevent.starter.enums.MessageTypesEnum;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,12 +67,12 @@ public class IOEventService {
 	/**
 	 * This is a kafka producer which send parallel events info to
 	 * ioevent-parallel-gateway-events topic
-	 * 
+	 *
 	 * @param parallelEventInfo for the parallel event information,
 	 */
 	public void sendParallelEventInfo(IOEventParallelEventInformation parallelEventInfo) {
 		Message<IOEventParallelEventInformation> message = MessageBuilder.withPayload(parallelEventInfo)
-				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.MESSAGE_KEY,
+				.setHeader(KafkaHeaders.TOPIC, "ioevent-parallel-gateway-events").setHeader(KafkaHeaders.KEY,
 						parallelEventInfo.getHeaders().get(IOEventHeaders.CORRELATION_ID.toString()))
 				.build();
 
@@ -78,7 +81,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all Inputs names of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Inputs names,
 	 */
@@ -109,7 +112,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all parallel Input names of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Inputs names,
 	 */
@@ -129,7 +132,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all outputs names of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of outputs names,
 	 */
@@ -160,7 +163,7 @@ public class IOEventService {
 
 	/**
 	 * method returns exclusive Gateway outputs names of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of outputs names,
 	 */
@@ -181,7 +184,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all output Event of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of OutputEvent Object ,
 	 */
@@ -204,7 +207,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all inputs of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of InputEvent Object ,
 	 */
@@ -227,7 +230,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all topics of @IOEvent annotation,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Topics names ,
 	 */
@@ -262,7 +265,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all Input topics of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Topics names ,
 	 */
@@ -292,7 +295,7 @@ public class IOEventService {
 
 	/**
 	 * method returns all Input topics of @IOEvent definition,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return list of Topics names ,
 	 */
@@ -322,7 +325,7 @@ public class IOEventService {
 
 	/**
 	 * method returns if two lists are equal
-	 * 
+	 *
 	 * @param firstList  list of String,
 	 * @param secondList list of String,
 	 * @return boolean ,
@@ -334,35 +337,107 @@ public class IOEventService {
 
 	/**
 	 * method returns event type from the IOEvent annotation
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return IOEventType ,
 	 */
 	public IOEventType getIOEventType(IOEvent ioEvent) {
+		if (isStartConditional(ioEvent)) {
+			return IOEventType.START_CONDITIONAL;
+		}
 		if (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())) {
-			return IOEventType.START;
+			if (isStartTimer(ioEvent)) {
+				return IOEventType.START_TIMER;
+			} else {
+				return IOEventType.START;
+			}
 		} else if (!StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())) {
 			return IOEventType.END;
 		} else {
+			if (ioEvent.timer().delay() > 0) {
+				return IOEventType.INTERMEDIATE_TIMER;
+			} else if (ioEvent.timer().limit() > 0) {
+				return IOEventType.BOUNDRY_TIMER;
+			} else if (isMessage(ioEvent)) {
+				if (isMessageThrow(ioEvent)) {
+					return IOEventType.MESSAGE_THROW;
+				} else if (isMessageCatch(ioEvent)) {
+					return IOEventType.MESSAGE_CATCH;
+				}
+			}
+
 			return IOEventType.TASK;
 		}
 	}
 
+	public boolean isStartConditional(IOEvent ioEvent) {
+		return (ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT));
+	}
+	
+	public boolean isMessage(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.message().key()));
+		// An iomessage must have property key not blank (not empty string)
+	}
+
+	public boolean isMessageThrow(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.THROW));
+	}
+
+	public boolean isMessageCatch(IOEvent ioEvent) {
+		return (ioEvent.message().messageType().equals(MessageTypesEnum.CATCH));
+	}
+
 	/**
 	 * method returns if the IOEvent annotation is of a Start Event
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isStart(IOEvent ioEvent) {
 		return (!StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
-				&& (!getOutputs(ioEvent).isEmpty()));
+				&& (!getOutputs(ioEvent).isEmpty())
+		);
 
+	}
+
+	public boolean isConditionalStart(IOEvent ioEvent) {
+		return ((ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+		);
+	}
+
+	/**
+	 * method returns if the IOEvent annotation is a start timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isStartTimer(IOEvent ioEvent) {
+		return (!StringUtils.isBlank(ioEvent.startEvent().timer().cron()));
+	}
+
+	/**
+	 * method returns if the IOEvent annotation is an intermediate timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isIntermediateTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().delay() > 0);
+	}
+
+	/**
+	 * method returns if the IOEvent annotation is a boundry timer Event
+	 *
+	 * @param ioEvent for the IOEvent annotation,
+	 * @return boolean ,
+	 */
+	public boolean isBoundryTimer(IOEvent ioEvent) {
+		return (ioEvent.timer().limit() > 0);
 	}
 
 	/**
 	 * method returns if the IOEvent annotation is of a End Event
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
@@ -373,20 +448,21 @@ public class IOEventService {
 
 	/**
 	 * method returns if the IOEvent annotation is of a Implicit Task Event
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
 	public boolean isImplicitTask(IOEvent ioEvent) {
-		return ((getInputs(ioEvent).isEmpty() || getOutputs(ioEvent).isEmpty())
+		return ((getInputs(ioEvent).isEmpty() && (!ioEvent.EventType().equals(EventTypesEnum.START_CONDITIONAL_EVENT))
+				|| getOutputs(ioEvent).isEmpty())
 				&& (StringUtils.isBlank(ioEvent.startEvent().key() + ioEvent.startEvent().value())
-						&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
+				&& StringUtils.isBlank(ioEvent.endEvent().key() + ioEvent.endEvent().value())));
 
 	}
 
 	/**
 	 * method returns if the IOEvent annotation is of a Task Event
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return boolean ,
 	 */
@@ -398,7 +474,7 @@ public class IOEventService {
 
 	/**
 	 * method returns input event of @IOEvent by name,
-	 * 
+	 *
 	 * @param ioEvent   for the IOEvent annotation,
 	 * @param inputName for the Input event name
 	 * @return InputEvent ,
@@ -414,19 +490,24 @@ public class IOEventService {
 
 	/**
 	 * method returns Task specific type from the IOEvent annotation
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return IOEventType ,
 	 */
 	public IOEventType checkTaskType(IOEvent ioEvent) {
 		IOEventType type = IOEventType.TASK;
-
 		if ((ioEvent.gatewayOutput().output().length != 0) || (ioEvent.gatewayInput().input().length != 0)) {
 
 			if (ioEvent.gatewayOutput().parallel() || ioEvent.gatewayInput().parallel()) {
 				type = IOEventType.GATEWAY_PARALLEL;
 			} else if (ioEvent.gatewayOutput().exclusive() || ioEvent.gatewayInput().exclusive()) {
 				type = IOEventType.GATEWAY_EXCLUSIVE;
+			}
+		} else if (isMessage(ioEvent)) {
+			if (isMessageThrow(ioEvent)) {
+				return IOEventType.MESSAGE_THROW;
+			} else if (isMessageCatch(ioEvent)) {
+				return IOEventType.MESSAGE_CATCH;
 			}
 		}
 
@@ -435,7 +516,7 @@ public class IOEventService {
 
 	/**
 	 * method returns ID generated from @IOEvent elements ,
-	 * 
+	 *
 	 * @param ioEvent for the IOEvent annotation,
 	 * @return String of ID generated ,
 	 */
@@ -447,7 +528,7 @@ public class IOEventService {
 
 	/**
 	 * method returns ProcessName from @IOEvent ,@IOFlow and recordProcessName ,
-	 * 
+	 *
 	 * @param ioEvent           for the IOEvent annotation,
 	 * @param ioFlow            for the IOFlow annotation,
 	 * @param recordProcessName for the process name consumed from record ,
@@ -477,7 +558,7 @@ public class IOEventService {
 
 	/**
 	 * method returns output topic from @IOEvent ,@IOFlow and outputEventTopic ,
-	 * 
+	 *
 	 * @param ioEvent          for the IOEvent annotation,
 	 * @param ioFlow           for the IOFlow annotation,
 	 * @param outputEventTopic for the output Event Topic name,
@@ -498,7 +579,7 @@ public class IOEventService {
 
 	/**
 	 * method returns ApiKey from @IOFlow and IOEventProperties ,
-	 * 
+	 *
 	 * @param ioFlow            for the IOFlow annotation,
 	 * @param iOEventProperties for the IOEvent custom properties value ,
 	 * @return String of ApiKey ,
@@ -514,7 +595,7 @@ public class IOEventService {
 
 	/**
 	 * method returns Output Key from OutputEvent ,
-	 * 
+	 *
 	 * @param outputEvent for the OutputEvent annotation,
 	 * @return String of Output Key ,
 	 */
@@ -528,7 +609,7 @@ public class IOEventService {
 
 	/**
 	 * method returns payload of the method ,
-	 * 
+	 *
 	 * @param joinPoint    for the JoinPoint where the method have been called ,
 	 * @param returnObject for the object returned by the method
 	 * @return IOResponse ,
@@ -562,6 +643,13 @@ public class IOEventService {
 		}
 	}
 
+	public ConditionalIOResponse<Object> getConditionalPayload(JoinPoint joinPoint, Object returnObject) {
+		ConditionalIOResponse<Object> conditional = ConditionalIOResponse.class.cast(returnObject);
+		return new ConditionalIOResponse<>(getpayload(joinPoint, returnObject).getKey(),
+				getpayload(joinPoint, returnObject).getBody(), conditional.isCondition());
+	}
+
+
 	private Object isNullpayload(Object object) {
 		if (object == null) {
 			return KafkaNull.INSTANCE;
@@ -571,7 +659,7 @@ public class IOEventService {
 
 	/**
 	 * method returns IOPayload Annotation index in method parameters,
-	 * 
+	 *
 	 * @param method for the method object ,
 	 * @return int ,
 	 */
@@ -591,7 +679,7 @@ public class IOEventService {
 	/**
 	 * method returns map of headers by merging the consumed headers with the new
 	 * headers created in method,
-	 * 
+	 *
 	 * @param headersConsumed for the List of Header consumed from the event ,
 	 * @param newHeaders      a Map of String,Object for the new headers declared in
 	 *                        method
@@ -615,7 +703,7 @@ public class IOEventService {
 	/**
 	 * Check if IOFlow is null or the IOFlow name is blank so it throws an
 	 * IllegalArgumentException
-	 * 
+	 *
 	 * @param ioFlow
 	 */
 	public void ioflowExistValidation(IOFlow ioFlow) {
@@ -635,7 +723,7 @@ public class IOEventService {
 
 	/**
 	 * Check if IOEvent key is blank so it throws an IllegalArgumentException
-	 * 
+	 *
 	 * @param ioEvent
 	 */
 	public void ioeventKeyValidation(IOEvent ioEvent) {
@@ -649,7 +737,7 @@ public class IOEventService {
 	 * Check if IOEvent is an exclusive gateway ,in case it's an exclusive gateway
 	 * it check if the method return type is IOResponse otherwise throw an
 	 * IllegalArgumentException
-	 * 
+	 *
 	 * @param ioEvent
 	 * @param method
 	 */
@@ -694,36 +782,46 @@ public class IOEventService {
 		}
 	}
 
-	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
-		String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
-		if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
 
-			checkInputTopic(getInputs(ioEvent), errorMsg);
-			checkOutputTopic(getOutputs(ioEvent), errorMsg);
-
-		}
-	}
-
-	void checkInputTopic(List<InputEvent> inputs, String msg) {
-		if (inputs.isEmpty()) {
-			throw new IllegalArgumentException(msg);
-		}
-		for (InputEvent input : inputs) {
-			if ( StringUtils.isBlank(input.topic())) {
-				throw new IllegalArgumentException(msg);
+	public void startTimervalidation(IOEvent ioEvent, Method method) {
+		if (isStartTimer(ioEvent)) {
+			if (method.getParameterCount() != 0) {
+				throw new IllegalArgumentException(
+						"IOEvent Method with Start Timer Event can not have parameters");
 			}
 		}
 	}
+	
+//	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
+//	String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";
+//	if (StringUtils.isBlank(ioFlow.topic()) && (StringUtils.isBlank(ioEvent.topic()) )) {
+//
+//		checkInputTopic(getInputs(ioEvent), errorMsg);
+//		checkOutputTopic(getOutputs(ioEvent), errorMsg);
+//
+//	}
+//}
 
-	void checkOutputTopic(List<OutputEvent> outputs, String msg) {
-		if (outputs.isEmpty()) {
-			throw new IllegalArgumentException(msg);
-		}
-		for (OutputEvent output : outputs) {
-			if (StringUtils.isBlank(output.topic()) ) {
-				throw new IllegalArgumentException(msg);
-			}
-		}
-	}
+//void checkInputTopic(List<InputEvent> inputs, String msg) {
+//	if (inputs.isEmpty()) {
+//		throw new IllegalArgumentException(msg);
+//	}
+//	for (InputEvent input : inputs) {
+//		if ( StringUtils.isBlank(input.topic())) {
+//			throw new IllegalArgumentException(msg);
+//		}
+//	}
+//}
+
+//void checkOutputTopic(List<OutputEvent> outputs, String msg) {
+//	if (outputs.isEmpty()) {
+//		throw new IllegalArgumentException(msg);
+//	}
+//	for (OutputEvent output : outputs) {
+//		if (StringUtils.isBlank(output.topic()) ) {
+//			throw new IllegalArgumentException(msg);
+//		}
+//	}
+//}
 
 }

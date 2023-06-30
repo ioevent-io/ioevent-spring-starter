@@ -84,6 +84,8 @@ public class IOEventParallelEventInformation {
 		headers.put("AppName", appName);
 		consumerRecord.headers().forEach(header -> this.headers.put(header.key(), new String(header.value())));
 	}
+	
+
 
 	public String getValue() {
 		return value;
