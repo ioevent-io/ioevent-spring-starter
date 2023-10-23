@@ -24,7 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import javax.annotation.PreDestroy;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +39,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import com.ioevent.starter.domain.IOEventBpmnPart;
 import com.ioevent.starter.domain.RegistryAction;
 
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
