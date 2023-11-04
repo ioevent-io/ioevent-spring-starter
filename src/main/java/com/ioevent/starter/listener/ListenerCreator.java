@@ -76,6 +76,7 @@ public class ListenerCreator {
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
+		props.setProperty("auto.offset.reset", "earliest");
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
