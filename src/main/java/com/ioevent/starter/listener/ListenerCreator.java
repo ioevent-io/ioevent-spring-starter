@@ -61,7 +61,8 @@ public class ListenerCreator {
 	private String PLAIN;
 	@Value("${spring.kafka.security.protocol:}")
 	private String SASL_SSL;
-
+	@Value("${ioevent.auto.offset.reset:earliest}")
+	private String autoOffsetReset;
 	/**
 	 * create listener on a single thread for the method and the topic given
 	 * 
@@ -76,6 +77,7 @@ public class ListenerCreator {
 		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
+		props.setProperty("auto.offset.reset", autoOffsetReset);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
