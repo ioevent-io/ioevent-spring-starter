@@ -55,8 +55,18 @@ public class ListenerCreator {
 	private String plain;
 	@Value("${spring.kafka.security.protocol:SASL_SSL}")
 	private String saslSsl;
-	@Autowired
-	private KafkaProperties kafkaProperties;
+	@Value("${spring.kafka.ssl-truststore-location:}")
+	private String sslTruststoreLocation;
+	@Value("${spring.kafka.ssl-truststore-password:}")
+	private String sslTruststorePassword;
+	@Value("${spring.kafka.ssl-keystore-location:}")
+	private String sslKeystoreLocation;
+	@Value("${spring.kafka.ssl-keystore-password:}")
+	private String sslKeystorePassword;
+	@Value("${spring.kafka.properties.ssl.endpoint.identification.algorithm:}")
+	private String sslEndpointIdentificationAlgorithm;
+	//@Autowired
+	//private KafkaProperties kafkaProperties;
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
 	private String PLAIN;
 	@Value("${spring.kafka.security.protocol:}")
@@ -83,6 +93,11 @@ public class ListenerCreator {
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
 			props.put("security.protocol", saslSsl);
+			props.put("ssl.truststore.location", sslTruststoreLocation);
+			props.put("ssl.truststore.password", sslTruststorePassword);
+			props.put("ssl.keystore.location", sslKeystoreLocation);
+			props.put("ssl.keystore.password", sslKeystorePassword);
+			props.put("ssl.endpoint.identification.algorithm", sslEndpointIdentificationAlgorithm);
 			props.put("sasl.mechanism", plain);
 			props.put("sasl.jaas.config", saslJaasConfig);
 		}

@@ -72,8 +72,18 @@ public class KafkaConfig {
 	private String saslSsl;
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String kafkaBootstrapServer;
-	@Autowired
-	private KafkaProperties kafkaProperties;
+	@Value("${spring.kafka.ssl-truststore-location:}")
+	private String sslTruststoreLocation;
+	@Value("${spring.kafka.ssl-truststore-password:}")
+	private String sslTruststorePassword;
+	@Value("${spring.kafka.ssl-keystore-location:}")
+	private String sslKeystoreLocation;
+	@Value("${spring.kafka.ssl-keystore-password:}")
+	private String sslKeystorePassword;
+	@Value("${spring.kafka.properties.ssl.endpoint.identification.algorithm:}")
+	private String sslEndpointIdentificationAlgorithm;
+	//@Autowired
+	//private KafkaProperties kafkaProperties;
 	
 	@Value("${spring.kafka.sasl.mechanism:NONE}")
 	private String PLAIN;
@@ -88,6 +98,14 @@ public class KafkaConfig {
 	@Value("${spring.kafka.streams.replication-factor:1}")
 	private String topicReplication;
 
+    private static final String SECURITY_PROTOCOl = "security.protocol";
+	private static final String SSL_TRUSTSTORE_LOCATION = "ssl.truststore.location";
+	private static final String SSL_TRUSTSTORE_PASSWORD = "ssl.truststore.password";
+	private static final String SSL_KEYSTORE_LOCATION = "ssl.keystore.location";
+	private static final String SSL_KEYSTORE_PASSWORD = "ssl.keystore.password";
+	private static final String SSL_ENDPOINT_IDENTIFICATION_ALGORITHM = "ssl.endpoint.identification.algorithm";
+    private static final String SASL_MECHANISM = "sasl.mechanism";
+	private static final String SASL_JAAS_CONFIG = "sasl.jaas.config";
 	/**
 	 * Bean to create the kafka admin client configuration,
 	 * 
@@ -106,9 +124,14 @@ public class KafkaConfig {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			properties.put("security.protocol", saslSsl);
-			properties.put("sasl.mechanism", plain);
-			properties.put("sasl.jaas.config", saslJaasConfig);
+			properties.put(SECURITY_PROTOCOl, saslSsl);
+			properties.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+			properties.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+			properties.put(SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+			properties.put(SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+			properties.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
+			properties.put(SASL_MECHANISM, plain);
+			properties.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		return AdminClient.create(properties);
 	}
@@ -136,9 +159,14 @@ public class KafkaConfig {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			props.put("security.protocol", saslSsl);
-			props.put("sasl.mechanism", plain);
-			props.put("sasl.jaas.config", saslJaasConfig);
+			props.put(SECURITY_PROTOCOl, saslSsl);
+			props.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+			props.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+			props.put(SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+			props.put(SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+			props.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
+			props.put(SASL_MECHANISM, plain);
+			props.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		return new KafkaStreamsConfiguration(props);
 	}
@@ -160,9 +188,14 @@ public class KafkaConfig {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			config.put("security.protocol", saslSsl);
-			config.put("sasl.mechanism", plain);
-			config.put("sasl.jaas.config", saslJaasConfig);
+			config.put(SECURITY_PROTOCOl, saslSsl);
+			config.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+			config.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+			config.put(SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+			config.put(SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+			config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
+			config.put(SASL_MECHANISM, plain);
+			config.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		return new DefaultKafkaProducerFactory<>(config);
 	}
@@ -196,9 +229,14 @@ public class KafkaConfig {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			config.put("security.protocol", saslSsl);
-			config.put("sasl.mechanism", plain);
-			config.put("sasl.jaas.config", saslJaasConfig);
+			config.put(SECURITY_PROTOCOl, saslSsl);
+			config.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+			config.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+			config.put(SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+			config.put(SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+			config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
+			config.put(SASL_MECHANISM, plain);
+			config.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		
 		return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new StringDeserializer());
