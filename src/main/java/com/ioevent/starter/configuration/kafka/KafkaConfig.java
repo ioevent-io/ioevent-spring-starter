@@ -68,7 +68,7 @@ public class KafkaConfig {
 	private String saslJaasPassword;
 	@Value("${spring.kafka.sasl.mechanism:PLAIN}")
 	private String plain;
-	@Value("${spring.kafka.security.protocol:SASL_SSL}")
+	@Value("${spring.kafka.security.protocol:PLAINTEXT}")
 	private String saslSsl;
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String kafkaBootstrapServer;
@@ -120,16 +120,16 @@ public class KafkaConfig {
 		properties.put("request.timeout.ms", 20000);
 		properties.put("retry.backoff.ms", 500);
 
+		properties.put(SECURITY_PROTOCOl, saslSsl);
+		properties.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			properties.put(SECURITY_PROTOCOl, saslSsl);
 			properties.put(SASL_MECHANISM, plain);
 			properties.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		if(!StringUtils.isBlank(sslTruststoreLocation)) {
-			properties.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 			properties.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
 			properties.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
 		}
@@ -159,16 +159,16 @@ public class KafkaConfig {
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 		props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
+		props.put(SECURITY_PROTOCOl, saslSsl);
+		props.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			props.put(SECURITY_PROTOCOl, saslSsl);
 			props.put(SASL_MECHANISM, plain);
 			props.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		if(!StringUtils.isBlank(sslTruststoreLocation)) {
-			props.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 			props.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
 			props.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
 		}
@@ -191,17 +191,17 @@ public class KafkaConfig {
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServer);
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-		
+
+		config.put(SECURITY_PROTOCOl, saslSsl);
+		config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			config.put(SECURITY_PROTOCOl, saslSsl);
 			config.put(SASL_MECHANISM, plain);
 			config.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		if(!StringUtils.isBlank(sslTruststoreLocation)) {
-			config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 			config.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
 			config.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
 		}
@@ -237,16 +237,16 @@ public class KafkaConfig {
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 10);
 
+		config.put(SECURITY_PROTOCOl, saslSsl);
+		config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			config.put(SECURITY_PROTOCOl, saslSsl);
 			config.put(SASL_MECHANISM, plain);
 			config.put(SASL_JAAS_CONFIG, saslJaasConfig);
 		}
 		if(!StringUtils.isBlank(sslTruststoreLocation)) {
-			config.put(SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm);
 			config.put(SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
 			config.put(SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
 		}

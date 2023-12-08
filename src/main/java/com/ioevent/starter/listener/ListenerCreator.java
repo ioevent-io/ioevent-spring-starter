@@ -53,7 +53,7 @@ public class ListenerCreator {
 	private String saslJaasPassword;
 	@Value("${spring.kafka.sasl.mechanism:PLAIN}")
 	private String plain;
-	@Value("${spring.kafka.security.protocol:SASL_SSL}")
+	@Value("${spring.kafka.security.protocol:PLAINTEXT}")
 	private String saslSsl;
 	@Value("${spring.kafka.ssl-truststore-location:}")
 	private String sslTruststoreLocation;
@@ -88,18 +88,19 @@ public class ListenerCreator {
 		props.setProperty("group.id", groupId);
 		props.setProperty("topicName", topicName);
 		props.setProperty("auto.offset.reset", autoOffsetReset);
+
+		props.put("security.protocol", saslSsl);
+		props.put("ssl.endpoint.identification.algorithm", sslEndpointIdentificationAlgorithm);
 		if (!StringUtils.isBlank(saslJaasUsername)) {
 			String saslJaasConfig = String.format(
 					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
 					saslJaasUsername, saslJaasPassword);
-			props.put("security.protocol", saslSsl);
 			props.put("sasl.mechanism", plain);
 			props.put("sasl.jaas.config", saslJaasConfig);
 		}
 		if(!StringUtils.isBlank(sslTruststoreLocation)) {
 			props.put("ssl.truststore.location", sslTruststoreLocation);
 			props.put("ssl.truststore.password", sslTruststorePassword);
-			props.put("ssl.endpoint.identification.algorithm", sslEndpointIdentificationAlgorithm);
 		}
 		if(!StringUtils.isBlank(sslKeystoreLocation)) {
 			props.put("ssl.keystore.location", sslKeystoreLocation);
