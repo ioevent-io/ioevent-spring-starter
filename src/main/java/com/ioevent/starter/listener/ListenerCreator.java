@@ -18,9 +18,8 @@ package com.ioevent.starter.listener;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,32 +44,8 @@ public class ListenerCreator {
 	@Autowired
 	private List<Listener> listeners;
 
-	@Value("${spring.kafka.bootstrap-servers}")
-	private String kafkaBootstrapServer;
-	@Value("${spring.kafka.sasl.jaas.username:}")
-	private String saslJaasUsername;
-	@Value("${spring.kafka.sasl.jaas.password:}")
-	private String saslJaasPassword;
-	@Value("${spring.kafka.sasl.mechanism:PLAIN}")
-	private String plain;
-	@Value("${spring.kafka.security.protocol:PLAINTEXT}")
-	private String saslSsl;
-	@Value("${spring.kafka.ssl-truststore-location:}")
-	private String sslTruststoreLocation;
-	@Value("${spring.kafka.ssl-truststore-password:}")
-	private String sslTruststorePassword;
-	@Value("${spring.kafka.ssl-keystore-location:}")
-	private String sslKeystoreLocation;
-	@Value("${spring.kafka.ssl-keystore-password:}")
-	private String sslKeystorePassword;
-	@Value("${spring.kafka.properties.ssl.endpoint.identification.algorithm:}")
-	private String sslEndpointIdentificationAlgorithm;
-	//@Autowired
-	//private KafkaProperties kafkaProperties;
-	@Value("${spring.kafka.sasl.mechanism:NONE}")
-	private String PLAIN;
-	@Value("${spring.kafka.security.protocol:}")
-	private String SASL_SSL;
+	@Autowired
+	private KafkaProperties kafkaProperties;
 	@Value("${ioevent.auto.offset.reset:earliest}")
 	private String autoOffsetReset;
 	/**
@@ -81,31 +56,13 @@ public class ListenerCreator {
 
 	public Listener createListener(Object bean, Method method, IOEvent ioEvent, String topicName, String groupId,
 			Thread t1) throws Throwable {
-		Properties props = new Properties();
-		props.setProperty("bootstrap.servers", kafkaBootstrapServer);
-		props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		props.setProperty("group.id", groupId);
-		props.setProperty("topicName", topicName);
-		props.setProperty("auto.offset.reset", autoOffsetReset);
+		Map<String,Object> props = kafkaProperties.buildConsumerProperties();
+		props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		props.put("group.id", groupId);
+		props.put("topicName", topicName);
+		props.put("auto.offset.reset", autoOffsetReset);
 
-		props.put("security.protocol", saslSsl);
-		props.put("ssl.endpoint.identification.algorithm", sslEndpointIdentificationAlgorithm);
-		if (!StringUtils.isBlank(saslJaasUsername)) {
-			String saslJaasConfig = String.format(
-					"org.apache.kafka.common.security.plain.PlainLoginModule required username='%s' password='%s';",
-					saslJaasUsername, saslJaasPassword);
-			props.put("sasl.mechanism", plain);
-			props.put("sasl.jaas.config", saslJaasConfig);
-		}
-		if(!StringUtils.isBlank(sslTruststoreLocation)) {
-			props.put("ssl.truststore.location", sslTruststoreLocation);
-			props.put("ssl.truststore.password", sslTruststorePassword);
-		}
-		if(!StringUtils.isBlank(sslKeystoreLocation)) {
-			props.put("ssl.keystore.location", sslKeystoreLocation);
-			props.put("ssl.keystore.password", sslKeystorePassword);
-		}
 
 		Consumer<String, String> consumer = new KafkaConsumer<>(props);
 		Listener consumerApplication = new Listener(consumer, recordsHandler, bean, method, ioEvent, topicName);
