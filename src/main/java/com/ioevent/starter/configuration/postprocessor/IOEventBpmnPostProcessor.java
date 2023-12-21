@@ -143,10 +143,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
-							DescribeTopicsResult describeTopics = client
-									.describeTopics(Collections.singleton(iOEventProperties.getPrefix() + topicName));
-							int partitionNumber = describeTopics.all().get()
-									.get(iOEventProperties.getPrefix() + topicName).partitions().size();
+							int partitionNumber = iOEventProperties.getTopic_partition();
 							for (int i = 0; i < (partitionNumber / 2) + 1; i++) {
 								synchronized (method) {
 									Thread listenerThread = new Thread() {

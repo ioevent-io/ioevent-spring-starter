@@ -21,10 +21,7 @@ package com.ioevent.starter.listener;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -72,9 +69,9 @@ public class Listener {
 	 * run consumer to subscribe to the output topic and start consuming ,as soon as
 	 * we get a record we send the record to the handler
 	 **/
-	public void runConsume(final Properties consumerProps) throws Throwable {
+	public void runConsume(final Map<String, Object> consumerProps) throws Throwable {
 		try {
-			consumer.subscribe(Collections.singletonList(consumerProps.getProperty("topicName")));
+			consumer.subscribe(Collections.singletonList(consumerProps.get("topicName").toString()));
 			while (keepConsuming) {
 				ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(10));
 				if (!consumerRecords.isEmpty()) {
