@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import com.ioevent.starter.domain.IOEventBpmnPart;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -145,6 +146,21 @@ public class IOEventTransitionAspect {
 						response.getBody(), ioEventType);
 			}
 		}
+		if((ioEvent.EventType()== EventTypesEnum.USER) || (ioEvent.EventType()== EventTypesEnum.MANUAL)){
+			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
+			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
+			IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
+			IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
+			Map<String, Object> headers = ioEventService.prepareHeaders(ioeventRecordInfo.getHeaderList(),
+					response.getHeaders());
+			EventLogger eventLogger = new EventLogger();
+
+			Message<Object> message = buildHumanTaskMessage(ioEvent, ioFlow, response, ioeventRecordInfo,
+					ioeventRecordInfo.getStartTime(), ioEventType, headers, "");
+
+			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+		}
 	}
 
 	/**
@@ -260,6 +276,30 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
+    public Message<Object> buildHumanTaskMessage(IOEvent ioEvent,IOFlow ioFlow,IOResponse<Object> response,
+												 IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
+												 Map<String, Object> headers, String key) {
+		//String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		Map<String,String> outputs = new IOEventBpmnPart().addOutput(ioEvent,ioFlow,"");
+
+		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + "humanTasks")
+				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioeventRecordInfo.getId())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
+				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
+				//.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
+				.setHeader("outputs", outputs)
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
+				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+	}
 	/**
 	 * Method that build the event message of add suffix task to be send in kafka
 	 * topic,
