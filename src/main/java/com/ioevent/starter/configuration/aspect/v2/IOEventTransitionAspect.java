@@ -279,12 +279,13 @@ public class IOEventTransitionAspect {
     public Message<Object> buildHumanTaskMessage(IOEvent ioEvent,IOFlow ioFlow,IOResponse<Object> response,
 												 IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
 												 Map<String, Object> headers, String key) {
+		log.info("entered to buildHumanTaskMessage");
 		//String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		Map<String,String> outputs = new IOEventBpmnPart().addOutput(ioEvent,ioFlow,"");
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + "humanTasks")
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + "ioevent-human-task")
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
@@ -292,7 +293,8 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
 				//.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
-				.setHeader("outputs", outputs)
+				.setHeader("OUTPUTS", outputs)
+				//.setHeader("SOURCE_TOPIC",)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
