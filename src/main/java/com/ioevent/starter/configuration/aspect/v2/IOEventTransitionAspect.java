@@ -27,6 +27,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -76,6 +77,8 @@ public class IOEventTransitionAspect {
 	private IOEventMessageBuilderService messageBuilderService;
 	@Autowired
 	private IOExceptionHandlingAspect ioExceptionHandlingAspect;
+	@Value("${spring.application.name}")
+	private String appName;
 
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a
@@ -283,7 +286,7 @@ public class IOEventTransitionAspect {
 		//String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		Map<String,String> outputs = new IOEventBpmnPart().addOutput(ioEvent,ioFlow,"");
-
+        log.info(ioeventRecordInfo.getOutputConsumedName());
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + "ioevent-human-task")
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
@@ -295,6 +298,7 @@ public class IOEventTransitionAspect {
 				//.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), ioEventService.getOutputKey(outputEvent))
 				.setHeader("OUTPUTS", outputs)
 				//.setHeader("SOURCE_TOPIC",)
+				.setHeader("APPNAME",appName)
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
