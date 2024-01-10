@@ -284,7 +284,7 @@ public class IOEventTransitionAspect {
 												 Map<String, Object> headers, String key) {
 		log.info("entered to buildHumanTaskMessage");
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		Map<String,String> outputs = new IOEventBpmnPart().addOutput(ioEvent,ioFlow,"");
+		Map<String,String> outputs = new IOEventBpmnPart().addOutput(ioEvent,ioFlow,iOEventProperties.getPrefix());
         log.info(ioeventRecordInfo.getOutputConsumedName());
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, appName +"_"+"ioevent-human-task")
