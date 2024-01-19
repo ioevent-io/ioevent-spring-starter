@@ -19,6 +19,7 @@ package com.ioevent.starter.configuration.aspect.v2;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 import com.ioevent.starter.domain.IOEventBpmnPart;
@@ -96,7 +97,13 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
+		if("Method blocked".equals(returnObject)) {
+			return;
+		}
+		/*if (Objects.isNull(returnObject)) {
+			return;
+		}*/
+			//if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -107,6 +114,7 @@ public class IOEventTransitionAspect {
 						ioEventService.getProcessName(ioEvent, ioFlow, ioeventRecordInfo.getWorkFlowName()));
 				String outputs = "";
 				IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
+				log.info("returnObjecttttttttttttttttttttt: " + returnObject);
 				IOResponse<Object> response = ioEventService.getpayload(joinPoint, returnObject);
 				if (ioEvent.gatewayOutput().output().length != 0) {
 
@@ -148,8 +156,8 @@ public class IOEventTransitionAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch,
 						response.getBody(), ioEventType);
 			}
-		}
-		if((ioEvent.EventType()== EventTypesEnum.USER) || (ioEvent.EventType()== EventTypesEnum.MANUAL)){
+			//}
+		/*if((ioEvent.EventType()== EventTypesEnum.USER) || (ioEvent.EventType()== EventTypesEnum.MANUAL)){
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 			IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
 			IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
@@ -163,7 +171,8 @@ public class IOEventTransitionAspect {
 
 			Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 			eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
-		}
+		}*/
+
 	}
 
 	/**

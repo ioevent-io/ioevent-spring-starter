@@ -81,7 +81,11 @@ public class RecordsHandler {
 		if (type.equals(String.class)) {
 			return consumedValue;
 		} else {
-			return mapper.readValue(consumedValue.toString(), type);
+			try {
+				return mapper.readValue(consumedValue.toString(), type);
+			} catch (Exception e) {
+				return null;
+			}
 		}
 	}
 

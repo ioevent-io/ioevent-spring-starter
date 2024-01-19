@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import com.ioevent.starter.configuration.aspect.v2.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -38,11 +39,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ioevent.starter.configuration.aspect.v2.IOEvenImplicitTaskAspect;
-import com.ioevent.starter.configuration.aspect.v2.IOEventEndAspect;
-import com.ioevent.starter.configuration.aspect.v2.IOEventStartAspect;
-import com.ioevent.starter.configuration.aspect.v2.IOEventTransitionAspect;
-import com.ioevent.starter.configuration.aspect.v2.IOExceptionHandlingAspect;
 import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.kafka.KafkaConfig;
 import com.ioevent.starter.configuration.postprocessor.IOEventBpmnPostProcessor;
@@ -208,6 +204,12 @@ public class IOEventConfiguration {
 	@Bean
 	public IOEvenImplicitTaskAspect ioEvenImplicitTaskAspect() {
 		return new IOEvenImplicitTaskAspect();
+	}
+
+	@ConditionalOnMissingBean
+	@Bean
+	public IOEventHumanTaskAspect ioEventHumanTaskAspect() {
+		return new IOEventHumanTaskAspect();
 	}
 
 	@ConditionalOnMissingBean
