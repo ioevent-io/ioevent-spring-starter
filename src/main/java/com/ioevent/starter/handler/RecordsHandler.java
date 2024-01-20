@@ -28,6 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.ioevent.starter.enums.EventTypesEnum;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.header.Header;
@@ -126,7 +127,12 @@ public class RecordsHandler {
 			for (BeanMethodPair pair : beanMethodPairs) {
 				String messgeKeyExpected = pair.getIoEvent().message().key();
 
-				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
+				List<String> inputNames = ioEventService.getInputNames(pair.getIoEvent());
+				if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
+					inputNames.add(pair.getIoEvent().key()+"-human");
+				}
+
+				for (String InputName : inputNames) {
 					TimeUnit timeUnit = (pair.getIoEvent().timer().timeUnit() != null)
 							? pair.getIoEvent().timer().timeUnit()
 							: TimeUnit.SECONDS;

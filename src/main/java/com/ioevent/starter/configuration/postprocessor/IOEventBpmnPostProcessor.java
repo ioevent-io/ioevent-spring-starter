@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.*;
 
+import com.ioevent.starter.enums.EventTypesEnum;
+import jdk.jfr.EventType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
@@ -140,8 +142,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			for (IOEvent ioEvent : ioEvents) {
 				checkMethodValidation(ioFlow, ioEvent, method);
 				if (needListener(ioEvent)) {
-
-					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
+					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
+					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType())){
+						inputTopics.add(appName+"_"+"ioevent-human-task-Response");
+					}
+					for (String topicName : inputTopics) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
 							int partitionNumber = iOEventProperties.getTopic_partition();
 							for (int i = 0; i < (partitionNumber / 2) + 1; i++) {
