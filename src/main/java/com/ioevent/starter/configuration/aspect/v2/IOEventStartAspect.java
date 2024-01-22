@@ -28,6 +28,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -73,6 +74,8 @@ public class IOEventStartAspect {
 	private IOEventProperties iOEventProperties;
 	@Autowired
 	private IOEventService ioEventService;
+	@Value("${spring.application.name}")
+	private String appName;
 
 	/**
 	 * Method Before advice runs after a successful completion of a Start task with
@@ -105,8 +108,7 @@ public class IOEventStartAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
 
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
-				&& ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent)))) {
+		if ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
 			EventLogger eventLogger = new EventLogger();
 			IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
 			StopWatch watch = ioeventRecordInfoInput.getWatch();
@@ -160,6 +162,9 @@ public class IOEventStartAspect {
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if (outputEvent.manualRequired()){
+			topicName =  appName+"_"+"ioevent-human-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)

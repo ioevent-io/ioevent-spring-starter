@@ -31,6 +31,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -77,6 +78,8 @@ public class IOEvenImplicitTaskAspect {
 	private IOEventProperties iOEventProperties;
 	@Autowired
 	private IOEventService ioEventService;
+	@Value("${spring.application.name}")
+	private String appName;
 
 	private static final String END_PREFIX = "end_Event";
 	private static final String START_PREFIX = "start-to-";
@@ -140,8 +143,6 @@ public class IOEvenImplicitTaskAspect {
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if ((myAnnotation.EventType() != EventTypesEnum.USER) && (myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
-
 			if (ioEventService.isImplicitTask(ioEvent)) {
 
 				IOFlow ioFlow = joinPoint.getTarget().getClass().getAnnotation(IOFlow.class);
@@ -201,9 +202,13 @@ public class IOEvenImplicitTaskAspect {
 
 						for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 							String outputKey = ioEventService.getOutputKey(outputEvent);
+							String outputTopic = outputEvent.topic();
+							if (outputEvent.manualRequired()){
+								outputTopic = appName+ "_" + "ioevent-human-task";
+							}
 							Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
 									ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,
-									outputEvent.topic(), eventLogger.getTimestamp(eventLogger.getStartTime()),
+									outputTopic, eventLogger.getTimestamp(eventLogger.getStartTime()),
 									ioeventRecordInfoInput.getInstanceStartTime(), ioEventType, headers, messageKey);
 							Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
 							eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
@@ -236,7 +241,6 @@ public class IOEvenImplicitTaskAspect {
 				}
 
 			}
-		}
 	}
 
 	public void createImpliciteEndEvent(IOEvent ioEvent, IOFlow ioFlow, IOEventRecordInfo ioeventRecordInfo,

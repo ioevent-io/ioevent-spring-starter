@@ -26,6 +26,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -75,6 +76,8 @@ public class IOEventTransitionAspect {
 	private IOEventMessageBuilderService messageBuilderService;
 	@Autowired
 	private IOExceptionHandlingAspect ioExceptionHandlingAspect;
+	@Value("${spring.application.name}")
+	private String applicationName;
 
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a
@@ -92,7 +95,6 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -144,7 +146,6 @@ public class IOEventTransitionAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch,
 						response.getBody(), ioEventType);
 			}
-		}
 	}
 
 	/**
@@ -168,7 +169,6 @@ public class IOEventTransitionAspect {
 	public String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
 			IOResponse<Object> response, String outputs, IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType,
 			String messageKey) throws InterruptedException, ExecutionException {
-
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
 			Message<Object> message;
@@ -241,6 +241,9 @@ public class IOEventTransitionAspect {
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
 			Map<String, Object> headers, String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.manualRequired()){
+			topicName = applicationName+"_"+"ioevent-human-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
@@ -283,6 +286,9 @@ public class IOEventTransitionAspect {
 		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName())
 				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
+		if(outputEvent.manualRequired()){
+			topicName = applicationName+"_"+"ioevent-human-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
