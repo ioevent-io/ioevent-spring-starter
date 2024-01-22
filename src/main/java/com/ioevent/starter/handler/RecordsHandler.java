@@ -19,15 +19,21 @@ package com.ioevent.starter.handler;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.ioevent.starter.annotations.*;
+import com.ioevent.starter.configuration.properties.IOEventProperties;
+import com.ioevent.starter.enums.EventTypesEnum;
+import com.ioevent.starter.logger.EventLogger;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.header.Header;
@@ -42,9 +48,6 @@ import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ioevent.starter.annotations.IOHeader;
-import com.ioevent.starter.annotations.IOHeaders;
-import com.ioevent.starter.annotations.IOPayload;
 import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.postprocessor.BeanMethodPair;
 import com.ioevent.starter.domain.IOEventHeaders;
@@ -67,6 +70,8 @@ public class RecordsHandler {
 	@Autowired
 	private IOEventService ioEventService;
 
+	@Autowired
+	IOEventProperties iOEventProperties;
 	@Value("${spring.application.name}")
 	private String appName;
 
@@ -77,10 +82,56 @@ public class RecordsHandler {
 	private ScheduledExecutorService asyncExecutor;
 
 
-	public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
+	/*public Object parseConsumedValue(Object consumedValue, Class<?> type) throws JsonProcessingException {
 		if (type.equals(String.class)) {
 			return consumedValue;
-		} else {
+		}
+		else if(type.equals(IOHumanInfos.class)){
+			JsonNode rootNode = mapper.readValue(consumedValue.toString(), JsonNode.class);
+			JsonNode originalPayloadNode = rootNode.get("originalPayload");
+			JsonNode humanResponseNode = rootNode.get("humanResponse");
+
+			Object originalPayload = mapper.treeToValue(originalPayloadNode, Object.class);
+			Object humanResponse = mapper.treeToValue(humanResponseNode, Object.class);
+
+			return new IOHumanInfos(originalPayload, humanResponse);
+		}
+		else {
+			return mapper.readValue(consumedValue.toString(), type);
+		}
+	}*/
+
+	public Object parseConsumedValue(Object consumedValue, Class<?> type,Method method) throws JsonProcessingException {
+		if (type.equals(String.class)) {
+			return consumedValue;
+		}
+		else if(type.equals(IOHumanInfos1.class)){
+			log.info("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
+			Type[] genericParameterTypes = method.getGenericParameterTypes();
+			log.info(genericParameterTypes.length+"");
+			Type type1 = genericParameterTypes[0];
+
+			ParameterizedType parameterizedType = (ParameterizedType) type1;
+			Type type11 = parameterizedType.getActualTypeArguments()[0];
+			Type type12 = parameterizedType.getActualTypeArguments()[1];
+			Class<?> rawType11 = mapper.getTypeFactory().constructType(type11).getRawClass();
+			Class<?> rawType12 = mapper.getTypeFactory().constructType(type12).getRawClass();
+
+
+            log.info(rawType11.toString());
+			log.info(rawType12.toString());
+			JavaType javaType = mapper.getTypeFactory().constructParametricType(IOHumanInfos1.class, rawType11, rawType12);
+			log.info(javaType.toString());
+
+			try {
+				return mapper.readValue(consumedValue.toString(), javaType);
+			}
+			catch (Exception e){
+				log.error(e.getMessage());
+			}
+			return mapper.readValue(consumedValue.toString(), javaType);
+		}
+		else {
 			return mapper.readValue(consumedValue.toString(), type);
 		}
 	}
@@ -97,7 +148,7 @@ public class RecordsHandler {
 	public void invokeWithOneParameter(Method method, Object bean, Object args) throws BeansException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException, JsonProcessingException {
 		Class<?>[] params = method.getParameterTypes();
-		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), parseConsumedValue(args, params[0]));
+		method.invoke(ctx.getApplicationContext().getBean(bean.getClass()), parseConsumedValue(args, params[0],method));
 
 	}
 
@@ -115,52 +166,77 @@ public class RecordsHandler {
 	 * to aspect and call doinvoke()
 	 **/
 
-	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) {
+	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) throws JsonProcessingException, ExecutionException, InterruptedException {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+				String outputConsumed = this.getIOEventHeaders(consumerRecord).getOutputConsumedName();
+				for (BeanMethodPair pair : beanMethodPairs) {
+					if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
+						if (!consumerRecord.topic().endsWith("human-task-Response")) {
+							for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
+								if(InputName.equals(outputConsumed)) {
+									IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+									log.info("topiccccccccccccccc");
+									log.info(consumerRecord.topic());
+									log.info("payloaddddddddddddd");
+									log.info(consumerRecord.value());
+									log.info("paramType");
+									log.info(pair.getMethod().getParameterTypes()[0].toString());
+									Object payload = parseConsumedValue(consumerRecord.value(), pair.getMethod().getParameterTypes()[0], pair.getMethod());
+									log.info("payloaddddddddddddd111111111111");
+									log.info(payload.toString());
+									IOEventType ioEventType = ioEventService.checkTaskType(pair.getIoEvent());
+									sendHumanTaskMessage(pair.getIoEvent(), ioeventRecordInfo, ioEventType, payload);
 
-			String outputConsumed = this.getIOEventHeaders(consumerRecord).getOutputConsumedName();
-			for (BeanMethodPair pair : beanMethodPairs) {
-				String messgeKeyExpected = pair.getIoEvent().message().key();
-
-				for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
-					TimeUnit timeUnit = (pair.getIoEvent().timer().timeUnit() != null)
-							? pair.getIoEvent().timer().timeUnit()
-							: TimeUnit.SECONDS;
-					long duration = (pair.getIoEvent().timer().delay() > 0) ? pair.getIoEvent().timer().delay() : 0L;
-
-					if (InputName.equals(outputConsumed)
-					) {
-						asyncExecutor.schedule(() -> {
-							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
-							IOEventContextHolder.setContext(ioeventRecordInfo);
-							if (pair.getIoEvent().gatewayInput().parallel()) {
-								parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
-
-							} else if (ioEventService.isMessage(pair.getIoEvent())
-									&& ioEventService.isMessageCatch(pair.getIoEvent())) {
-								messageInvoke(pair, consumerRecord, ioeventRecordInfo);
-							} else {
-								try {
-									simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
-								} catch (IllegalAccessException | InvocationTargetException
-										| JsonProcessingException e) {
-									log.error("error while invoking method", e);
+									//continue;
 								}
 							}
-						}, duration, timeUnit);
-					} else if (isMessageThrowEvent(consumerRecord)) {
-						asyncExecutor.schedule(() -> {
-							IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
-							if (ioEventService.isMessage(pair.getIoEvent())
-									&& ioEventService.isMessageCatch(pair.getIoEvent())) {
-								messageInvoke(pair, consumerRecord, ioeventRecordInfo);
-							}
-						}, duration, timeUnit);
+						}
 					}
+						String messgeKeyExpected = pair.getIoEvent().message().key();
 
-				}
+					    List<String> inputNames = ioEventService.getInputNames(pair.getIoEvent());
+					    if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
+							inputNames.add(pair.getIoEvent().key()+"-human");
+					    }
 
-			}
+						for (String InputName : inputNames) {
+							TimeUnit timeUnit = (pair.getIoEvent().timer().timeUnit() != null)
+									? pair.getIoEvent().timer().timeUnit()
+									: TimeUnit.SECONDS;
+							long duration = (pair.getIoEvent().timer().delay() > 0) ? pair.getIoEvent().timer().delay() : 0L;
+
+							if (InputName.equals(outputConsumed)
+							) {
+								asyncExecutor.schedule(() -> {
+									IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+									IOEventContextHolder.setContext(ioeventRecordInfo);
+									if (pair.getIoEvent().gatewayInput().parallel()) {
+										parallelInvoke(pair, consumerRecord, ioeventRecordInfo);
+
+									} else if (ioEventService.isMessage(pair.getIoEvent())
+											&& ioEventService.isMessageCatch(pair.getIoEvent())) {
+										messageInvoke(pair, consumerRecord, ioeventRecordInfo);
+									} else {
+										try {
+											simpleInvokeMethod(pair, consumerRecord.value(), ioeventRecordInfo);
+										} catch (IllegalAccessException | InvocationTargetException
+												 | JsonProcessingException e) {
+											log.error("error while invoking method", e);
+										}
+									}
+								}, duration, timeUnit);
+							} else if (isMessageThrowEvent(consumerRecord)) {
+								asyncExecutor.schedule(() -> {
+									IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
+									if (ioEventService.isMessage(pair.getIoEvent())
+											&& ioEventService.isMessageCatch(pair.getIoEvent())) {
+										messageInvoke(pair, consumerRecord, ioeventRecordInfo);
+									}
+								}, duration, timeUnit);
+							}
+
+						}
+					}
 
 		}
 	}
@@ -189,6 +265,35 @@ public class RecordsHandler {
 		log.info("IOEventINFO : " + messageEventInfo);
 		log.info("message event arrived : " + ioeventRecordInfo.getOutputConsumedName());
 
+	}
+
+	public void sendHumanTaskMessage(IOEvent ioEvent,IOEventRecordInfo ioEventRecordInfo,IOEventType ioEventType,Object payload) throws ExecutionException, InterruptedException {
+		Message<Object> message = buildHumanTaskMessage(ioEvent,ioEventRecordInfo,ioEventType,payload);
+		Long eventTimeStamp = kafkaTemplate.send(message).get().getRecordMetadata().timestamp();
+		EventLogger eventLogger = new EventLogger();
+		eventLogger.setEndTime(eventLogger.getISODate(new Date(eventTimeStamp)));
+	}
+
+    public Message<Object> buildHumanTaskMessage(IOEvent ioEvent,IOEventRecordInfo ioEventRecordInfo,IOEventType ioEventType,Object payload){
+		log.info("entered to buildHumanTaskMessage");
+		log.info(ioEventRecordInfo.getOutputConsumedName());
+		Map<String,Object> headers = ioEventService.prepareHeaders(ioEventRecordInfo.getHeaderList(),null);
+
+		return MessageBuilder.withPayload(payload).copyHeaders(headers)
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName +"_"+"ioevent-human-task")
+				.setHeader(KafkaHeaders.KEY, ioEventRecordInfo.getId())
+				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), "")
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioEventRecordInfo.getWorkFlowName())
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), ioEventRecordInfo.getId())
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
+				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
+				.setHeader("APPNAME",appName)
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.API_KEY.toString(), "apiKey")
+				.setHeader(IOEventHeaders.START_TIME.toString(), ioEventRecordInfo.getStartTime())
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioEventRecordInfo.getInstanceStartTime())
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
 	}
 
 	public Message<IOEventParallelEventInformation> sendParallelInfo(
@@ -238,7 +343,7 @@ public class RecordsHandler {
 
 		for (int i = 0; i < parameterTypes.length; i++) {
 			if (param.get(i) == null) {
-				paramList.add(parseConsumedValue(consumerValue, parameterTypes[i]));
+				paramList.add(parseConsumedValue(consumerValue, parameterTypes[i],method));
 			} else if (param.get(i).equals("no such header exist")) {
 				paramList.add(null);
 
@@ -259,7 +364,7 @@ public class RecordsHandler {
 			if (param.get(i) == null) {
 				String payloadInputName = parallelEventConsumed.getInputRequired().get(0);
 				paramList.add(parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
-						parameterTypes[i]));
+						parameterTypes[i],method));
 			} else if (param.get(i).equals("no such header exist")) {
 				paramList.add(null);
 
@@ -282,7 +387,7 @@ public class RecordsHandler {
 					IOPayload ioPayload = (IOPayload) annotation;
 					String payloadInputName = parallelEventConsumed.getInputRequired().get(ioPayload.index());
 					paramMap.put(i, parseConsumedValue(parallelEventConsumed.getPayloadMap().get(payloadInputName),
-							parameterTypes[i]));
+							parameterTypes[i],method));
 				}
 			}
 			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
@@ -290,7 +395,7 @@ public class RecordsHandler {
 					IOHeader ioHeader = (IOHeader) annotation;
 					paramMap.put(i,
 							parallelEventConsumed.getHeaders().get(ioHeader.value()) != null ? parseConsumedValue(
-									parallelEventConsumed.getHeaders().get(ioHeader.value()), parameterTypes[i])
+									parallelEventConsumed.getHeaders().get(ioHeader.value()), parameterTypes[i],method)
 									: "no such header exist");
 				}
 
@@ -373,14 +478,14 @@ public class RecordsHandler {
 		for (int i = 0; i < parameterAnnotations.length; i++) {
 			Annotation[] annotations = parameterAnnotations[i];
 			if (Arrays.asList(annotations).stream().filter(IOPayload.class::isInstance).count() != 0) {
-				paramMap.put(i, parseConsumedValue(consumerValue, parameterTypes[i]));
+				paramMap.put(i, parseConsumedValue(consumerValue, parameterTypes[i],method));
 			}
 			if (Arrays.asList(annotations).stream().filter(IOHeader.class::isInstance).count() != 0) {
 				for (Annotation annotation : annotations) {
 					IOHeader ioHeader = (IOHeader) annotation;
 					paramMap.put(i,
 							headersMap.get(ioHeader.value()) != null
-									? parseConsumedValue(headersMap.get(ioHeader.value()), parameterTypes[i])
+									? parseConsumedValue(headersMap.get(ioHeader.value()), parameterTypes[i],method)
 									: "no such header exist");
 				}
 

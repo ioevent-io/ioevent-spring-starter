@@ -92,7 +92,7 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
+		//if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -144,7 +144,7 @@ public class IOEventTransitionAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch,
 						response.getBody(), ioEventType);
 			}
-		}
+		//}
 	}
 
 	/**

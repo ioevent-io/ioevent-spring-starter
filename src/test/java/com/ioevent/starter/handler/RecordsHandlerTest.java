@@ -83,13 +83,13 @@ class RecordsHandlerTest {
 	void parseConsumedValueTest() throws JsonMappingException, JsonProcessingException {
 		// test String object
 		Object string = "test String";
-		assertEquals(String.class, recordsHandler.parseConsumedValue(string, String.class).getClass());
+		assertEquals(String.class, recordsHandler.parseConsumedValue(string, String.class,null).getClass());
 		// test custom object
 		ParallelEventInfo parallelEventInfo = new ParallelEventInfo("id",
 				Arrays.asList("first element ", "second element"));
 		Object parallelString = gson.toJson(parallelEventInfo);
 		assertEquals(ParallelEventInfo.class,
-				recordsHandler.parseConsumedValue(parallelString, ParallelEventInfo.class).getClass());
+				recordsHandler.parseConsumedValue(parallelString, ParallelEventInfo.class,null).getClass());
 
 	}
 
