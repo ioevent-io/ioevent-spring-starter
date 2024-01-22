@@ -169,9 +169,11 @@ public class RecordsHandler {
 	public void process(ConsumerRecords<String, String> consumerRecords, List<BeanMethodPair> beanMethodPairs) throws JsonProcessingException, ExecutionException, InterruptedException {
 		for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
 				String outputConsumed = this.getIOEventHeaders(consumerRecord).getOutputConsumedName();
+
+				outerLoop:
 				for (BeanMethodPair pair : beanMethodPairs) {
 					if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
-						if (!consumerRecord.topic().endsWith("human-task-Response")) {
+						if (!consumerRecord.topic().endsWith("ioevent-human-task-Response")) {
 							for (String InputName : ioEventService.getInputNames(pair.getIoEvent())) {
 								if(InputName.equals(outputConsumed)) {
 									IOEventRecordInfo ioeventRecordInfo = this.getIOEventHeaders(consumerRecord);
@@ -186,8 +188,7 @@ public class RecordsHandler {
 									log.info(payload.toString());
 									IOEventType ioEventType = ioEventService.checkTaskType(pair.getIoEvent());
 									sendHumanTaskMessage(pair.getIoEvent(), ioeventRecordInfo, ioEventType, payload);
-
-									//continue;
+									continue outerLoop;
 								}
 							}
 						}
