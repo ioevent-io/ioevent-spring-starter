@@ -124,7 +124,8 @@ public class RecordsHandler {
 				String messgeKeyExpected = pair.getIoEvent().message().key();
 				List<String> inputNames = ioEventService.getInputNames(pair.getIoEvent());
 				if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
-					inputNames.add(pair.getIoEvent().key()+"-human");
+					//inputNames.add(pair.getIoEvent().key()+"-human");
+					Arrays.stream(pair.getIoEvent().input()).toList().forEach(inputEvent -> inputNames.add(inputEvent.key()+"-human"));
 				}
 
 				for (String InputName : inputNames) {

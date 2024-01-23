@@ -86,8 +86,7 @@ public class IOEventStartAspect {
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
 	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
-				&& (ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
+		if ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
 			StopWatch watch = new StopWatch();
 			watch.start("IOEvent annotation Start Aspect");
 			IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch, (new Date()).getTime(), ""));
