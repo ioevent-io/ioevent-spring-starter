@@ -99,6 +99,9 @@ public class IOEventMessageBuilderService {
 			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.manualRequired()){
+			topicName = appName+"_"+"ioevent-human-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
 		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
@@ -184,6 +187,9 @@ public class IOEventMessageBuilderService {
 			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.manualRequired()){
+			topicName = appName+"_"+"ioevent-human-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		if (response.getBody() == null) {
 			response.setBody(KafkaNull.INSTANCE);
