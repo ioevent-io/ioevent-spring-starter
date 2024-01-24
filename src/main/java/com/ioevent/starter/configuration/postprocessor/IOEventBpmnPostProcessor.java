@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.*;
 
+import com.ioevent.starter.domain.*;
 import com.ioevent.starter.enums.EventTypesEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -37,6 +38,10 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -46,11 +51,6 @@ import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
-import com.ioevent.starter.domain.IOEventBpmnPart;
-import com.ioevent.starter.domain.IOEventExceptionInformation;
-import com.ioevent.starter.domain.IOEventGatwayInformation;
-import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.domain.IOTimerEvent;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
 import com.ioevent.starter.service.IOEventMessageBuilderService;
@@ -90,6 +90,9 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Autowired
 	private AppContext ctx;
+
+	@Autowired
+	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	public void setListeners(List<Listener> listeners) {
 		this.listeners = listeners;
@@ -144,6 +147,9 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
 					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType())){
 						inputTopics.add(appName+"_"+"ioevent-human-task-Response");
+						if(ioEvent.input().length==1 && ioEvent.input()[0].key().isEmpty() && ioEvent.input()[0].value().isEmpty()){
+							sendImplicitManualTaskStartEvent(ioEvent,ioFlow);
+						}
 					}
 					for (String topicName : inputTopics) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
@@ -229,6 +235,10 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				}
 			}
 
+		}
+		if(EventTypesEnum.MANUAL.equals(ioEvent.EventType())){
+			log.info("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+			return true;
 		}
 		return false;
 	}
@@ -318,6 +328,24 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.initialize();
 		return scheduler;
+	}
+
+	private void sendImplicitManualTaskStartEvent(IOEvent ioEvent,IOFlow ioFlow){
+		IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
+		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
+		Message<String> message = MessageBuilder.withPayload("implicit manual task start")
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task")
+				.setHeader(KafkaHeaders.KEY, ioEvent.key())
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.API_KEY.toString(), ioEventService.getApiKey(iOEventProperties, ioFlow))
+				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
+				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
+				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
+				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), true)
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+
+        kafkaTemplate.send(message);
 	}
 
 }
