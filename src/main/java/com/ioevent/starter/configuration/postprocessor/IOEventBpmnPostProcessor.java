@@ -29,6 +29,7 @@ import java.util.*;
 
 import com.ioevent.starter.domain.*;
 import com.ioevent.starter.enums.EventTypesEnum;
+import com.ioevent.starter.service.TopicServices;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
@@ -93,6 +94,12 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
+
+	@Autowired
+	TopicServices topicServices;
+
+	@Value("${spring.kafka.streams.replication-factor:1}")
+	private String replicationFactor;
 
 	public void setListeners(List<Listener> listeners) {
 		this.listeners = listeners;
@@ -331,16 +338,23 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	private void sendImplicitManualTaskStartEvent(IOEvent ioEvent,IOFlow ioFlow){
+		topicServices.createTopic(iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task", "",replicationFactor,iOEventProperties.getTopic_partition());
+		topicServices.createTopic(iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task-Response", "",replicationFactor,iOEventProperties.getTopic_partition());
 		IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		Message<String> message = MessageBuilder.withPayload("implicit manual task start")
+		Message<String> message = MessageBuilder.withPayload("implicit human start")
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task")
 				.setHeader(KafkaHeaders.KEY, ioEvent.key())
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(),"implicit human start")
+				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioEventService.getProcessName(ioEvent, ioFlow, ""))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), ioEventService.getApiKey(iOEventProperties, ioFlow))
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "implicit human start")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
+				.setHeader(IOEventHeaders.START_TIME.toString(), new Date().getTime())
+				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), new Date().getTime())
 				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), true)
 				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();

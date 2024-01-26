@@ -126,7 +126,8 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 					iOEventProperties.getTopic_partition());
 			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+applicationName+"_"+"ioevent-human-task-Response", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			
+
+			ioTopics.add(iOEventProperties.getPrefix()+applicationName+"_"+"ioevent-human-task");
 			
 			if (iOEventProperties.getTopic_names() != null) {
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,
