@@ -33,6 +33,7 @@ import com.ioevent.starter.service.TopicServices;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -95,8 +96,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	@Autowired
-	TopicServices topicServices;
+	//@Autowired
+	//TopicServices topicServices;
 
 	@Value("${spring.kafka.streams.replication-factor:1}")
 	private String replicationFactor;
@@ -338,8 +339,8 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	private void sendImplicitManualTaskStartEvent(IOEvent ioEvent,IOFlow ioFlow){
-		topicServices.createTopic(iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task", "",replicationFactor,iOEventProperties.getTopic_partition());
-		topicServices.createTopic(iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task-Response", "",replicationFactor,iOEventProperties.getTopic_partition());
+		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-human-task", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
+		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-human-task-Response", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
 		IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		Message<String> message = MessageBuilder.withPayload("implicit human start")
