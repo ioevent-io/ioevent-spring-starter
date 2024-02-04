@@ -96,9 +96,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	//@Autowired
-	//TopicServices topicServices;
-
 	@Value("${spring.kafka.streams.replication-factor:1}")
 	private String replicationFactor;
 
@@ -153,7 +150,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				checkMethodValidation(ioFlow, ioEvent, method);
 				if (needListener(ioEvent)) {
 					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
-					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType())){
+					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
 						inputTopics.add(appName+"_"+"ioevent-human-task-Response");
 						if(ioEvent.input().length==1 && ioEvent.input()[0].key().isEmpty() && ioEvent.input()[0].value().isEmpty()){
 							sendImplicitManualTaskStartEvent(ioEvent,ioFlow);
@@ -244,8 +241,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			}
 
 		}
-		if(EventTypesEnum.MANUAL.equals(ioEvent.EventType())){
-			log.info("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
 			return true;
 		}
 		return false;
