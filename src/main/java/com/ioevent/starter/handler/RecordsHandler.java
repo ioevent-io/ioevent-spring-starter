@@ -123,7 +123,7 @@ public class RecordsHandler {
 			for (BeanMethodPair pair : beanMethodPairs) {
 				String messgeKeyExpected = pair.getIoEvent().message().key();
 				List<String> inputNames = ioEventService.getInputNames(pair.getIoEvent());
-				if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType())) {
+				if(EventTypesEnum.MANUAL.equals(pair.getIoEvent().EventType()) || EventTypesEnum.USER.equals(pair.getIoEvent().EventType())) {
 					Arrays.stream(pair.getIoEvent().input()).toList().forEach(inputEvent -> inputNames.add(inputEvent.key()+"-human"));
 					if(pair.getIoEvent().input().length==1 && pair.getIoEvent().input()[0].key().isEmpty() && pair.getIoEvent().input()[0].value().isEmpty()) {
 						inputNames.add(pair.getIoEvent().key()+"-human");
