@@ -50,7 +50,6 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
@@ -203,8 +202,8 @@ public class IOEvenImplicitTaskAspect {
 						for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 							String outputKey = ioEventService.getOutputKey(outputEvent);
 							String outputTopic = outputEvent.topic();
-							if (outputEvent.manualRequired()){
-								outputTopic = appName+ "_" + "ioevent-human-task";
+							if (outputEvent.userActionRequired()){
+								outputTopic = appName+ "_" + "ioevent-user-task";
 							}
 							Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
 									ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,

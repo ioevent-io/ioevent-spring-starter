@@ -43,7 +43,6 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
@@ -241,12 +240,12 @@ public class IOEventTransitionAspect {
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
 			Map<String, Object> headers, String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
-		if(outputEvent.manualRequired()){
-			topicName = applicationName+"_"+"ioevent-human-task";
+		if(outputEvent.userActionRequired()){
+			topicName = applicationName+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
@@ -260,7 +259,13 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(), iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	/**
@@ -286,12 +291,12 @@ public class IOEventTransitionAspect {
 		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName())
 				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
-		if(outputEvent.manualRequired()){
-			topicName = applicationName+"_"+"ioevent-human-task";
+		if(outputEvent.userActionRequired()){
+			topicName = applicationName+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
@@ -306,6 +311,12 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(), iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 }

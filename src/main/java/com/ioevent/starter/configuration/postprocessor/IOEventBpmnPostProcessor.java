@@ -151,7 +151,7 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				if (needListener(ioEvent)) {
 					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
 					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
-						inputTopics.add(appName+"_"+"ioevent-human-task-Response");
+						inputTopics.add(appName+"_"+"ioevent-user-task-Response");
 						if(ioEvent.input().length==1 && ioEvent.input()[0].key().isEmpty() && ioEvent.input()[0].value().isEmpty()){
 							sendImplicitManualTaskStartEvent(ioEvent,ioFlow);
 						}
@@ -335,20 +335,20 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 	}
 
 	private void sendImplicitManualTaskStartEvent(IOEvent ioEvent,IOFlow ioFlow){
-		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-human-task", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
-		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-human-task-Response", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
+		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-user-task", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
+		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-user-task-Response", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
 		IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		Message<String> message = MessageBuilder.withPayload("implicit human start")
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName+"_"+"ioevent-human-task")
+		Message<String> message = MessageBuilder.withPayload("implicit user start")
+				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName+"_"+"ioevent-user-task")
 				.setHeader(KafkaHeaders.KEY, ioEvent.key())
-				.setHeader(IOEventHeaders.CORRELATION_ID.toString(),"implicit human start")
+				.setHeader(IOEventHeaders.CORRELATION_ID.toString(),"implicit user start")
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioEventService.getProcessName(ioEvent, ioFlow, ""))
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.API_KEY.toString(), ioEventService.getApiKey(iOEventProperties, ioFlow))
 				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
 				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
-				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "implicit human start")
+				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "implicit user start")
 				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
 				.setHeader(IOEventHeaders.START_TIME.toString(), new Date().getTime())
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), new Date().getTime())

@@ -61,6 +61,6 @@ public @interface OutputEvent {
 	 * Specify if the event will be sent to a manual task
 	 *
 	 */
-	boolean manualRequired() default false;
+	boolean userActionRequired() default false;
 
 }

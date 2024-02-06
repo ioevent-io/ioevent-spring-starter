@@ -47,7 +47,6 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
@@ -161,11 +160,11 @@ public class IOEventStartAspect {
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
-		if (outputEvent.manualRequired()){
-			topicName =  appName+"_"+"ioevent-human-task";
+		if (outputEvent.userActionRequired()){
+			topicName =  appName+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, uuid)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
@@ -179,7 +178,13 @@ public class IOEventStartAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(),iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	/**
