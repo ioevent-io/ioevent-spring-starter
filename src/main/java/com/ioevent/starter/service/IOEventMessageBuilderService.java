@@ -99,9 +99,12 @@ public class IOEventMessageBuilderService {
 			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.userActionRequired()){
+			topicName = appName+"_"+"ioevent-user-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
@@ -115,7 +118,13 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), isImplicitStart)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(),iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	/**
@@ -184,12 +193,15 @@ public class IOEventMessageBuilderService {
 			IOResponse<Object> response, OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime,
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.userActionRequired()){
+			topicName = appName+"_"+"ioevent-user-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		if (response.getBody() == null) {
 			response.setBody(KafkaNull.INSTANCE);
 		}
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioeventRecordInfo.getWorkFlowName())
@@ -203,7 +215,13 @@ public class IOEventMessageBuilderService {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), isImplicitStart)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(),iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	public Message<IOTimerEvent> sendTimerEvent(

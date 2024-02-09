@@ -68,6 +68,10 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 	private Set<String> ioTopics;
 	@Autowired
 	private IOEventService ioEventService;
+	@Value("${spring.application.name}")
+	private String applicationName;
+	@Autowired
+	private IOEventProperties ioeventProperties;
 
 	/**
 	 * BeanPostProcessor method to execute Before Bean Initialisation ,
@@ -118,7 +122,12 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 					iOEventProperties.getTopic_partition());
 			((TopicServices) bean).createTopic("ioevent-event-message-aggregation", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			
+			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
+			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task-Response", "", replicationFactor,
+					iOEventProperties.getTopic_partition());
+
+			ioTopics.add(iOEventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task");
 			
 			if (iOEventProperties.getTopic_names() != null) {
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,

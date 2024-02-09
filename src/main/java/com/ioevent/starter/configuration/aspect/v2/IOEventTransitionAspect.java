@@ -26,6 +26,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -42,7 +43,6 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
@@ -75,6 +75,8 @@ public class IOEventTransitionAspect {
 	private IOEventMessageBuilderService messageBuilderService;
 	@Autowired
 	private IOExceptionHandlingAspect ioExceptionHandlingAspect;
+	@Value("${spring.application.name}")
+	private String applicationName;
 
 	/**
 	 * Method AfterReturning advice runs after a successful completion of a
@@ -92,7 +94,6 @@ public class IOEventTransitionAspect {
 	@AfterReturning(value = "@annotation(anno)", argNames = "jp, anno,return", returning = "return")
 	public void transitionAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)) {
 			if (ioEventService.isTransition(ioEvent)) {
 				IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 				EventLogger eventLogger = new EventLogger();
@@ -144,7 +145,6 @@ public class IOEventTransitionAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, outputs, watch,
 						response.getBody(), ioEventType);
 			}
-		}
 	}
 
 	/**
@@ -168,7 +168,6 @@ public class IOEventTransitionAspect {
 	public String simpleEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
 			IOResponse<Object> response, String outputs, IOEventRecordInfo ioeventRecordInfo, IOEventType ioEventType,
 			String messageKey) throws InterruptedException, ExecutionException {
-
 		for (OutputEvent outputEvent : ioEventService.getOutputs(ioEvent)) {
 
 			Message<Object> message;
@@ -241,9 +240,12 @@ public class IOEventTransitionAspect {
 			OutputEvent outputEvent, IOEventRecordInfo ioeventRecordInfo, Long startTime, IOEventType ioEventType,
 			Map<String, Object> headers, String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if(outputEvent.userActionRequired()){
+			topicName = applicationName+"_"+"ioevent-user-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
@@ -257,7 +259,13 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(), iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	/**
@@ -283,9 +291,12 @@ public class IOEventTransitionAspect {
 		String inputtopic = ioEventService.getInputEventByName(ioEvent, ioeventRecordInfo.getOutputConsumedName())
 				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
+		if(outputEvent.userActionRequired()){
+			topicName = applicationName+"_"+"ioevent-user-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(headers)
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, ioeventRecordInfo.getId())
 				.setHeader(IOEventHeaders.MESSAGE_KEY.toString(), key)
@@ -300,6 +311,12 @@ public class IOEventTransitionAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), ioeventRecordInfo.getInstanceStartTime())
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(), iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 }
