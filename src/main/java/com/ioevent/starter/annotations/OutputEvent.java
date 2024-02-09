@@ -57,5 +57,10 @@ public @interface OutputEvent {
 	 * @return the suffix name
 	 */
 	String suffix() default "";
+	/**
+	 * Specify if the event will be sent to a manual task
+	 *
+	 */
+	boolean userActionRequired() default false;
 
 }

@@ -28,6 +28,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -46,7 +47,6 @@ import com.ioevent.starter.annotations.OutputEvent;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
 import com.ioevent.starter.domain.IOEventHeaders;
 import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.enums.EventTypesEnum;
 import com.ioevent.starter.handler.IOEventRecordInfo;
 import com.ioevent.starter.logger.EventLogger;
 import com.ioevent.starter.service.IOEventContextHolder;
@@ -73,6 +73,8 @@ public class IOEventStartAspect {
 	private IOEventProperties iOEventProperties;
 	@Autowired
 	private IOEventService ioEventService;
+	@Value("${spring.application.name}")
+	private String appName;
 
 	/**
 	 * Method Before advice runs after a successful completion of a Start task with
@@ -83,8 +85,7 @@ public class IOEventStartAspect {
 	 */
 	@Before(value = "@annotation(anno)", argNames = "jp, anno")
 	public void iOEventAnnotationImpicitStartAspect(JoinPoint joinPoint, IOEvent ioEvent) {
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
-				&& (ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
+		if ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
 			StopWatch watch = new StopWatch();
 			watch.start("IOEvent annotation Start Aspect");
 			IOEventContextHolder.setContext(new IOEventRecordInfo("", "", "", watch, (new Date()).getTime(), ""));
@@ -105,8 +106,7 @@ public class IOEventStartAspect {
 	public void iOEventAnnotationAspect(JoinPoint joinPoint, IOEvent ioEvent, Object returnObject)
 			throws JsonProcessingException, ParseException, InterruptedException, ExecutionException {
 
-		if ((ioEvent.EventType() != EventTypesEnum.USER) && (ioEvent.EventType() != EventTypesEnum.MANUAL)
-				&& ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent)))) {
+		if ((ioEventService.isStart(ioEvent)) || (ioEventService.isConditionalStart(ioEvent))) {
 			EventLogger eventLogger = new EventLogger();
 			IOEventRecordInfo ioeventRecordInfoInput = IOEventContextHolder.getContext();
 			StopWatch watch = ioeventRecordInfoInput.getWatch();
@@ -160,8 +160,11 @@ public class IOEventStartAspect {
 	public Message<Object> buildStartMessage(IOEvent ioEvent, IOFlow ioFlow, IOResponse<Object> response,
 			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
+		if (outputEvent.userActionRequired()){
+			topicName =  appName+"_"+"ioevent-user-task";
+		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		return MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
+		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
 				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix() + topicName)
 				.setHeader(KafkaHeaders.KEY, uuid)
 				.setHeader(IOEventHeaders.CORRELATION_ID.toString(), uuid)
@@ -175,7 +178,13 @@ public class IOEventStartAspect {
 				.setHeader(IOEventHeaders.START_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), startTime)
 				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), false)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
+				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false);
+
+		if (outputEvent.userActionRequired()){
+			messageBuilder.setHeader(IOEventHeaders.APPLICATION_PREFIX.toString(),iOEventProperties.getPrefix());
+		}
+
+		return messageBuilder.build();
 	}
 
 	/**

@@ -18,24 +18,24 @@ package com.ioevent.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.*;
 
+import com.ioevent.starter.domain.*;
+import com.ioevent.starter.enums.EventTypesEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -45,11 +45,6 @@ import com.ioevent.starter.annotations.IOFlow;
 import com.ioevent.starter.annotations.InputEvent;
 import com.ioevent.starter.configuration.context.AppContext;
 import com.ioevent.starter.configuration.properties.IOEventProperties;
-import com.ioevent.starter.domain.IOEventBpmnPart;
-import com.ioevent.starter.domain.IOEventExceptionInformation;
-import com.ioevent.starter.domain.IOEventGatwayInformation;
-import com.ioevent.starter.domain.IOEventType;
-import com.ioevent.starter.domain.IOTimerEvent;
 import com.ioevent.starter.listener.Listener;
 import com.ioevent.starter.listener.ListenerCreator;
 import com.ioevent.starter.service.IOEventMessageBuilderService;
@@ -89,6 +84,12 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 
 	@Autowired
 	private AppContext ctx;
+
+	@Autowired
+	private KafkaTemplate<String, Object> kafkaTemplate;
+
+	@Value("${spring.kafka.streams.replication-factor:1}")
+	private String replicationFactor;
 
 	public void setListeners(List<Listener> listeners) {
 		this.listeners = listeners;
@@ -140,8 +141,11 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 			for (IOEvent ioEvent : ioEvents) {
 				checkMethodValidation(ioFlow, ioEvent, method);
 				if (needListener(ioEvent)) {
-
-					for (String topicName : ioEventService.getInputTopic(ioEvent, ioFlow)) {
+					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
+					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
+						inputTopics.add(appName+"_"+"ioevent-user-task-Response");
+					}
+					for (String topicName : inputTopics) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
 							int partitionNumber = iOEventProperties.getTopic_partition();
 							for (int i = 0; i < (partitionNumber / 2) + 1; i++) {
@@ -225,6 +229,9 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				}
 			}
 
+		}
+		if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
+			return true;
 		}
 		return false;
 	}
@@ -315,5 +322,4 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		scheduler.initialize();
 		return scheduler;
 	}
-
 }

@@ -91,7 +91,6 @@ public class IOExceptionHandlingAspect {
 			throws ParseException, JsonProcessingException, InterruptedException, ExecutionException {
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		IOEvent myAnnotation = signature.getMethod().getAnnotation(IOEvent.class);
-		if ((myAnnotation.EventType() != EventTypesEnum.USER)&&(myAnnotation.EventType() != EventTypesEnum.MANUAL)) {
 			throwable.printStackTrace();
 			IOEventRecordInfo ioeventRecordInfo = IOEventContextHolder.getContext();
 			EventLogger eventLogger = new EventLogger();
@@ -128,7 +127,6 @@ public class IOExceptionHandlingAspect {
 				prepareAndDisplayEventLogger(eventLogger, ioeventRecordInfo, ioEvent, output, watch, response.getBody(),
 						ioEventType);
 			}
-		}
 	}
 
 	private String endEventSendProcess(EventLogger eventLogger, IOEvent ioEvent, IOFlow ioFlow,
