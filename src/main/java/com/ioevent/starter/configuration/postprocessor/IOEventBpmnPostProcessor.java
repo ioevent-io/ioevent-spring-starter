@@ -18,22 +18,17 @@ package com.ioevent.starter.configuration.postprocessor;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.*;
 
 import com.ioevent.starter.domain.*;
 import com.ioevent.starter.enums.EventTypesEnum;
-import com.ioevent.starter.service.TopicServices;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -41,9 +36,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -152,9 +144,6 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
 					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
 						inputTopics.add(appName+"_"+"ioevent-user-task-Response");
-						if(ioEvent.input().length==1 && ioEvent.input()[0].key().isEmpty() && ioEvent.input()[0].value().isEmpty()){
-							sendImplicitManualTaskStartEvent(ioEvent,ioFlow);
-						}
 					}
 					for (String topicName : inputTopics) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
@@ -333,30 +322,4 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 		scheduler.initialize();
 		return scheduler;
 	}
-
-	private void sendImplicitManualTaskStartEvent(IOEvent ioEvent,IOFlow ioFlow){
-		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-user-task", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
-		client.createTopics(List.of(new NewTopic(iOEventProperties.getPrefix() + appName + "_" + "ioevent-user-task-Response", iOEventProperties.getTopic_partition(), Short.valueOf(replicationFactor))));
-		IOEventType ioEventType = ioEventService.checkTaskType(ioEvent);
-		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
-		Message<String> message = MessageBuilder.withPayload("implicit user start")
-				.setHeader(KafkaHeaders.TOPIC, iOEventProperties.getPrefix()+appName+"_"+"ioevent-user-task")
-				.setHeader(KafkaHeaders.KEY, ioEvent.key())
-				.setHeader(IOEventHeaders.CORRELATION_ID.toString(),"implicit user start")
-				.setHeader(IOEventHeaders.PROCESS_NAME.toString(), ioEventService.getProcessName(ioEvent, ioFlow, ""))
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
-				.setHeader(IOEventHeaders.API_KEY.toString(), ioEventService.getApiKey(iOEventProperties, ioFlow))
-				.setHeader(IOEventHeaders.EVENT_TYPE.toString(), ioEventType.toString())
-				.setHeader(IOEventHeaders.INPUT.toString(), ioEventService.getInputNames(ioEvent))
-				.setHeader(IOEventHeaders.OUTPUT_EVENT.toString(), "implicit user start")
-				.setHeader(IOEventHeaders.STEP_NAME.toString(), ioEvent.key())
-				.setHeader(IOEventHeaders.START_TIME.toString(), new Date().getTime())
-				.setHeader(IOEventHeaders.START_INSTANCE_TIME.toString(), new Date().getTime())
-				.setHeader(IOEventHeaders.API_KEY.toString(), apiKey)
-				.setHeader(IOEventHeaders.IMPLICIT_START.toString(), true)
-				.setHeader(IOEventHeaders.IMPLICIT_END.toString(), false).build();
-
-        kafkaTemplate.send(message);
-	}
-
 }
