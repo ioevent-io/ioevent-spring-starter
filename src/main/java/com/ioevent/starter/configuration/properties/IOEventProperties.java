@@ -52,6 +52,16 @@ public class IOEventProperties {
 	private String topic_replication="1" ;
 	private String api_key = "";
 	private Long heartBeat = 30000L ;
+	private int consumers_per_topic = 0;
+
+	public int getConsumers_per_topic() {
+		return consumers_per_topic;
+	}
+
+	public void setConsumers_per_topic(int consumers_per_topic) {
+		this.consumers_per_topic = consumers_per_topic;
+	}
+
 	private int core_pool_size = 2 ;
 	
 	public Long getHeartBeat() {

@@ -100,7 +100,7 @@ public class IOEventMessageBuilderService {
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		if(outputEvent.userActionRequired()){
-			topicName = appName+"_"+"ioevent-user-task";
+			topicName = ioEventService.getUserTaskTopicName(appName)+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
@@ -194,7 +194,7 @@ public class IOEventMessageBuilderService {
 			Map<String, Object> headers, boolean isImplicitStart) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		if(outputEvent.userActionRequired()){
-			topicName = appName+"_"+"ioevent-user-task";
+			topicName = ioEventService.getUserTaskTopicName(appName)+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		if (response.getBody() == null) {

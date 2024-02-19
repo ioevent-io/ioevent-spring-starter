@@ -143,12 +143,16 @@ public class IOEventBpmnPostProcessor implements BeanPostProcessor, IOEventPostP
 				if (needListener(ioEvent)) {
 					List<String> inputTopics = ioEventService.getInputTopic(ioEvent, ioFlow);
 					if(EventTypesEnum.MANUAL.equals(ioEvent.EventType()) || EventTypesEnum.USER.equals(ioEvent.EventType())){
-						inputTopics.add(appName+"_"+"ioevent-user-task-Response");
+						inputTopics.add(ioEventService.getUserTaskTopicName(appName)+"_"+"ioevent-user-task-Response");
 					}
 					for (String topicName : inputTopics) {
 						if (!listenerExist(topicName, bean, method, ioEvent)) {
+							int consumersPerTopic = iOEventProperties.getConsumers_per_topic();
 							int partitionNumber = iOEventProperties.getTopic_partition();
-							for (int i = 0; i < (partitionNumber / 2) + 1; i++) {
+
+							int consumersNumber = consumersPerTopic > 0 ? consumersPerTopic : (partitionNumber / 2) + 1;
+
+							for (int i = 0; i < consumersNumber; i++) {
 								synchronized (method) {
 									Thread listenerThread = new Thread() {
 										@Override

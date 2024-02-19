@@ -203,7 +203,7 @@ public class IOEvenImplicitTaskAspect {
 							String outputKey = ioEventService.getOutputKey(outputEvent);
 							String outputTopic = outputEvent.topic();
 							if (outputEvent.userActionRequired()){
-								outputTopic = appName+ "_" + "ioevent-user-task";
+								outputTopic = ioEventService.getUserTaskTopicName(appName)+ "_" + "ioevent-user-task";
 							}
 							Message<Object> message = this.buildMessage(ioEvent, ioFlow, response,
 									ioeventRecordInfoInput.getWorkFlowName(), ioeventRecordInfoInput.getId(), outputKey,
