@@ -791,6 +791,10 @@ public class IOEventService {
 			}
 		}
 	}
+
+	public String getUserTaskTopicName(String appName){
+		return appName.replace(" ", "-");
+	}
 	
 //	public void topicExistValidation(IOFlow ioFlow, IOEvent ioEvent) {
 //	String errorMsg = "Topic not specified, verify that you have specified the topic in @IOFlow, @IOEvent, @InputEvent or @OutputEvent annotations ";

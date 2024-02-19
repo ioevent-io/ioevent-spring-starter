@@ -96,7 +96,7 @@ public class KafkaConfig {
 		config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
 		config.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, topicReplication);
 		config.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
-		config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+		config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 		config.put(ProducerConfig.LINGER_MS_CONFIG, 5);
 
 		return new KafkaStreamsConfiguration(config);

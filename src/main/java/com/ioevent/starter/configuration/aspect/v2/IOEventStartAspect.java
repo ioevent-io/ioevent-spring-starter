@@ -161,7 +161,7 @@ public class IOEventStartAspect {
 			String processName, String uuid, OutputEvent outputEvent, Long startTime,String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		if (outputEvent.userActionRequired()){
-			topicName =  appName+"_"+"ioevent-user-task";
+			topicName =  ioEventService.getUserTaskTopicName(appName)+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 		MessageBuilder<Object> messageBuilder = MessageBuilder.withPayload(response.getBody()).copyHeaders(response.getHeaders())
