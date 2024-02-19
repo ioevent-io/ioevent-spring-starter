@@ -122,12 +122,12 @@ public class IOEventTopicBeanPostProcessor implements DestructionAwareBeanPostPr
 					iOEventProperties.getTopic_partition());
 			((TopicServices) bean).createTopic("ioevent-event-message-aggregation", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task", "", replicationFactor,
+			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+ioEventService.getUserTaskTopicName(applicationName)+"_"+"ioevent-user-task", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
-			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task-Response", "", replicationFactor,
+			((TopicServices) bean).createTopic(ioeventProperties.getPrefix()+ioEventService.getUserTaskTopicName(applicationName)+"_"+"ioevent-user-task-Response", "", replicationFactor,
 					iOEventProperties.getTopic_partition());
 
-			ioTopics.add(iOEventProperties.getPrefix()+applicationName+"_"+"ioevent-user-task");
+			ioTopics.add(iOEventProperties.getPrefix()+ioEventService.getUserTaskTopicName(applicationName)+"_"+"ioevent-user-task");
 			
 			if (iOEventProperties.getTopic_names() != null) {
 				iOEventProperties.getTopic_names().stream().forEach(x -> ((TopicServices) bean).createTopic(x,

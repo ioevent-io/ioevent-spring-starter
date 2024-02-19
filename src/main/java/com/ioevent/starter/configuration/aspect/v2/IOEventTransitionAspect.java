@@ -241,7 +241,7 @@ public class IOEventTransitionAspect {
 			Map<String, Object> headers, String key) {
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, outputEvent.topic());
 		if(outputEvent.userActionRequired()){
-			topicName = applicationName+"_"+"ioevent-user-task";
+			topicName = ioEventService.getUserTaskTopicName(applicationName)+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
@@ -292,7 +292,7 @@ public class IOEventTransitionAspect {
 				.topic();
 		String topicName = ioEventService.getOutputTopicName(ioEvent, ioFlow, inputtopic);
 		if(outputEvent.userActionRequired()){
-			topicName = applicationName+"_"+"ioevent-user-task";
+			topicName = ioEventService.getUserTaskTopicName(applicationName)+"_"+"ioevent-user-task";
 		}
 		String apiKey = ioEventService.getApiKey(iOEventProperties, ioFlow);
 
