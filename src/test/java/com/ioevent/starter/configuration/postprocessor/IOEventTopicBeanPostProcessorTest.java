@@ -68,18 +68,19 @@ class IOEventTopicBeanPostProcessorTest {
 	}
 	@Test
 	void topicExist_returnTrue() throws InterruptedException, ExecutionException {
-		when(client.listTopics()).thenReturn(listTopicsResult);
-		when(listTopicsResult.names()).thenReturn(future);
-		when(future.get()).thenReturn(new HashSet<>(Arrays.asList("test-Topic1", "Topic2","test-Topic3")));
-		when(iOEventProperties.getPrefix()).thenReturn("test-");
+		setupAdminListTopicsAndGetAndGetPrefixAnd1MoreStubs();
 		Assert.assertTrue(ioeventTopicBeanPostProcessor.topicExist("Topic1"));
 	}
 	@Test
 	void topicExist_returnFalse() throws InterruptedException, ExecutionException {
+		setupAdminListTopicsAndGetAndGetPrefixAnd1MoreStubs();
+		Assert.assertFalse(ioeventTopicBeanPostProcessor.topicExist("newTopic"));
+	}
+
+	private void setupAdminListTopicsAndGetAndGetPrefixAnd1MoreStubs() throws InterruptedException, ExecutionException {
 		when(client.listTopics()).thenReturn(listTopicsResult);
 		when(listTopicsResult.names()).thenReturn(future);
-		when(future.get()).thenReturn(new HashSet<>(Arrays.asList("test-Topic1", "Topic2","test-Topic3")));
+		when(future.get()).thenReturn(new HashSet<>(Arrays.asList("test-Topic1", "Topic2", "test-Topic3")));
 		when(iOEventProperties.getPrefix()).thenReturn("test-");
-		Assert.assertFalse(ioeventTopicBeanPostProcessor.topicExist("newTopic"));
 	}
 }
