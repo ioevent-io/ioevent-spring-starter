@@ -107,10 +107,7 @@ class IOEventBpmnPostProcessorTest {
 		Method startMethod = this.getClass().getMethod("startAnnotationMethod", null);
 		IOEvent ioEventStart = startMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
-		when(ioEventService.getIOEventType(ioEventStart)).thenReturn(IOEventType.START);
-		when(ioEventService.getProcessName(ioEventStart,null,"")).thenReturn("startkey");
-		when(iOEventProperties.getApikey()).thenReturn("");
-		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
+		setupIOEventPropertiesGetApikeyAndGetApiKeyAnd2MoreStubs(ioEventStart, IOEventType.START, "startkey");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventStart,null,null, "testClass",
 				bpmnPartId.toString(), "testMethod","type");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventStart,null, bpmnPartId.toString(),"",appName, "startkey", IOEventType.START,
@@ -126,10 +123,7 @@ class IOEventBpmnPostProcessorTest {
 		Method endMethod = this.getClass().getMethod("endAnnotationMethod", null);
 		IOEvent ioEventEnd = endMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
-		when(ioEventService.getIOEventType(ioEventEnd)).thenReturn(IOEventType.END);
-		when(ioEventService.getProcessName(ioEventEnd,null,"")).thenReturn("endkey");
-		when(iOEventProperties.getApikey()).thenReturn("");
-		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
+		setupIOEventPropertiesGetApikeyAndGetApiKeyAnd2MoreStubs(ioEventEnd, IOEventType.END, "endkey");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventEnd,null,null, "testClass",
 				bpmnPartId.toString(), "type","testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventEnd,null, bpmnPartId.toString(),"",appName, "endkey", IOEventType.END,
@@ -144,10 +138,7 @@ class IOEventBpmnPostProcessorTest {
 		Method taskMethod = this.getClass().getMethod("simpleTaskAnnotationMethod", null);
 		IOEvent ioEventTask = taskMethod.getAnnotation(IOEvent.class);
 		UUID bpmnPartId = UUID.randomUUID();
-		when(ioEventService.getIOEventType(ioEventTask)).thenReturn(IOEventType.TASK);
-		when(ioEventService.getProcessName(ioEventTask,null,"")).thenReturn("");
-		when(iOEventProperties.getApikey()).thenReturn("");
-		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
+		setupIOEventPropertiesGetApikeyAndGetApiKeyAnd2MoreStubs(ioEventTask, IOEventType.TASK, "");
 		IOEventBpmnPart ioEventBpmnPartCreated = ioeventBpmnPostProcessor.createIOEventBpmnPart(ioEventTask,null,null, "testClass",
 				bpmnPartId.toString(),"type", "testMethod");
 		IOEventBpmnPart ioEventBpmnPart = new IOEventBpmnPart(ioEventTask,null, bpmnPartId.toString(),"",appName, "", IOEventType.TASK,
@@ -172,5 +163,12 @@ class IOEventBpmnPostProcessorTest {
 	void ListenerExist_returnFalse() throws InterruptedException {
 		ioeventBpmnPostProcessor.setListeners(listeners);
 		assertFalse(ioeventBpmnPostProcessor.listenerExist("Topic", null, null, null));
+	}
+
+	private void setupIOEventPropertiesGetApikeyAndGetApiKeyAnd2MoreStubs(IOEvent getIOEventTypeArg1, IOEventType getIOEventTypeReturnValue, String getProcessNameReturnValue) {
+		when(ioEventService.getIOEventType(getIOEventTypeArg1)).thenReturn(getIOEventTypeReturnValue);
+		when(ioEventService.getProcessName(getIOEventTypeArg1,null,"")).thenReturn(getProcessNameReturnValue);
+		when(iOEventProperties.getApikey()).thenReturn("");
+		when(ioEventService.getApiKey(iOEventProperties, null)).thenReturn("");
 	}
 }
